@@ -1,0 +1,10 @@
+/* Example custom CSS */
+.topbar {
+    background-color: #1c1c1c;
+}
+.topbar-wrapper {
+    background-color: #282c34;
+}
+.swagger-ui .scheme-container {
+    background-color: #f8f8f8;
+}

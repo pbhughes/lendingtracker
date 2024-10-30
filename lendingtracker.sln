@@ -1,0 +1,33 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.002.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{6757AE7D-543D-4563-AFF4-524E951E30FD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "api", "api", "{12FAFC3D-2A51-4DA7-ADD4-E99CAB5C743C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LendingTrackerApi", "src\api\LendingTrackerApi\LendingTrackerApi.csproj", "{83E9491A-82C5-44D6-9037-5C1B519E8EE7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{83E9491A-82C5-44D6-9037-5C1B519E8EE7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{83E9491A-82C5-44D6-9037-5C1B519E8EE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{83E9491A-82C5-44D6-9037-5C1B519E8EE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{83E9491A-82C5-44D6-9037-5C1B519E8EE7}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{12FAFC3D-2A51-4DA7-ADD4-E99CAB5C743C} = {6757AE7D-543D-4563-AFF4-524E951E30FD}
+		{83E9491A-82C5-44D6-9037-5C1B519E8EE7} = {12FAFC3D-2A51-4DA7-ADD4-E99CAB5C743C}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {83121F4B-E82B-47DC-863C-D864F149D039}
+	EndGlobalSection
+EndGlobal
