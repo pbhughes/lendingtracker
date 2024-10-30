@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using LendingTrackerApi.Models;
 using Microsoft.OpenApi.Models;
 using Redoc;
+using Microsoft.AspNetCore.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -44,11 +45,17 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("authorized_user", policy =>
+        policy
+            .RequireClaim("scope", "lender"));
+});
 
 var app = builder.Build();
 
 //use authorization
+app.UseAuthentication();
 app.UseAuthorization();
 
 // Enable middleware to serve generated Swagger as a JSON endpoint.
@@ -72,11 +79,11 @@ app.UseAuthorization();
 // Define CRUD endpoints for User
 app.MapGet("/users", async (LendingTrackerContext db) =>
     await db.Users.ToListAsync())
-    .WithTags("Users");
+    .WithTags("Users").RequireAuthorization("authorized_user");
 
 app.MapGet("/users/{id}", async (int id, LendingTrackerContext db) =>
     await db.Users.FindAsync(id) is User user ? Results.Ok(user) : Results.NotFound())
-    .WithTags("Users");
+    .WithTags("Users").RequireAuthorization("authorized_user");
 
 app.MapPost("/users", async (User user, LendingTrackerContext db) =>
 {
@@ -84,7 +91,7 @@ app.MapPost("/users", async (User user, LendingTrackerContext db) =>
     await db.SaveChangesAsync();
     return Results.Created($"/users/{user.UserId}", user);
   
-}).WithTags("Users");
+}).WithTags("Users").RequireAuthorization("authorized_user");
 
 app.MapPut("/users/{id}", async (int id, User updatedUser, LendingTrackerContext db) =>
 {
@@ -99,7 +106,7 @@ app.MapPut("/users/{id}", async (int id, User updatedUser, LendingTrackerContext
 
     await db.SaveChangesAsync();
     return Results.NoContent();
-}).WithTags("Users");
+}).WithTags("Users").RequireAuthorization("authorized_user");
 
 app.MapDelete("/users/{id}", async (int id, LendingTrackerContext db) =>
 {
@@ -110,23 +117,25 @@ app.MapDelete("/users/{id}", async (int id, LendingTrackerContext db) =>
         return Results.Ok(user);
     }
     return Results.NotFound();
-}).WithTags("Users");
+}).WithTags("Users").RequireAuthorization("authorized_user");
 
 // Repeat the above pattern for Borrowers, Items, and Transactions
 
 // For Borrowers
+
 app.MapGet("/borrowers", async (LendingTrackerContext db) =>
-    await db.Borrowers.ToListAsync()).WithTags("Borrowers");
+    await db.Borrowers.ToListAsync()).WithTags("Borrowers").RequireAuthorization("authorized_user");
 
 app.MapGet("/borrowers/{id}", async (int id, LendingTrackerContext db) =>
-    await db.Borrowers.FindAsync(id) is Borrower borrower ? Results.Ok(borrower) : Results.NotFound()).WithTags("Borrowers");
+    await db.Borrowers.FindAsync(id) is Borrower borrower ? Results.Ok(borrower) : Results.NotFound()).WithTags("Borrowers")
+    .RequireAuthorization("authorized_user");
 
 app.MapPost("/borrowers", async (Borrower borrower, LendingTrackerContext db) =>
 {
     db.Borrowers.Add(borrower);
     await db.SaveChangesAsync();
     return Results.Created($"/borrowers/{borrower.BorrowerId}", borrower);
-}).WithTags("Borrowers");
+}).WithTags("Borrowers").RequireAuthorization("authorized_user");
 
 app.MapPut("/borrowers/{id}", async (int id, Borrower updatedBorrower, LendingTrackerContext db) =>
 {
@@ -139,7 +148,7 @@ app.MapPut("/borrowers/{id}", async (int id, Borrower updatedBorrower, LendingTr
 
     await db.SaveChangesAsync();
     return Results.NoContent();
-}).WithTags("Borrowers");
+}).WithTags("Borrowers").RequireAuthorization("authorized_user");
 
 app.MapDelete("/borrowers/{id}", async (int id, LendingTrackerContext db) =>
 {
@@ -150,21 +159,22 @@ app.MapDelete("/borrowers/{id}", async (int id, LendingTrackerContext db) =>
         return Results.Ok(borrower);
     }
     return Results.NotFound();
-}).WithTags("Borrowers");
+}).WithTags("Borrowers").RequireAuthorization("authorized_user");
 
 // For Items
 app.MapGet("/items", async (LendingTrackerContext db) =>
-    await db.Items.ToListAsync()).WithTags("Items");
+    await db.Items.ToListAsync()).WithTags("Items").RequireAuthorization("authorized_user");
 
 app.MapGet("/items/{id}", async (int id, LendingTrackerContext db) =>
-    await db.Items.FindAsync(id) is Item item ? Results.Ok(item) : Results.NotFound()).WithTags("Items");
+    await db.Items.FindAsync(id) is Item item ? Results.Ok(item) : Results.NotFound()).WithTags("Items")
+    .RequireAuthorization("authorized_user");
 
 app.MapPost("/items", async (Item item, LendingTrackerContext db) =>
 {
     db.Items.Add(item);
     await db.SaveChangesAsync();
     return Results.Created($"/items/{item.ItemId}", item);
-}).WithTags("Items");
+}).WithTags("Items").RequireAuthorization("authorized_user");
 
 app.MapPut("/items/{id}", async (int id, Item updatedItem, LendingTrackerContext db) =>
 {
@@ -177,7 +187,7 @@ app.MapPut("/items/{id}", async (int id, Item updatedItem, LendingTrackerContext
 
     await db.SaveChangesAsync();
     return Results.NoContent();
-}).WithTags("Items");
+}).WithTags("Items").RequireAuthorization("authorized_user");
 
 app.MapDelete("/items/{id}", async (int id, LendingTrackerContext db) =>
 {
@@ -188,22 +198,22 @@ app.MapDelete("/items/{id}", async (int id, LendingTrackerContext db) =>
         return Results.Ok(item);
     }
     return Results.NotFound();
-}).WithTags("Items");
+}).WithTags("Items").RequireAuthorization("authorized_user");
 
 // For Transactions
 app.MapGet("/transactions", async (LendingTrackerContext db) =>
-    await db.Transactions.ToListAsync()).WithTags("Transactions");
+    await db.Transactions.ToListAsync()).WithTags("Transactions").RequireAuthorization("authorized_user");
 
 app.MapGet("/transactions/{id}", async (int id, LendingTrackerContext db) =>
     await db.Transactions.FindAsync(id) is Transaction transaction ? Results.Ok(transaction) : Results.NotFound())
-    .WithTags("Transactions");
+    .WithTags("Transactions").RequireAuthorization("authorized_user");
 
 app.MapPost("/transactions", async (Transaction transaction, LendingTrackerContext db) =>
 {
     db.Transactions.Add(transaction);
     await db.SaveChangesAsync();
     return Results.Created($"/transactions/{transaction.TransactionId}", transaction);
-}).WithTags("Transactions");
+}).WithTags("Transactions").RequireAuthorization("authorized_user");
 
 app.MapPut("/transactions/{id}", async (int id, Transaction updatedTransaction, LendingTrackerContext db) =>
 {
@@ -217,7 +227,7 @@ app.MapPut("/transactions/{id}", async (int id, Transaction updatedTransaction, 
 
     await db.SaveChangesAsync();
     return Results.NoContent();
-}).WithTags("Transactions");
+}).WithTags("Transactions").RequireAuthorization("authorized_user");
 
 app.MapDelete("/transactions/{id}", async (int id, LendingTrackerContext db) =>
 {
@@ -228,7 +238,7 @@ app.MapDelete("/transactions/{id}", async (int id, LendingTrackerContext db) =>
         return Results.Ok(transaction);
     }
     return Results.NotFound();
-}).WithTags("Transactions");
+}).WithTags("Transactions").RequireAuthorization("authorized_user");
 
 // Run the application
 app.Run();
