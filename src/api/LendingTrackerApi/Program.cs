@@ -1,11 +1,12 @@
+using Microsoft.Identity.Web;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
 using LendingTrackerApi.Models;
 using Microsoft.OpenApi.Models;
 using Redoc;
-using Microsoft.AspNetCore.Authorization;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,32 +25,33 @@ builder.Services.AddSwaggerGen(c =>
     c.EnableAnnotations();
 });
 
-//add authorization
-var auth0Domain = builder.Configuration["Auth0:Domain"];
-var auth0Audience = builder.Configuration["Auth0:Audience"];
+//add authentication and authorization
 
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.Authority = $"https://${auth0Domain}/";
-    options.Audience = auth0Audience;
-    options.TokenValidationParameters = new TokenValidationParameters
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAdB2C"))
+        .EnableTokenAcquisitionToCallDownstreamApi()
+        .AddInMemoryTokenCaches();
+    
+    builder.Services.Configure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
     {
-        ValidateIssuerSigningKey = true,
-        ValidateIssuer = true,
-        ValidateAudience = true
-    };
-});
+        // Specify the valid audiences (array of audience values)
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateAudience = false,
+            ValidAudiences = new[] { "806b17b5-8f69-46d7-b9f8-26fff192a38f" } // List multiple valid audiences
+        };
+    });
 
+
+
+
+builder.Services.AddAuthorization();
 builder.Services.AddAuthorization(options =>
 {
+    
     options.AddPolicy("authorized_user", policy =>
-        policy
-            .RequireClaim("scope", "lender"));
+        policy.RequireClaim("http://schemas.microsoft.com/identity/claims/scope", "lender"));
+
 });
 
 var app = builder.Build();
@@ -74,7 +76,6 @@ app.UseReDoc(c =>
 
 // Configure the HTTP request pipeline.
 app.UseHttpsRedirection();
-app.UseAuthorization();
 
 // Define CRUD endpoints for User
 app.MapGet("/users", async (LendingTrackerContext db) =>
