@@ -10,6 +10,16 @@ export const createClaimsTable = (claims) => {
     Object.keys(claims).forEach((key) => {
         if (typeof claims[key] !== 'string' && typeof claims[key] !== 'number') return;
         switch (key) {
+            case 'extension_isNewUser' :
+                populateClaim(
+                    key,
+                    claims[key],
+                    'Indicates the user is new or not.',
+                    index,
+                    claimsObj
+                );
+                index++;
+                break
             case 'aud':
                 populateClaim(
                     key,

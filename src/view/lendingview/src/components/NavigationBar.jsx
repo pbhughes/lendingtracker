@@ -1,15 +1,15 @@
-import { Nav, Navbar, Dropdown, DropdownButton, Button } from 'react-bootstrap';
+import { Nav, Navbar, Dropdown, DropdownButton, Button, Card, CardBody } from 'react-bootstrap';
 import { AuthenticatedTemplate, UnauthenticatedTemplate, useMsal } from '@azure/msal-react';
-import { InteractionStatus } from "@azure/msal-browser"; 
+import { InteractionStatus } from "@azure/msal-browser";
 import { loginRequest, b2cPolicies } from '../authConfig';
 
 export const NavigationBar = () => {
     const { instance, inProgress } = useMsal();
-     let activeAccount;
+    let activeAccount;
 
-     if (instance) {
-         activeAccount = instance.getActiveAccount();
-     }
+    if (instance) {
+        activeAccount = instance.getActiveAccount();
+    }
 
     const handleLoginPopup = () => {
         instance
@@ -35,16 +35,16 @@ export const NavigationBar = () => {
     };
 
     const handleProfileEdit = () => {
-        if(inProgress === InteractionStatus.None){
-           instance.acquireTokenRedirect(b2cPolicies.authorities.editProfile);
+        if (inProgress === InteractionStatus.None) {
+            instance.acquireTokenRedirect(b2cPolicies.authorities.editProfile);
         }
     };
-    
+
     return (
         <>
             <Navbar bg="primary" variant="dark" className="navbarStyle">
                 <a className="navbar-brand" href="/">
-                    Microsoft identity platform
+                    Lending Tracker
                 </a>
                 <AuthenticatedTemplate>
 
@@ -52,19 +52,24 @@ export const NavigationBar = () => {
                         <Button variant="info" onClick={handleProfileEdit} className="profileButton">
                             Edit Profile
                         </Button>
+                        <Card>
+                            <Card.Title>{activeAccount && activeAccount.name ? activeAccount.name : 'Unknown'}</Card.Title>
+                            <CardBody>
+                                <DropdownButton
+                                    variant="warning"
+                                    drop="start"
+                                    title={activeAccount && activeAccount.username ? activeAccount.username : 'Unknown'}
+                                >
+                                    <Dropdown.Item as="button" onClick={handleLogoutPopup}>
+                                        Sign out using Popup
+                                    </Dropdown.Item>
+                                    <Dropdown.Item as="button" onClick={handleLogoutRedirect}>
+                                        Sign out using Redirect
+                                    </Dropdown.Item>
+                                </DropdownButton>
+                            </CardBody>
+                        </Card>
 
-                        <DropdownButton
-                            variant="warning"
-                            drop="start"
-                            title={activeAccount && activeAccount.username ? activeAccount.username : 'Unknown'}
-                        >
-                            <Dropdown.Item as="button" onClick={handleLogoutPopup}>
-                                Sign out using Popup
-                            </Dropdown.Item>
-                            <Dropdown.Item as="button" onClick={handleLogoutRedirect}>
-                                Sign out using Redirect
-                            </Dropdown.Item>
-                        </DropdownButton>
                     </div>
                 </AuthenticatedTemplate>
                 <UnauthenticatedTemplate>

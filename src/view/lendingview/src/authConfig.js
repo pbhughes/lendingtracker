@@ -17,14 +17,15 @@ export const b2cPolicies = {
         editProfile: 'B2C_1_profile',
     },
     authorities: {
+        
         signUpSignIn: {
-            authority: 'https://needthatback.b2clogin.com/needthatback.onmicrosoft.com/b2c_1_ss',
+            authority: 'https://needthatback.b2clogin.com/needthatback.onmicrosoft.com/b2c_1_combined',
         },
         forgotPassword: {
             authority: 'https://needthatback.b2clogin.com/needthatback.onmicrosoft.com/B2C_1_reset',
         },
         editProfile: {
-            authority: 'https://needthatback.b2clogin.com/needthatback.onmicrosoft.com/b2c_1_edit_profile',
+            authority: 'https://needthatback.b2clogin.com/needthatback.onmicrosoft.com/b2c_1_profile',
         },
     },
     authorityDomain: 'needthatback.b2clogin.com',
@@ -44,6 +45,7 @@ export const msalConfig = {
         redirectUri: '/', // You must register this URI on Azure Portal/App Registration. Defaults to window.location.origin
         postLogoutRedirectUri: '/', // Indicates the page to navigate after logout.
         navigateToLoginRequestUrl: false, // If "true", will navigate back to the original request location before processing the auth code response.
+        scopes: ['openid', 'profile', 'email', 'lender'], // Add scopes as needed for your application.
     },
     cache: {
         cacheLocation: 'sessionStorage', // Configures cache location. "sessionStorage" is more secure, but "localStorage" gives you SSO between tabs.
