@@ -24,7 +24,7 @@ export const ListView = (props) => {
     const account = instance.getActiveAccount();
 
     const { error, execute } = useFetchWithMsal({
-        scopes: protectedResources.apiTodoList.scopes.write
+        scopes: protectedResources.lenderAPI.scopes.write
     });
 
     const [tasks, setTasks] = useState(props.todoListData);
@@ -33,7 +33,7 @@ export const ListView = (props) => {
         const updatedTask = tasks.find(task => id === task.id);
         updatedTask.completed = !updatedTask.completed;
 
-        execute("PUT", protectedResources.apiTodoList.endpoint + `/${id}`, updatedTask).then(() => {
+        execute("PUT", protectedResources.lenderAPI.endpoint + `/${id}`, updatedTask).then(() => {
             const updatedTasks = tasks.map(task => {
                 if (id === task.id) {
                     return { ...task, completed: !task.completed }
@@ -52,7 +52,7 @@ export const ListView = (props) => {
             completed: false
         };
 
-        execute("POST", protectedResources.apiTodoList.endpoint, newTask).then((response) => {
+        execute("POST", protectedResources.lenderAPI.endpoint, newTask).then((response) => {
             if (response && response.message === "success") {
                 setTasks([...tasks, newTask]);
             }
@@ -60,7 +60,7 @@ export const ListView = (props) => {
     }
 
     const handleDeleteTask = (id) => {
-        execute("DELETE", protectedResources.apiTodoList.endpoint + `/${id}`).then((response) => {
+        execute("DELETE", protectedResources.lenderAPI.endpoint + `/${id}`).then((response) => {
             if (response && response.message === "success") {
                 const remainingTasks = tasks.filter(task => id !== task.id);
                 setTasks(remainingTasks);
@@ -72,7 +72,7 @@ export const ListView = (props) => {
         const updatedTask = tasks.find(task => id === task.id);
         updatedTask.name = newName;
 
-        execute("PUT", protectedResources.apiTodoList.endpoint + `/${id}`, updatedTask).then(() => {
+        execute("PUT", protectedResources.lenderAPI.endpoint + `/${id}`, updatedTask).then(() => {
             const updatedTasks = tasks.map(task => {
                 if (id === task.id) {
                     return { ...task, name: newName }

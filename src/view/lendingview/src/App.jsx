@@ -7,7 +7,9 @@ import { PageLayout } from './components/PageLayout';
 import { TodoList } from './pages/TodoList';
 import { Home } from './pages/Home';
 import { b2cPolicies, protectedResources } from './authConfig';
-import { compareIssuingPolicy } from './utils/claimUtils';
+import { compareIssuingPolicy, detectNewUser } from './utils/claimUtils';
+
+import useFetchWithMSal from './hooks/useFetchWithMsal';
 
 import './styles/App.css';
 
@@ -52,6 +54,23 @@ const Pages = () => {
                 }
 
                 /**
+                 * Here we are checking to see if the user is coming back from a new sign up.
+                 * If so we need to send them to the pay wall
+                 */
+                if(detectNewUser(event.payload.idTokenClaims, b2cPolicies.names.signUpSignIn)) {
+                   console.log("New User Detected");
+                   const user = {
+                    "fullName": event.payload.idTokenClaims.name,
+                    "email": event.payload.email,
+                    "phoneNumber": "2707049633",
+                    "countryCode": "+1",
+                    "address": event.payload.idTokenClaims.streetAddress,
+                   }
+                   console.log(user);
+                   useFetchWithMSal.excectue('POST', protectedResources.lenderAPI.endpoints.lender, user);             
+                 };
+
+                /**
                  * Below we are checking if the user is returning from the reset password flow.
                  * If so, we will ask the user to reauthenticate with their new password.
                  * If you do not want this behavior and prefer your users to stay signed in instead,
@@ -62,8 +81,7 @@ const Pages = () => {
                     let signUpSignInFlowRequest = {
                         authority: b2cPolicies.authorities.signUpSignIn.authority,
                         scopes: [
-                            ...protectedResources.apiTodoList.scopes.read,
-                            ...protectedResources.apiTodoList.scopes.write,
+                            ...protectedResources.lenderAPI.scopes.lender
                         ],
                     };
                     instance.loginRedirect(signUpSignInFlowRequest);
