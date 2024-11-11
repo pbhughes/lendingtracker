@@ -245,3 +245,7 @@ export function compareIssuingPolicy(idTokenClaims, policyToCompare) {
     let acrMatches = idTokenClaims.hasOwnProperty('acr') && idTokenClaims['acr'].toLowerCase() === policyToCompare.toLowerCase();
     return tfpMatches || acrMatches;
 }
+export function detectNewUser(idTokenClaims, policyToCompare) {
+    let isNewUser = idTokenClaims.hasOwnProperty('newUser') && idTokenClaims['newUser'] === true;
+    return  isNewUser;
+}

@@ -83,11 +83,10 @@ export const msalConfig = {
  * https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/dev/lib/msal-browser/docs/resources-and-scopes.md
  */
 export const protectedResources = {
-    apiTodoList: {
-        endpoint: 'http://localhost:5000/api/todolist',
+    lenderAPI: {
+        endpoint: 'http://localhost:5041/users',
         scopes: {
-            read: ['https://fabrikamb2c.onmicrosoft.com/TodoList/ToDoList.Read'],
-            write: ['https://fabrikamb2c.onmicrosoft.com/TodoList/ToDoList.ReadWrite'],
+            lender: ['https://needthatback.onmicrosoft.com/lender/lender'],
         },
     },
 };
@@ -99,5 +98,5 @@ export const protectedResources = {
  * https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-permissions-and-consent#openid-connect-scopes
  */
 export const loginRequest = {
-    scopes: [...protectedResources.apiTodoList.scopes.read, ...protectedResources.apiTodoList.scopes.write],
+    scopes: [...protectedResources.lenderAPI.scopes.lender],
 };
