@@ -10,13 +10,9 @@
             "type": "chrome",
             "sourceMaps": true,
             "port": 3000,
-            "url": "http://localhost:3000",
+            "url": "https://localhost:3000",
             "webRoot": "${workspaceFolder}",
             "preLaunchTask": "Start React App",
-            "runtimeArgs": [
-                "--ignore-certificate-errors",  // Ignore SSL issues for self-signed certs
-                "--disable-web-security"  // If you face CORS issues
-             ]
         },
         {
             "name": "Launch via NPM",
