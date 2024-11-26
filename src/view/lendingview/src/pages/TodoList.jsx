@@ -8,7 +8,7 @@ import useFetchWithMsal from '../hooks/useFetchWithMsal';
 
 const TodoListContent = () => {
     const { error, execute } = useFetchWithMsal({
-        scopes: protectedResources.lenderAPI.scopes.read,
+        scopes: protectedResources.lenderAPI.scopes.lender,
     });
 
     const [todoListData, setTodoListData] = useState(null);

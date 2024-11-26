@@ -45,7 +45,7 @@ export const msalConfig = {
         redirectUri: 'https://localhost:3000', // You must register this URI on Azure Portal/App Registration. Defaults to window.location.origin
         postLogoutRedirectUri: '/', // Indicates the page to navigate after logout.
         navigateToLoginRequestUrl: false, // If "true", will navigate back to the original request location before processing the auth code response.
-        scopes: ['openid', 'profile', 'email', 'https://needthatback.onmicrosoft.com/lender'], // Add scopes as needed for your application.
+        scopes: ['openid', 'profile', 'email', 'https://needthatback.onmicrosoft.com/lender/lender'], // Add scopes as needed for your application.
     },
     cache: {
         cacheLocation: 'sessionStorage', // Configures cache location. "sessionStorage" is more secure, but "localStorage" gives you SSO between tabs.
@@ -86,7 +86,7 @@ export const protectedResources = {
     lenderAPI: {
         endpoint: 'http://localhost:5041/users',
         scopes: {
-            lender: ['https://needthatback.onmicrosoft.com/lender'],
+            lender: ['https://needthatback.onmicrosoft.com/lender/lender'],
         },
     },
 };
