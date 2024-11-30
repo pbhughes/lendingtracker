@@ -9,7 +9,7 @@ import { IdTokenData } from '../components/DataDisplay';
  * ID token Claims: https://docs.microsoft.com/en-us/azure/active-directory/develop/id-tokens#claims-in-an-id-token
  * Optional Claims:  https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-optional-claims#v10-and-v20-optional-claims-set
  */
-export const Home = () => {
+export const Hello = () => {
     const { instance } = useMsal();
     const activeAccount = instance.getActiveAccount();
 
@@ -22,6 +22,7 @@ export const Home = () => {
                     </Container>
                 ) : null}
             </AuthenticatedTemplate>
+            <div>Fuck react</div>
         </>
     );
 };

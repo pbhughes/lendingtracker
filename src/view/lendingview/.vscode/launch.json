@@ -5,6 +5,13 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Debug Windows Hermes",
+            "request": "launch",
+            "type": "reactnativedirect",
+            "cwd": "${workspaceFolder}",
+            "platform": "windows"
+        },
+        {
             "name": "Attach Chrome",
             "request": "attach",
             "type": "chrome",

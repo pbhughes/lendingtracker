@@ -9,10 +9,12 @@ public partial class Transaction
     public int TransactionId { get; set; }
 
     [Required]
-    public int LenderId { get; set; }
+    [RegularExpression("^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$")]
+    public Guid LenderId { get; set; }
 
     [Required]
-    public int BorrowerId { get; set; }
+    [RegularExpression("^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$")]
+    public Guid BorrowerId { get; set; }
 
     [Required]
     public int ItemId { get; set; }

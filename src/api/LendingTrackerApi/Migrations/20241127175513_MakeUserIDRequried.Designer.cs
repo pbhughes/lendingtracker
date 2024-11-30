@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LendingTrackerApi.Migrations
 {
     [DbContext(typeof(LendingTrackerContext))]
-    [Migration("20241030191513_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20241127175513_MakeUserIDRequried")]
+    partial class MakeUserIDRequried
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -27,11 +27,9 @@ namespace LendingTrackerApi.Migrations
 
             modelBuilder.Entity("LendingTrackerApi.Models.Borrower", b =>
                 {
-                    b.Property<int>("BorrowerId")
+                    b.Property<Guid>("BorrowerId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("BorrowerId"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("BorrowerEmail")
                         .IsRequired()
@@ -52,8 +50,8 @@ namespace LendingTrackerApi.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("BorrowerId")
                         .HasName("PK__Borrower__568EDB576270152D");
@@ -96,8 +94,8 @@ namespace LendingTrackerApi.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<int>("OwnerId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("ItemId")
                         .HasName("PK__Items__727E838BC5CFABC7");
@@ -118,8 +116,8 @@ namespace LendingTrackerApi.Migrations
                     b.Property<DateTime>("BorrowedAt")
                         .HasColumnType("datetime");
 
-                    b.Property<int>("BorrowerId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("BorrowerId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("DueDate")
                         .HasColumnType("datetime");
@@ -127,8 +125,8 @@ namespace LendingTrackerApi.Migrations
                     b.Property<int>("ItemId")
                         .HasColumnType("int");
 
-                    b.Property<int>("LenderId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("LenderId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("ReturnedAt")
                         .HasColumnType("datetime");
@@ -153,11 +151,9 @@ namespace LendingTrackerApi.Migrations
 
             modelBuilder.Entity("LendingTrackerApi.Models.User", b =>
                 {
-                    b.Property<int>("UserId")
+                    b.Property<Guid>("UserId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserId"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Address")
                         .HasMaxLength(255)

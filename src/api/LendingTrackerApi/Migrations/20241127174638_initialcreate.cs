@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace LendingTrackerApi.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class initialcreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -15,8 +15,7 @@ namespace LendingTrackerApi.Migrations
                 name: "Users",
                 columns: table => new
                 {
-                    UserId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     FullName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Email = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     PhoneNumber = table.Column<string>(type: "nvarchar(15)", maxLength: 15, nullable: false),
@@ -33,9 +32,8 @@ namespace LendingTrackerApi.Migrations
                 name: "Borrowers",
                 columns: table => new
                 {
-                    BorrowerId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    UserId = table.Column<int>(type: "int", nullable: false),
+                    BorrowerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     IsEligible = table.Column<bool>(type: "bit", nullable: true, defaultValue: true),
                     BorrowerEmail = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     BorrowerSms = table.Column<string>(type: "nvarchar(15)", maxLength: 15, nullable: false),
@@ -60,7 +58,7 @@ namespace LendingTrackerApi.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     ItemName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Description = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    OwnerId = table.Column<int>(type: "int", nullable: false),
+                    OwnerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     IsAvailable = table.Column<bool>(type: "bit", nullable: true, defaultValue: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime", nullable: true, defaultValueSql: "(getdate())")
                 },
@@ -81,8 +79,8 @@ namespace LendingTrackerApi.Migrations
                 {
                     TransactionId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    LenderId = table.Column<int>(type: "int", nullable: false),
-                    BorrowerId = table.Column<int>(type: "int", nullable: false),
+                    LenderId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    BorrowerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ItemId = table.Column<int>(type: "int", nullable: false),
                     BorrowedAt = table.Column<DateTime>(type: "datetime", nullable: false),
                     ReturnedAt = table.Column<DateTime>(type: "datetime", nullable: true),

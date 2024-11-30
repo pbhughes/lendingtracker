@@ -4,8 +4,16 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
 using LendingTrackerApi.Models;
+using LendingTrackerApi.Services;
 using Microsoft.OpenApi.Models;
 using Redoc;
+using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.Data.SqlClient;
+using LendingTrackerApi.Extensions;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -31,28 +39,28 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAdB2C"))
         .EnableTokenAcquisitionToCallDownstreamApi()
         .AddInMemoryTokenCaches();
-    
-    builder.Services.Configure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
+
+builder.Services.Configure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
+{
+    // Specify the valid audiences (array of audience values)
+    options.TokenValidationParameters = new TokenValidationParameters
     {
-        // Specify the valid audiences (array of audience values)
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateAudience = false,
-            ValidAudiences = new[] { "806b17b5-8f69-46d7-b9f8-26fff192a38f" } // List multiple valid audiences
-        };
-    });
-
-
-
+        ValidateAudience = false,
+        ValidAudiences = new[] { "806b17b5-8f69-46d7-b9f8-26fff192a38f" } // List multiple valid audiences
+    };
+});
 
 builder.Services.AddAuthorization();
 builder.Services.AddAuthorization(options =>
 {
-    
+
     options.AddPolicy("authorized_user", policy =>
         policy.RequireClaim("http://schemas.microsoft.com/identity/claims/scope", "lender"));
 
 });
+
+//inject model validators
+builder.Services.AddScoped(typeof(IValidationServices), typeof(ValidatorService));
 
 var app = builder.Build();
 
@@ -74,8 +82,18 @@ app.UseReDoc(c =>
     c.InjectStylesheet("/styles/redoc.css");
 });
 
+
 // Configure the HTTP request pipeline.
 app.UseHttpsRedirection();
+app.UseExceptionHandler("/error");
+
+app.MapGet("/error", (HttpContext context) =>
+{
+    var exception = context.Features.Get<IExceptionHandlerFeature>()?.Error;
+    return exception is DbUpdateException
+        ? Results.Problem("A database error occurred.", statusCode: 500)
+        : Results.Problem("An unexpected error occurred.", statusCode: 500);
+});
 
 // Define CRUD endpoints for User
 app.MapGet("/users", async (LendingTrackerContext db) =>
@@ -86,13 +104,45 @@ app.MapGet("/users/{id}", async (int id, LendingTrackerContext db) =>
     await db.Users.FindAsync(id) is User user ? Results.Ok(user) : Results.NotFound())
     .WithTags("Users").RequireAuthorization("authorized_user");
 
-app.MapPost("/users", async (User user, LendingTrackerContext db) =>
+app.MapPost("/users", async (User user, LendingTrackerContext db, IValidationServices validationServices) =>
 {
-    db.Users.Add(user);
-    await db.SaveChangesAsync();
-    return Results.Created($"/users/{user.UserId}", user);
-  
+
+
+    var validationResult = validationServices.ValidateUser(user);
+    if (!validationResult.Valid)
+    {
+        return Results.BadRequest(validationResult.ErrorMessage);
+    }
+
+    try
+    {
+        //check for duplicates
+        bool exists = await db.Users.FindAsync(user.UserId) is User existing ? true : false;
+        if (exists)
+        {
+            return Results.BadRequest($"User {user.Email} already exists");
+        }
+
+        db.Users.Add(user);
+        await db.SaveChangesAsync();
+        return Results.Created($"/users/{user.UserId}", user);
+    }
+    catch (DbUpdateException dbEx)
+    {
+        return Results.Problem(dbEx.FlattenMessages());
+    }
+    catch(SqlException sqlEx)
+    {
+        return Results.Problem(sqlEx.FlattenMessages());
+    }
+    catch(Exception ex)
+    {
+        return Results.Problem(ex.FlattenMessages());
+    }
+   
+
 }).WithTags("Users").RequireAuthorization("authorized_user");
+
 
 app.MapPut("/users/{id}", async (int id, User updatedUser, LendingTrackerContext db) =>
 {
