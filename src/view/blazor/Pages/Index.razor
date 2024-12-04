@@ -1,0 +1,34 @@
+﻿@page "/"
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@inject NavigationManager Navigation
+
+<h1>Hello, world!</h1>
+
+Welcome to your new app.
+
+
+<AuthorizeView>
+    <Authorized>
+        Hello, @context.User.Identity.Name!
+        @{
+            List<Claim> all = context.User.Claims.ToList();
+        }
+        <ul>
+        @foreach(Claim claim in all)
+        {
+            <li>cliam: @claim.Type  Value: @claim.Value</li>
+        }
+        </ul>
+        <button @onclick="RedirectWithQuery">Go to Page with Query</button>
+    </Authorized>
+</AuthorizeView>
+
+@code{
+    private void RedirectWithQuery()
+    {
+        Navigation.NavigateTo("/RegisterNewUser");
+    }
+}
+
