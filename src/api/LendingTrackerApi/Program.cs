@@ -14,9 +14,24 @@ using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.Data.SqlClient;
 using LendingTrackerApi.Extensions;
+using Microsoft.Graph.Models.ExternalConnectors;
+using Microsoft.Graph;
 
+var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
 var builder = WebApplication.CreateBuilder(args);
+
+//Add CORS Support
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: MyAllowSpecificOrigins,
+                      policy =>
+                      {
+                          policy.AllowAnyOrigin();
+                          policy.AllowAnyMethod();
+                          policy.AllowAnyHeader();
+                      });
+});
 
 // Configure DbContext
 builder.Services.AddDbContext<LendingTrackerContext>(options =>
@@ -38,6 +53,7 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAdB2C"))
         .EnableTokenAcquisitionToCallDownstreamApi()
+        .AddMicrosoftGraph(builder.Configuration.GetSection("MicrosoftGraph"))
         .AddInMemoryTokenCaches();
 
 builder.Services.Configure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
@@ -50,7 +66,7 @@ builder.Services.Configure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationSch
     };
 });
 
-builder.Services.AddAuthorization();
+
 builder.Services.AddAuthorization(options =>
 {
 
@@ -61,8 +77,12 @@ builder.Services.AddAuthorization(options =>
 
 //inject model validators
 builder.Services.AddScoped(typeof(IValidationServices), typeof(ValidatorService));
+builder.Services.AddScoped(typeof(IGetFromGraph), typeof(GetFromGraph));
 
 var app = builder.Build();
+
+// Use CORS
+app.UseCors(MyAllowSpecificOrigins);
 
 //use authorization
 app.UseAuthentication();
@@ -104,10 +124,22 @@ app.MapGet("/users/{id}", async (int id, LendingTrackerContext db) =>
     await db.Users.FindAsync(id) is User user ? Results.Ok(user) : Results.NotFound())
     .WithTags("Users").RequireAuthorization("authorized_user");
 
-app.MapPost("/users", async (User user, LendingTrackerContext db, IValidationServices validationServices) =>
+app.MapPost("/users", async (User user, LendingTrackerContext db, IValidationServices validationServices,
+    IGetFromGraph graphClient) =>
 {
+    //Call the graph api to get phone number
+    try
+    {
+        var phone =await graphClient.GetPhoneNumber(user.Email);
+        user.PhoneNumber = phone;
+        user.CountryCode = "+1";
+    }
+    catch (Exception ex)
+    {
 
-
+        throw;
+    }
+    
     var validationResult = validationServices.ValidateUser(user);
     if (!validationResult.Valid)
     {
@@ -131,16 +163,14 @@ app.MapPost("/users", async (User user, LendingTrackerContext db, IValidationSer
     {
         return Results.Problem(dbEx.FlattenMessages());
     }
-    catch(SqlException sqlEx)
+    catch (SqlException sqlEx)
     {
         return Results.Problem(sqlEx.FlattenMessages());
     }
-    catch(Exception ex)
+    catch (Exception ex)
     {
         return Results.Problem(ex.FlattenMessages());
     }
-   
-
 }).WithTags("Users").RequireAuthorization("authorized_user");
 
 

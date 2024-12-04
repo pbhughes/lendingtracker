@@ -1,14 +1,10 @@
 using System;
 using System.Net.Http;
-using System.Collections.Generic;
 using System.Threading.Tasks;
-using System.Text;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Graph;
-using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
+
 
 
 namespace LendingView
@@ -29,20 +25,7 @@ namespace LendingView
                 options.ProviderOptions.DefaultAccessTokenScopes.Add("https://needthatback.onmicrosoft.com/lender/lender");
             });
 
-            // Add Microsoft Graph client
-            builder.Services.AddScoped(sp =>
-            {
-                var accessTokenProvider = sp.GetRequiredService<IAccessTokenProvider>();
-                return new GraphServiceClient(new DelegateAuthenticationProvider(async request =>
-                {
-                    var result = await accessTokenProvider.RequestAccessToken();
-                    if (result.TryGetToken(out var token))
-                    {
-                        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.Value);
-                    }
-                }));
-            });
-
+           
             await builder.Build().RunAsync();
         }
     }
