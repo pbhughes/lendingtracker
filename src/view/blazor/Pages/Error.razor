@@ -1,0 +1,13 @@
+﻿@page "/error/{errorCode}/{errorMessage}"
+<h3>Error Page</h3>
+<p>Error Code: @ErrorCode</p>
+<p>Error Message: @ErrorMessage</p>
+
+@code {
+    [Parameter]
+    public string ErrorCode { get; set; }
+
+    [Parameter]
+    public string ErrorMessage { get; set; }
+}
+

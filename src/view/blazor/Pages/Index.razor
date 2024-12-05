@@ -1,0 +1,176 @@
+﻿@page "/"
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using LendingView.Models
+@using System.ComponentModel.DataAnnotations
+@using System.Net.Http
+@using System.Text.RegularExpressions
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IAccessTokenProvider TokenProvider
+@using System.IdentityModel.Tokens.Jwt
+
+<h1>Hello, world!</h1>
+
+Welcome to your new app.
+
+
+<AuthorizeView>
+    <Authorized Context="authContext">
+        Hello, @authContext.User.Identity.Name
+
+        <h3>Please add a phone number to support SMS messaging.</h3>
+        <h5>This can be different than the phone used during authentication</h5>
+        <EditForm Model="@me" method="post" OnValidSubmit="HandleValidSubmit">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <input type="hidden" id="name" @bind="me.UserId" />
+            <select @bind="me.CountryCode" class="country-select">
+                @foreach (var country in countries)
+                {
+                    <option value="@country.Code" data-flag="@country.FlagUrl">
+                        @country.Name (@country.Code)
+                    </option>
+                }
+            </select>
+            <input type="tel" id="phone" @bind="me.PhoneNumber" placeholder="Phone Number xxx-xxx-xxxx" />
+            <button type="submit">Submit</button>
+        </EditForm>
+    </Authorized>
+</AuthorizeView>
+
+@code{
+
+    //Country selector support
+    private static List<Country> countries = CountryData.GetCountries();
+
+
+    private User me = new User();
+    private ClaimsIdentity identity;
+    private string accessToken = string.Empty;
+    private string error;
+
+
+    protected override async Task OnInitializedAsync(){
+
+        await GetAccessToken();
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+        var newUserClaim = await GetClaimAsync("newUser");
+        if ( newUserClaim == null)
+        {
+            Navigation.NavigateTo("/counter");
+        }
+
+        me.UserId = Guid.Parse(authState.User.Claims.First(nameof => nameof.Type == "sub").Value);
+        me.Email = await ParseEmails(authState.User.Identities.First().Claims.First(n => n.Type == "emails").Value);
+        me.FullName = authState.User.Identities.First().Claims.First(n => n.Type == "name").Value;
+
+        string address = await GetClaimAsync("streetAddress");
+        string city = await GetClaimAsync("city");
+        string state = await GetClaimAsync("state");
+        string zip = await GetClaimAsync("postalCode"); 
+        me.Address = $"{address}\n{city}, {state} {zip}";
+
+    }
+
+    private async void HandleValidSubmit()
+    {
+        await GetAccessToken();
+        var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+        Http.DefaultRequestHeaders.Authorization = value;
+
+        var response = await Http.PostAsJsonAsync<User>("/users", me);
+    }
+
+    private async Task GetAccessToken()
+    {
+        var tokenResult = await TokenProvider.RequestAccessToken(new AccessTokenRequestOptions
+            {
+                Scopes = new[] { "https://needthatback.onmicrosoft.com/lender/lender" ,
+                                 "profile", "openid"
+                }
+            });
+
+        if (tokenResult.TryGetToken(out var token))
+        {
+            accessToken = token.Value;
+        }
+        else
+        {
+            error = tokenResult.Status switch
+            {
+                AccessTokenResultStatus.RequiresRedirect => "Redirect required. Navigating...",
+                AccessTokenResultStatus.Success => null,
+                _ => "An unknown error occurred."
+            };
+
+            if (tokenResult.Status == AccessTokenResultStatus.RequiresRedirect)
+            {
+                Navigation.NavigateTo(tokenResult.RedirectUrl!);
+            }
+        }
+    }
+
+    private async Task<string> GetClaimAsync(string claimType)
+    {
+
+        var handler = new JwtSecurityTokenHandler();
+
+        // Read the token
+        if (handler.CanReadToken(accessToken))
+        {
+            var jwtToken = handler.ReadJwtToken(accessToken);
+
+            // Access claims
+            var claims = jwtToken.Claims;
+
+            foreach (var claim in claims)
+            {
+                if (claim.Type == claimType)
+                {
+                    if (claim.Type == "emails")
+                    {
+                        string emailPattern = @"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}";
+
+                        var firstEmail = jwtToken.Claims.First(n => n.Type == "emails").Value;
+                        Console.WriteLine(firstEmail);
+
+                        Match match = Regex.Match(firstEmail, emailPattern);
+
+                        if (match.Success)
+                        {
+                            return match.Value;
+                        }
+                        else
+                        {
+                            return "No Email";
+                        }
+                    }
+                    return claim.Value;
+                }
+            }
+        }
+        return null;
+    }
+
+    private async Task<string> ParseEmails(string emailClaimValues){
+        string emailPattern = @"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}";
+
+        Match match = Regex.Match(emailClaimValues, emailPattern);
+
+        if (match.Success)
+        {
+            return match.Value;
+        }
+        else
+        {
+            return "No Email";
+        }
+    }
+
+}
+
