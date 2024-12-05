@@ -77,7 +77,6 @@ builder.Services.AddAuthorization(options =>
 
 //inject model validators
 builder.Services.AddScoped(typeof(IValidationServices), typeof(ValidatorService));
-builder.Services.AddScoped(typeof(IGetFromGraph), typeof(GetFromGraph));
 
 var app = builder.Build();
 
@@ -124,21 +123,9 @@ app.MapGet("/users/{id}", async (int id, LendingTrackerContext db) =>
     await db.Users.FindAsync(id) is User user ? Results.Ok(user) : Results.NotFound())
     .WithTags("Users").RequireAuthorization("authorized_user");
 
-app.MapPost("/users", async (User user, LendingTrackerContext db, IValidationServices validationServices,
-    IGetFromGraph graphClient) =>
+app.MapPost("/users", async (User user, LendingTrackerContext db, IValidationServices validationServices) =>
 {
-    //Call the graph api to get phone number
-    try
-    {
-        var phone =await graphClient.GetPhoneNumber(user.Email);
-        user.PhoneNumber = phone;
-        user.CountryCode = "+1";
-    }
-    catch (Exception ex)
-    {
-
-        throw;
-    }
+    
     
     var validationResult = validationServices.ValidateUser(user);
     if (!validationResult.Valid)
