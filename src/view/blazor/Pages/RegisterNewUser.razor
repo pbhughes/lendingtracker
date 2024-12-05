@@ -11,9 +11,6 @@
 
 
 
-
-
-
 @code {
 
     private string accessToken;
@@ -39,11 +36,8 @@
 
         user.CreatedAt = DateTime.Now;
 
-        var response = await Http.PostAsJsonAsync<User>("https://localhost:5002/users", user);
-        var content = await response.Content.ReadAsStringAsync();
-
-        if (!response.IsSuccessStatusCode)
-            Navigation.NavigateTo($"/error/{response.StatusCode}/{Uri.EscapeDataString(content)}");
+        var response = await Http.PostAsJsonAsync<User>("/users", user);
+       
 
     }
 

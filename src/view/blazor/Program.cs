@@ -7,6 +7,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 
 
+
+
 namespace LendingView
 {
     public class Program
@@ -16,7 +18,22 @@ namespace LendingView
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
             builder.RootComponents.Add<App>("app");
 
-            builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+            builder.Services.AddScoped<HttpClientInterceptor>();
+            // Configure HttpClient with the interceptor
+            builder.Services.AddScoped(sp =>
+            {
+                var interceptor = sp.GetRequiredService<HttpClientInterceptor>();
+
+                // Assign the default HttpClientHandler as the inner handler
+                interceptor.InnerHandler = new HttpClientHandler();
+
+                return new HttpClient(interceptor)
+                {
+                    BaseAddress = new Uri("https://localhost:5002")
+                };
+            });
+
+
 
             builder.Services.AddMsalAuthentication(options =>
             {
