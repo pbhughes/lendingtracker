@@ -231,7 +231,7 @@ app.MapDelete("/borrowers/{id}", async (int id, LendingTrackerContext db) =>
 
 // For Items
 app.MapGet("/items", async (LendingTrackerContext db) =>
-    await db.Items.ToListAsync()).WithTags("Items").RequireAuthorization("authorized_user");
+    await db.Items.ToListAsync<Item>()).WithTags("Items").RequireAuthorization("authorized_user");
 
 app.MapGet("/items/{id}", async (int id, LendingTrackerContext db) =>
     await db.Items.FindAsync(id) is Item item ? Results.Ok(item) : Results.NotFound()).WithTags("Items")

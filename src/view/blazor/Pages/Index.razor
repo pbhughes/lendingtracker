@@ -110,7 +110,7 @@ Welcome to your new app.
 
             if (tokenResult.Status == AccessTokenResultStatus.RequiresRedirect)
             {
-                Navigation.NavigateTo(tokenResult.RedirectUrl!);
+                Navigation.NavigateTo(tokenResult.InteractiveRequestUrl!);
             }
         }
     }
