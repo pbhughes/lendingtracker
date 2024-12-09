@@ -1,0 +1,91 @@
+<edmx:Edmx Version="4.0" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
+  <edmx:DataServices>
+    <Schema Namespace="LendingTrackerApi.Models" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+      <EntityType Name="User">
+        <Key>
+          <PropertyRef Name="UserId" />
+        </Key>
+        <Property Name="UserId" Type="Edm.Guid" Nullable="false" />
+        <Property Name="FullName" Type="Edm.String" Nullable="false" />
+        <Property Name="Email" Type="Edm.String" Nullable="false" />
+        <Property Name="PhoneNumber" Type="Edm.String" Nullable="false" />
+        <Property Name="CountryCode" Type="Edm.String" Nullable="false" MaxLength="5" />
+        <Property Name="Address" Type="Edm.String" />
+        <Property Name="CreatedAt" Type="Edm.DateTimeOffset" />
+        <NavigationProperty Name="Borrowers" Type="Collection(LendingTrackerApi.Models.Borrower)" />
+        <NavigationProperty Name="Items" Type="Collection(LendingTrackerApi.Models.Item)" />
+        <NavigationProperty Name="Transactions" Type="Collection(LendingTrackerApi.Models.Transaction)" />
+      </EntityType>
+      <EntityType Name="Borrower">
+        <Key>
+          <PropertyRef Name="BorrowerId" />
+        </Key>
+        <Property Name="BorrowerId" Type="Edm.Guid" Nullable="false" />
+        <Property Name="UserId" Type="Edm.Guid" Nullable="false" />
+        <Property Name="IsEligible" Type="Edm.Boolean" />
+        <Property Name="BorrowerEmail" Type="Edm.String" Nullable="false" />
+        <Property Name="BorrowerSms" Type="Edm.String" Nullable="false" />
+        <Property Name="CountryCode" Type="Edm.String" MaxLength="5" />
+        <NavigationProperty Name="Transactions" Type="Collection(LendingTrackerApi.Models.Transaction)" />
+        <NavigationProperty Name="User" Type="LendingTrackerApi.Models.User" Nullable="false">
+          <ReferentialConstraint Property="UserId" ReferencedProperty="UserId" />
+        </NavigationProperty>
+      </EntityType>
+      <EntityType Name="Item">
+        <Key>
+          <PropertyRef Name="ItemId" />
+        </Key>
+        <Property Name="ItemId" Type="Edm.Int32" Nullable="false" />
+        <Property Name="ItemName" Type="Edm.String" Nullable="false" />
+        <Property Name="Description" Type="Edm.String" />
+        <Property Name="OwnerId" Type="Edm.Guid" Nullable="false" />
+        <Property Name="IsAvailable" Type="Edm.Boolean" />
+        <Property Name="CreatedAt" Type="Edm.DateTimeOffset" />
+        <NavigationProperty Name="Owner" Type="LendingTrackerApi.Models.User" Nullable="false" />
+        <NavigationProperty Name="Transactions" Type="Collection(LendingTrackerApi.Models.Transaction)" />
+      </EntityType>
+      <EntityType Name="Transaction">
+        <Key>
+          <PropertyRef Name="TransactionId" />
+        </Key>
+        <Property Name="TransactionId" Type="Edm.Int32" Nullable="false" />
+        <Property Name="LenderId" Type="Edm.Guid" Nullable="false" />
+        <Property Name="BorrowerId" Type="Edm.Guid" Nullable="false" />
+        <Property Name="ItemId" Type="Edm.Int32" Nullable="false" />
+        <Property Name="BorrowedAt" Type="Edm.DateTimeOffset" Nullable="false" />
+        <Property Name="ReturnedAt" Type="Edm.DateTimeOffset" />
+        <Property Name="DueDate" Type="Edm.DateTimeOffset" Nullable="false" />
+        <Property Name="Status" Type="Edm.String" />
+        <NavigationProperty Name="Borrower" Type="LendingTrackerApi.Models.Borrower" Nullable="false">
+          <ReferentialConstraint Property="BorrowerId" ReferencedProperty="BorrowerId" />
+        </NavigationProperty>
+        <NavigationProperty Name="Item" Type="LendingTrackerApi.Models.Item" Nullable="false">
+          <ReferentialConstraint Property="ItemId" ReferencedProperty="ItemId" />
+        </NavigationProperty>
+        <NavigationProperty Name="Lender" Type="LendingTrackerApi.Models.User" Nullable="false" />
+      </EntityType>
+    </Schema>
+    <Schema Namespace="Default" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+      <EntityContainer Name="Container">
+        <EntitySet Name="Users" EntityType="LendingTrackerApi.Models.User">
+          <NavigationPropertyBinding Path="Borrowers" Target="Borrowers" />
+          <NavigationPropertyBinding Path="Items" Target="Items" />
+          <NavigationPropertyBinding Path="Transactions" Target="Transactions" />
+        </EntitySet>
+        <EntitySet Name="Borrowers" EntityType="LendingTrackerApi.Models.Borrower">
+          <NavigationPropertyBinding Path="Transactions" Target="Transactions" />
+          <NavigationPropertyBinding Path="User" Target="Users" />
+        </EntitySet>
+        <EntitySet Name="Items" EntityType="LendingTrackerApi.Models.Item">
+          <NavigationPropertyBinding Path="Owner" Target="Users" />
+          <NavigationPropertyBinding Path="Transactions" Target="Transactions" />
+        </EntitySet>
+        <EntitySet Name="Transactions" EntityType="LendingTrackerApi.Models.Transaction">
+          <NavigationPropertyBinding Path="Borrower" Target="Borrowers" />
+          <NavigationPropertyBinding Path="Item" Target="Items" />
+          <NavigationPropertyBinding Path="Lender" Target="Users" />
+        </EntitySet>
+      </EntityContainer>
+    </Schema>
+  </edmx:DataServices>
+</edmx:Edmx>
