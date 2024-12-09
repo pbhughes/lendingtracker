@@ -1,178 +1,344 @@
-diff --git a/src/view/blazor/App.razor b/src/view/blazor/App.razor
-index 0a2b62a..165b1b9 100644
---- a/src/view/blazor/App.razor
-+++ b/src/view/blazor/App.razor
-@@ -21,3 +21,10 @@
-         </NotFound>
-     </Router>
- </CascadingAuthenticationState>
+diff --git a/src/api/LendingTrackerApi/Program.cs b/src/api/LendingTrackerApi/Program.cs
+index 1664ce1..348ab91 100644
+--- a/src/api/LendingTrackerApi/Program.cs
++++ b/src/api/LendingTrackerApi/Program.cs
+@@ -1,21 +1,16 @@
+-using Microsoft.Identity.Web;
+-using Microsoft.AspNetCore.Authentication.JwtBearer;
+-using Microsoft.IdentityModel.Tokens;
+-using Microsoft.Extensions.Configuration;
+-using Microsoft.EntityFrameworkCore;
++using LendingTrackerApi.Extensions;
+ using LendingTrackerApi.Models;
+ using LendingTrackerApi.Services;
+-using Microsoft.OpenApi.Models;
+-using Redoc;
+-using System.ComponentModel.DataAnnotations;
+-using Microsoft.AspNetCore.Http.Json;
+-using System.Text.Json;
+-using System.Text.Json.Serialization;
++using Microsoft.AspNetCore.Authentication.JwtBearer;
+ using Microsoft.AspNetCore.Diagnostics;
++using Microsoft.AspNetCore.Http;
++using Microsoft.AspNetCore.Mvc.Rendering;
+ using Microsoft.Data.SqlClient;
+-using LendingTrackerApi.Extensions;
+-using Microsoft.Graph.Models.ExternalConnectors;
+-using Microsoft.Graph;
++using Microsoft.EntityFrameworkCore;
++using Microsoft.Identity.Web;
++using Microsoft.IdentityModel.Tokens;
++using Microsoft.OpenApi.Models;
++using System.Security.Claims;
+ 
+ var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+ 
+@@ -56,6 +51,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+         .AddMicrosoftGraph(builder.Configuration.GetSection("MicrosoftGraph"))
+         .AddInMemoryTokenCaches();
+ 
++builder.Services.AddHttpContextAccessor();
 +
-+@code{
-+    protected override void OnInitialized()
-+    {
-+        Console.WriteLine("App.razor");
-+    }
-+}
-diff --git a/src/view/blazor/Pages/FetchData.razor b/src/view/blazor/Pages/FetchData.razor
-deleted file mode 100644
-index 1a31340..0000000
---- a/src/view/blazor/Pages/FetchData.razor
-+++ /dev/null
-@@ -1,92 +0,0 @@
--﻿@page "/fetchdata"
--@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
--@inject HttpClient Http
--@inject IAccessTokenProvider TokenProvider
--@inject NavigationManager Navigation
+ builder.Services.Configure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
+ {
+     // Specify the valid audiences (array of audience values)
+@@ -115,15 +112,27 @@ app.MapGet("/error", (HttpContext context) =>
+ });
+ 
+ // Define CRUD endpoints for User
+-app.MapGet("/users", async (LendingTrackerContext db) =>
+-    await db.Users.ToListAsync())
+-    .WithTags("Users").RequireAuthorization("authorized_user");
++app.MapGet("/users", async (LendingTrackerContext db, IHttpContextAccessor httpContext) => {
++
++    if (httpContext == null) return Results.Unauthorized();
++
++    var id = httpContext.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
++    
++    if (id is null) return Results.Unauthorized();
++
++
++    if (!Guid.TryParse(id, out var parsedGuid))
++        return Results.Unauthorized();
++
++    return await db.Users.FindAsync(parsedGuid) is not User user ?  Results.NotFound() :  Results.Ok(user);  
++
++}).WithTags("Users").RequireAuthorization("authorized_user");
+ 
+ app.MapGet("/users/{id}", async (int id, LendingTrackerContext db) =>
+     await db.Users.FindAsync(id) is User user ? Results.Ok(user) : Results.NotFound())
+     .WithTags("Users").RequireAuthorization("authorized_user");
+ 
+-app.MapPost("/users", async (User user, LendingTrackerContext db, IValidationServices validationServices) =>
++app.MapPost("/users", async (User user, LendingTrackerContext db, IValidationServices validationServices, IHttpContextAccessor httpContext) =>
+ {
+     
+     
+@@ -230,8 +239,21 @@ app.MapDelete("/borrowers/{id}", async (int id, LendingTrackerContext db) =>
+ }).WithTags("Borrowers").RequireAuthorization("authorized_user");
+ 
+ // For Items
+-app.MapGet("/items", async (LendingTrackerContext db) =>
+-    await db.Items.ToListAsync<Item>()).WithTags("Items").RequireAuthorization("authorized_user");
++app.MapGet("/items", async (LendingTrackerContext db, IHttpContextAccessor httpContext) =>
++{
++    if (httpContext == null) return Results.Unauthorized();
++
++    var id = httpContext.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
++
++    if (id is null) return Results.Unauthorized();
++
++    if (!Guid.TryParse(id, out var parsedGuid))
++        return Results.Unauthorized();
++
++    var item = await db.Items.SingleOrDefaultAsync(x => x.OwnerId == parsedGuid);
++
++    return item is null ? Results.NotFound() : Results.Ok(item);
++}).WithTags("Items").RequireAuthorization("authorized_user");
+ 
+ app.MapGet("/items/{id}", async (int id, LendingTrackerContext db) =>
+     await db.Items.FindAsync(id) is Item item ? Results.Ok(item) : Results.NotFound()).WithTags("Items")
+diff --git a/src/view/blazor/LendingView.csproj b/src/view/blazor/LendingView.csproj
+index 67f7ea3..1837aea 100644
+--- a/src/view/blazor/LendingView.csproj
++++ b/src/view/blazor/LendingView.csproj
+@@ -24,6 +24,13 @@
+     <PackageReference Include="System.Net.Http.Json" Version="5.0.0-*" />
+   </ItemGroup>
+ 
++  <ItemGroup>
++    <Compile Remove="Connected Services\**" />
++    <Content Remove="Connected Services\**" />
++    <EmbeddedResource Remove="Connected Services\**" />
++    <None Remove="Connected Services\**" />
++  </ItemGroup>
++
+   <ItemGroup>
+     <PackageReference Include="Microsoft.AspNetCore.Components.QuickGrid" Version="9.0.0" />
+     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="9.0.0" />
+@@ -31,7 +38,13 @@
+     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="9.0.0" />
+     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="9.0.0" />
+     <PackageReference Include="Microsoft.Authentication.WebAssembly.Msal" Version="9.0.0" />
++    <PackageReference Include="Microsoft.OData.Client" Version="8.2.2" />
++    <PackageReference Include="Microsoft.OData.Core" Version="8.2.2" />
++    <PackageReference Include="Microsoft.OData.Edm" Version="8.2.2" />
++    <PackageReference Include="Microsoft.Spatial" Version="8.2.2" />
++    <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
+     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.2.1" />
++    <PackageReference Include="System.Text.Json" Version="9.0.0" />
+   </ItemGroup>
+ 
+ 
+diff --git a/src/view/blazor/Shared/LoginDisplay.razor b/src/view/blazor/Shared/LoginDisplay.razor
+index ba53f75..e516379 100644
+--- a/src/view/blazor/Shared/LoginDisplay.razor
++++ b/src/view/blazor/Shared/LoginDisplay.razor
+@@ -18,7 +18,7 @@
+ </AuthorizeView>
+ 
+ @code{
+-    
++
+     private async Task BeginLogout(MouseEventArgs args)
+     {
+         await SignOutManager.SetSignOutState();
+@@ -46,15 +46,5 @@
+         return email.ToString();
+     }
+ 
+-    private async Task<bool> IsNewUser(AuthenticationState context){
 -
--<h1>Weather forecast</h1>
--
--<p>This component demonstrates fetching data from the server.</p>
--
--@if (forecasts == null)
--{
--    <p><em>Loading...</em></p>
--}
--else
--{
--    <table class="table">
--        <thead>
--            <tr>
--                <th>Date</th>
--                <th>Temp. (C)</th>
--                <th>Temp. (F)</th>
--                <th>Summary</th>
--            </tr>
--        </thead>
--        <tbody>
--            @foreach (var forecast in forecasts)
--            {
--                <tr>
--                    <td>@forecast.Date.ToShortDateString()</td>
--                    <td>@forecast.TemperatureC</td>
--                    <td>@forecast.TemperatureF</td>
--                    <td>@forecast.Summary</td>
--                </tr>
--            }
--        </tbody>
--    </table>
--}
--
--@code {
--    private WeatherForecast[] forecasts;
--
--    protected override async Task OnInitializedAsync()
--    {
--        await GetAccessToken();
--        var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
--        Http.DefaultRequestHeaders.Authorization = value;
--        forecasts = await Http.GetFromJsonAsync<WeatherForecast[]>("https://localhost:5002/users");
--    }
--
--    public class WeatherForecast
--    {
--        public DateTime Date { get; set; }
--
--        public int TemperatureC { get; set; }
--
--        public string Summary { get; set; }
--
--        public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
--    }
--
--    private string? accessToken;
--    private string? error;
--
--  
--    private async Task GetAccessToken()
--    {
--        var tokenResult = await TokenProvider.RequestAccessToken(new AccessTokenRequestOptions
--            {
--                Scopes = new[] { "https://needthatback.onmicrosoft.com/lender/lender" }
--            });
--
--        if (tokenResult.TryGetToken(out var token))
--        {
--            accessToken = token.Value;
--        }
+-        var newUserClaim = context.User.Claims.First(n => n.Type == "newUser")?.Value;
+ 
+-        if (string.IsNullOrEmpty(newUserClaim))
+-            return true;
 -        else
 -        {
--            error = tokenResult.Status switch
--            {
--                AccessTokenResultStatus.RequiresRedirect => "Redirect required. Navigating...",
--                AccessTokenResultStatus.Success => null,
--                _ => "An unknown error occurred."
--            };
--
--            if (tokenResult.Status == AccessTokenResultStatus.RequiresRedirect)
--            {
--                Navigation.NavigateTo(tokenResult.RedirectUrl!);
--            }
+-            return false;
 -        }
 -    }
--}
-diff --git a/src/view/blazor/Pages/Index.razor b/src/view/blazor/Pages/Index.razor
-index a596643..c41896c 100644
---- a/src/view/blazor/Pages/Index.razor
-+++ b/src/view/blazor/Pages/Index.razor
-@@ -110,7 +110,7 @@ Welcome to your new app.
- 
-             if (tokenResult.Status == AccessTokenResultStatus.RequiresRedirect)
-             {
--                Navigation.NavigateTo(tokenResult.RedirectUrl!);
-+                Navigation.NavigateTo(tokenResult.InteractiveRequestUrl!);
-             }
-         }
-     }
-diff --git a/src/view/blazor/Program.cs b/src/view/blazor/Program.cs
-index 7ddaa10..eef55b0 100644
---- a/src/view/blazor/Program.cs
-+++ b/src/view/blazor/Program.cs
-@@ -39,6 +39,7 @@ namespace LendingView
-             {
-                 builder.Configuration.Bind("AzureAdB2C", options.ProviderOptions.Authentication);
-                 options.ProviderOptions.AdditionalScopesToConsent.Add("profile");
-+                options.ProviderOptions.AdditionalScopesToConsent.Add("openid");
-                 options.ProviderOptions.DefaultAccessTokenScopes.Add("https://needthatback.onmicrosoft.com/lender/lender");
-             });
- 
-diff --git a/src/view/blazor/Properties/launchSettings.json b/src/view/blazor/Properties/launchSettings.json
-index cceb509..bfe9f7a 100644
---- a/src/view/blazor/Properties/launchSettings.json
-+++ b/src/view/blazor/Properties/launchSettings.json
-@@ -3,6 +3,8 @@
-     "LendingView": {
-       "commandName": "Project",
-       "launchBrowser": true,
-+      "dotnetRunMessages": true,
-+      "hotReloadEnabled": true,
-       "environmentVariables": {
-         "ASPNETCORE_ENVIRONMENT": "Development"
-       },
-diff --git a/src/view/blazor/Shared/NavMenu.razor b/src/view/blazor/Shared/NavMenu.razor
-index adcf54e..789dd30 100644
---- a/src/view/blazor/Shared/NavMenu.razor
-+++ b/src/view/blazor/Shared/NavMenu.razor
-@@ -18,8 +18,8 @@
-             </NavLink>
-         </li>
-         <li class="nav-item px-3">
--            <NavLink class="nav-link" href="fetchdata">
--                <span class="oi oi-list-rich" aria-hidden="true"></span> Fetch data
-+            <NavLink class="nav-link" href="items">
-+                <span class="oi oi-list-rich" aria-hidden="true"></span> Items
-             </NavLink>
-         </li>
-     </ul>
-diff --git a/src/view/blazor/wwwroot/index.html b/src/view/blazor/wwwroot/index.html
-index b507472..8561cfd 100644
---- a/src/view/blazor/wwwroot/index.html
-+++ b/src/view/blazor/wwwroot/index.html
-@@ -8,6 +8,7 @@
-     <base href="/" />
-     <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet" />
-     <link href="css/app.css" rel="stylesheet" />
-+    <link href="debugging.js"/>   
- </head>
- 
- <body>
+ }
+diff --git a/table b/table
+index 39b2936..39db763 100644
+--- a/table
++++ b/table
+@@ -1,178 +0,0 @@
+-diff --git a/src/view/blazor/App.razor b/src/view/blazor/App.razor
+-index 0a2b62a..165b1b9 100644
+---- a/src/view/blazor/App.razor
+-+++ b/src/view/blazor/App.razor
+-@@ -21,3 +21,10 @@
+-         </NotFound>
+-     </Router>
+- </CascadingAuthenticationState>
+-+
+-+@code{
+-+    protected override void OnInitialized()
+-+    {
+-+        Console.WriteLine("App.razor");
+-+    }
+-+}
+-diff --git a/src/view/blazor/Pages/FetchData.razor b/src/view/blazor/Pages/FetchData.razor
+-deleted file mode 100644
+-index 1a31340..0000000
+---- a/src/view/blazor/Pages/FetchData.razor
+-+++ /dev/null
+-@@ -1,92 +0,0 @@
+--﻿@page "/fetchdata"
+--@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+--@inject HttpClient Http
+--@inject IAccessTokenProvider TokenProvider
+--@inject NavigationManager Navigation
+--
+--<h1>Weather forecast</h1>
+--
+--<p>This component demonstrates fetching data from the server.</p>
+--
+--@if (forecasts == null)
+--{
+--    <p><em>Loading...</em></p>
+--}
+--else
+--{
+--    <table class="table">
+--        <thead>
+--            <tr>
+--                <th>Date</th>
+--                <th>Temp. (C)</th>
+--                <th>Temp. (F)</th>
+--                <th>Summary</th>
+--            </tr>
+--        </thead>
+--        <tbody>
+--            @foreach (var forecast in forecasts)
+--            {
+--                <tr>
+--                    <td>@forecast.Date.ToShortDateString()</td>
+--                    <td>@forecast.TemperatureC</td>
+--                    <td>@forecast.TemperatureF</td>
+--                    <td>@forecast.Summary</td>
+--                </tr>
+--            }
+--        </tbody>
+--    </table>
+--}
+--
+--@code {
+--    private WeatherForecast[] forecasts;
+--
+--    protected override async Task OnInitializedAsync()
+--    {
+--        await GetAccessToken();
+--        var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+--        Http.DefaultRequestHeaders.Authorization = value;
+--        forecasts = await Http.GetFromJsonAsync<WeatherForecast[]>("https://localhost:5002/users");
+--    }
+--
+--    public class WeatherForecast
+--    {
+--        public DateTime Date { get; set; }
+--
+--        public int TemperatureC { get; set; }
+--
+--        public string Summary { get; set; }
+--
+--        public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+--    }
+--
+--    private string? accessToken;
+--    private string? error;
+--
+--  
+--    private async Task GetAccessToken()
+--    {
+--        var tokenResult = await TokenProvider.RequestAccessToken(new AccessTokenRequestOptions
+--            {
+--                Scopes = new[] { "https://needthatback.onmicrosoft.com/lender/lender" }
+--            });
+--
+--        if (tokenResult.TryGetToken(out var token))
+--        {
+--            accessToken = token.Value;
+--        }
+--        else
+--        {
+--            error = tokenResult.Status switch
+--            {
+--                AccessTokenResultStatus.RequiresRedirect => "Redirect required. Navigating...",
+--                AccessTokenResultStatus.Success => null,
+--                _ => "An unknown error occurred."
+--            };
+--
+--            if (tokenResult.Status == AccessTokenResultStatus.RequiresRedirect)
+--            {
+--                Navigation.NavigateTo(tokenResult.RedirectUrl!);
+--            }
+--        }
+--    }
+--}
+-diff --git a/src/view/blazor/Pages/Index.razor b/src/view/blazor/Pages/Index.razor
+-index a596643..c41896c 100644
+---- a/src/view/blazor/Pages/Index.razor
+-+++ b/src/view/blazor/Pages/Index.razor
+-@@ -110,7 +110,7 @@ Welcome to your new app.
+- 
+-             if (tokenResult.Status == AccessTokenResultStatus.RequiresRedirect)
+-             {
+--                Navigation.NavigateTo(tokenResult.RedirectUrl!);
+-+                Navigation.NavigateTo(tokenResult.InteractiveRequestUrl!);
+-             }
+-         }
+-     }
+-diff --git a/src/view/blazor/Program.cs b/src/view/blazor/Program.cs
+-index 7ddaa10..eef55b0 100644
+---- a/src/view/blazor/Program.cs
+-+++ b/src/view/blazor/Program.cs
+-@@ -39,6 +39,7 @@ namespace LendingView
+-             {
+-                 builder.Configuration.Bind("AzureAdB2C", options.ProviderOptions.Authentication);
+-                 options.ProviderOptions.AdditionalScopesToConsent.Add("profile");
+-+                options.ProviderOptions.AdditionalScopesToConsent.Add("openid");
+-                 options.ProviderOptions.DefaultAccessTokenScopes.Add("https://needthatback.onmicrosoft.com/lender/lender");
+-             });
+- 
+-diff --git a/src/view/blazor/Properties/launchSettings.json b/src/view/blazor/Properties/launchSettings.json
+-index cceb509..bfe9f7a 100644
+---- a/src/view/blazor/Properties/launchSettings.json
+-+++ b/src/view/blazor/Properties/launchSettings.json
+-@@ -3,6 +3,8 @@
+-     "LendingView": {
+-       "commandName": "Project",
+-       "launchBrowser": true,
+-+      "dotnetRunMessages": true,
+-+      "hotReloadEnabled": true,
+-       "environmentVariables": {
+-         "ASPNETCORE_ENVIRONMENT": "Development"
+-       },
+-diff --git a/src/view/blazor/Shared/NavMenu.razor b/src/view/blazor/Shared/NavMenu.razor
+-index adcf54e..789dd30 100644
+---- a/src/view/blazor/Shared/NavMenu.razor
+-+++ b/src/view/blazor/Shared/NavMenu.razor
+-@@ -18,8 +18,8 @@
+-             </NavLink>
+-         </li>
+-         <li class="nav-item px-3">
+--            <NavLink class="nav-link" href="fetchdata">
+--                <span class="oi oi-list-rich" aria-hidden="true"></span> Fetch data
+-+            <NavLink class="nav-link" href="items">
+-+                <span class="oi oi-list-rich" aria-hidden="true"></span> Items
+-             </NavLink>
+-         </li>
+-     </ul>
+-diff --git a/src/view/blazor/wwwroot/index.html b/src/view/blazor/wwwroot/index.html
+-index b507472..8561cfd 100644
+---- a/src/view/blazor/wwwroot/index.html
+-+++ b/src/view/blazor/wwwroot/index.html
+-@@ -8,6 +8,7 @@
+-     <base href="/" />
+-     <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet" />
+-     <link href="css/app.css" rel="stylesheet" />
+-+    <link href="debugging.js"/>   
+- </head>
+- 
+- <body>

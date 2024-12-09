@@ -1,21 +1,16 @@
-using Microsoft.Identity.Web;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.Extensions.Configuration;
-using Microsoft.EntityFrameworkCore;
+using LendingTrackerApi.Extensions;
 using LendingTrackerApi.Models;
 using LendingTrackerApi.Services;
-using Microsoft.OpenApi.Models;
-using Redoc;
-using System.ComponentModel.DataAnnotations;
-using Microsoft.AspNetCore.Http.Json;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Data.SqlClient;
-using LendingTrackerApi.Extensions;
-using Microsoft.Graph.Models.ExternalConnectors;
-using Microsoft.Graph;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Web;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using System.Security.Claims;
 
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
@@ -55,6 +50,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .EnableTokenAcquisitionToCallDownstreamApi()
         .AddMicrosoftGraph(builder.Configuration.GetSection("MicrosoftGraph"))
         .AddInMemoryTokenCaches();
+
+builder.Services.AddHttpContextAccessor();
 
 builder.Services.Configure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
 {
@@ -115,15 +112,27 @@ app.MapGet("/error", (HttpContext context) =>
 });
 
 // Define CRUD endpoints for User
-app.MapGet("/users", async (LendingTrackerContext db) =>
-    await db.Users.ToListAsync())
-    .WithTags("Users").RequireAuthorization("authorized_user");
+app.MapGet("/users", async (LendingTrackerContext db, IHttpContextAccessor httpContext) => {
+
+    if (httpContext == null) return Results.Unauthorized();
+
+    var id = httpContext.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+    
+    if (id is null) return Results.Unauthorized();
+
+
+    if (!Guid.TryParse(id, out var parsedGuid))
+        return Results.Unauthorized();
+
+    return await db.Users.FindAsync(parsedGuid) is not User user ?  Results.NotFound() :  Results.Ok(user);  
+
+}).WithTags("Users").RequireAuthorization("authorized_user");
 
 app.MapGet("/users/{id}", async (int id, LendingTrackerContext db) =>
     await db.Users.FindAsync(id) is User user ? Results.Ok(user) : Results.NotFound())
     .WithTags("Users").RequireAuthorization("authorized_user");
 
-app.MapPost("/users", async (User user, LendingTrackerContext db, IValidationServices validationServices) =>
+app.MapPost("/users", async (User user, LendingTrackerContext db, IValidationServices validationServices, IHttpContextAccessor httpContext) =>
 {
     
     
@@ -230,8 +239,21 @@ app.MapDelete("/borrowers/{id}", async (int id, LendingTrackerContext db) =>
 }).WithTags("Borrowers").RequireAuthorization("authorized_user");
 
 // For Items
-app.MapGet("/items", async (LendingTrackerContext db) =>
-    await db.Items.ToListAsync<Item>()).WithTags("Items").RequireAuthorization("authorized_user");
+app.MapGet("/items", async (LendingTrackerContext db, IHttpContextAccessor httpContext) =>
+{
+    if (httpContext == null) return Results.Unauthorized();
+
+    var id = httpContext.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+    if (id is null) return Results.Unauthorized();
+
+    if (!Guid.TryParse(id, out var parsedGuid))
+        return Results.Unauthorized();
+
+    var item = await db.Items.SingleOrDefaultAsync(x => x.OwnerId == parsedGuid);
+
+    return item is null ? Results.NotFound() : Results.Ok(item);
+}).WithTags("Items").RequireAuthorization("authorized_user");
 
 app.MapGet("/items/{id}", async (int id, LendingTrackerContext db) =>
     await db.Items.FindAsync(id) is Item item ? Results.Ok(item) : Results.NotFound()).WithTags("Items")
