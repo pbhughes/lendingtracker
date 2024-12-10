@@ -15,11 +15,15 @@
 }
 else
 {
-    <QuickGrid Items="@items" ItemKey="item => item.ItemId">
-        <PropertyColumn Property="@(i => i.ItemId)" Sortable="true" />
-        <PropertyColumn Property="@(i => i.ItemName)" Sortable="true" />
-        <PropertyColumn Property="@(i => i.Description)" Sortable="true"/>
-    </QuickGrid>
+    <div class="grid">
+        <QuickGrid Items="@items" ItemKey="item => item.ItemId">
+            <PropertyColumn Property="@(i => i.ItemId)" Sortable="true" />
+            <PropertyColumn Property="@(i => i.ItemName)" Sortable="true" />
+            <PropertyColumn Property="@(i => i.Description)" Sortable="true"/>
+            <PropertyColumn Property="@(i => i.IsAvailable)" Sortable="true" />
+        </QuickGrid>
+    </div>
+ 
 
 }
 
