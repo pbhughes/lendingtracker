@@ -11,6 +11,7 @@ using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Security.Claims;
+using System.Linq;
 
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
@@ -250,7 +251,7 @@ app.MapGet("/items", async (LendingTrackerContext db, IHttpContextAccessor httpC
     if (!Guid.TryParse(id, out var parsedGuid))
         return Results.Unauthorized();
 
-    var item = await db.Items.SingleOrDefaultAsync(x => x.OwnerId == parsedGuid);
+    var item = await db.Items.Where(i => i.OwnerId == parsedGuid).ToListAsync();
 
     return item is null ? Results.NotFound() : Results.Ok(item);
 }).WithTags("Items").RequireAuthorization("authorized_user");
