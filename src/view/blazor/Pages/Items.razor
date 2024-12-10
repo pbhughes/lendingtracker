@@ -15,11 +15,15 @@
 }
 else
 {
-    <QuickGrid Items="@items" ItemKey="item => item.ItemId">
-        <PropertyColumn Property="@(i => i.ItemId)" Sortable="true" />
-        <PropertyColumn Property="@(i => i.ItemName)" Sortable="true" />
-        <PropertyColumn Property="@(i => i.Description)" Sortable="true"/>
-    </QuickGrid>
+    <div class="grid">
+        <QuickGrid Items="@items" ItemKey="item => item.ItemId">
+            <PropertyColumn Property="@(i => i.ItemId)" Sortable="true" />
+            <PropertyColumn Property="@(i => i.ItemName)" Sortable="true" />
+            <PropertyColumn Property="@(i => i.Description)" Sortable="true"/>
+            <PropertyColumn Property="@(i => i.IsAvailable)" Sortable="true" />
+        </QuickGrid>
+    </div>
+ 
 
 }
 
@@ -31,8 +35,9 @@ else
         await GetAccessToken();
         var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
         Http.DefaultRequestHeaders.Authorization = value;
-        var items1 = new List<Item>();
-        items = await Http.GetFromJsonAsync<IQueryable<Item>>("https://localhost:5002/items");
+        var itemsList = new List<Item>();
+        itemsList = await Http.GetFromJsonAsync<List<Item>>("https://localhost:5002/items");
+        items = itemsList.AsQueryable();
     }
 
    
