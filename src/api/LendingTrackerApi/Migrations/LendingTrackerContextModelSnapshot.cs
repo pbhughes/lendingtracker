@@ -68,6 +68,7 @@ namespace LendingTrackerApi.Migrations
                 {
                     b.Property<int>("ItemId")
                         .ValueGeneratedOnAdd()
+                        .UseIdentityColumn()
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ItemId"));
