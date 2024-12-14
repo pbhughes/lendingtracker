@@ -190,8 +190,15 @@ Bordered="true" Dense="true" EditTrigger="@(_editTriggerRowClick ? DataGridEditT
         _events.Insert(0, $"Event = CanceledEditingItem, Data = {System.Text.Json.JsonSerializer.Serialize(item)}");
     }
 
-    void CommittedItemChanges(Item item)
+    async void CommittedItemChanges(Item item)
     {
         _events.Insert(0, $"Event = CommittedItemChanges, Data = {System.Text.Json.JsonSerializer.Serialize(item)}");
+
+        //call the put AI and commit the changes
+        await GetAccessToken();
+        var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+        Http.DefaultRequestHeaders.Authorization = value;
+        
+        var response = await Http.PutAsJsonAsync<Item>($"https://localhost:5002/items/{item.ItemId}", item);
     }
 }
