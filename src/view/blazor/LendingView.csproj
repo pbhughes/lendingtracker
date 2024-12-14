@@ -4,7 +4,9 @@
     <RuntimeIdentifier>browser-wasm</RuntimeIdentifier>
     <UseBlazorWebAssembly>true</UseBlazorWebAssembly>
     <RazorLangVersion>3.0</RazorLangVersion>
-	<BlazorWebAssemblyEnableDebugging>true</BlazorWebAssemblyEnableDebugging>
+	<BlazorWebAssemblyEnableDebugging>false</BlazorWebAssemblyEnableDebugging>
+	<BlazorWebAssemblyEnableCSSIsolation>true</BlazorWebAssemblyEnableCSSIsolation>
+	 <BlazorWebAssemblyEnableCompression>true</BlazorWebAssemblyEnableCompression>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1' ">
@@ -32,7 +34,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Components.QuickGrid" Version="9.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="9.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="9.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="9.0.0" />
@@ -42,6 +43,7 @@
     <PackageReference Include="Microsoft.OData.Core" Version="8.2.2" />
     <PackageReference Include="Microsoft.OData.Edm" Version="8.2.2" />
     <PackageReference Include="Microsoft.Spatial" Version="8.2.2" />
+    <PackageReference Include="MudBlazor" Version="7.15.0" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.2.1" />
     <PackageReference Include="System.Text.Json" Version="9.0.0" />
