@@ -16,6 +16,7 @@
 }
 else
 {
+
     <MudDataGrid T="Item" Items="@Elements.Take(4)" ReadOnly="@_readOnly" EditMode="@(_isCellEditMode ? DataGridEditMode.Cell : DataGridEditMode.Form)"
                  StartedEditingItem="@StartedEditingItem" CanceledEditingItem="@CanceledEditingItem" CommittedItemChanges="@CommittedItemChanges"
                  Bordered="true" Dense="true" EditTrigger="@(_editTriggerRowClick ? DataGridEditTrigger.OnRowClick : DataGridEditTrigger.Manual)">
@@ -92,8 +93,13 @@ else
         await GetAccessToken();
         var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
         Http.DefaultRequestHeaders.Authorization = value;
+
         Elements = await Http.GetFromJsonAsync<List<Item>>("https://localhost:5002/items");
-        //items = items1.AsQueryable();
+
+        
+        Elements = await Http.GetFromJsonAsync<List<Item>>("https://localhost:5002/items");
+
+
     }
 
    
