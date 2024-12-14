@@ -250,9 +250,9 @@ app.MapGet("/items", async (LendingTrackerContext db, IHttpContextAccessor httpC
     if (!Guid.TryParse(id, out var parsedGuid))
         return Results.Unauthorized();
 
-    var item = await db.Items.SingleOrDefaultAsync(x => x.OwnerId == parsedGuid);
+    var items = db.Items.Where(i => i.OwnerId == parsedGuid);
 
-    return item is null ? Results.NotFound() : Results.Ok(item);
+    return items is null ? Results.NotFound() : Results.Ok(items.ToList());
 }).WithTags("Items").RequireAuthorization("authorized_user");
 
 app.MapGet("/items/{id}", async (int id, LendingTrackerContext db) =>

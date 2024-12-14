@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using MudBlazor.Services;
 
 
 
@@ -43,6 +44,7 @@ namespace LendingView
                 options.ProviderOptions.DefaultAccessTokenScopes.Add("https://needthatback.onmicrosoft.com/lender/lender");
             });
 
+            builder.Services.AddMudServices();
            
             await builder.Build().RunAsync();
         }
