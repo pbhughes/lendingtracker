@@ -12,6 +12,8 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Security.Claims;
 using System.Linq;
+using System.Runtime.CompilerServices;
+
 
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
@@ -201,8 +203,12 @@ app.MapDelete("/users/{id}", async (int id, LendingTrackerContext db) =>
 
 // For Borrowers
 
-app.MapGet("/borrowers", async (LendingTrackerContext db) =>
-    await db.Borrowers.ToListAsync()).WithTags("Borrowers").RequireAuthorization("authorized_user");
+app.MapGet("/borrowers", async (LendingTrackerContext db, ClaimsPrincipal currentUser ) =>
+{
+    var items = await db.Borrowers.Where(b => b.UserId == Guid.Parse(currentUser.GetNameIdentifierId())).ToListAsync();
+    return items is null ? Results.NotFound() : Results.Ok(items.ToList());
+
+}).WithTags("Borrowers").RequireAuthorization("authorized_user");
 
 app.MapGet("/borrowers/{id}", async (int id, LendingTrackerContext db) =>
     await db.Borrowers.FindAsync(id) is Borrower borrower ? Results.Ok(borrower) : Results.NotFound()).WithTags("Borrowers")
@@ -228,10 +234,16 @@ app.MapPut("/borrowers/{id}", async (int id, Borrower updatedBorrower, LendingTr
     return Results.NoContent();
 }).WithTags("Borrowers").RequireAuthorization("authorized_user");
 
-app.MapDelete("/borrowers/{id}", async (int id, LendingTrackerContext db) =>
+app.MapDelete("/borrowers/{id}", async (Guid id, LendingTrackerContext db, ClaimsPrincipal currentUser) =>
 {
+    Guid sub = Guid.Parse(currentUser.GetNameIdentifierId());
+
     if (await db.Borrowers.FindAsync(id) is Borrower borrower)
     {
+        if (borrower.UserId != sub)
+        {
+            return Results.Unauthorized();
+        }
         db.Borrowers.Remove(borrower);
         await db.SaveChangesAsync();
         return Results.Ok(borrower);
@@ -282,10 +294,17 @@ app.MapPut("/items/{id}", async (int id, Item updatedItem, LendingTrackerContext
     return Results.NoContent();
 }).WithTags("Items").RequireAuthorization("authorized_user");
 
-app.MapDelete("/items/{id}", async (int id, LendingTrackerContext db) =>
+app.MapDelete("/items/{id}", async (int id, LendingTrackerContext db, ClaimsPrincipal user) =>
 {
+    string sub = user.GetNameIdentifierId();
+
+    
     if (await db.Items.FindAsync(id) is Item item)
     {
+        if(item.OwnerId.ToString() != sub)
+        {
+            return Results.Unauthorized();
+        }
         db.Items.Remove(item);
         await db.SaveChangesAsync();
         return Results.Ok(item);
