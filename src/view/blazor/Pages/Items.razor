@@ -26,7 +26,7 @@ else{
 
         </ToolBarContent>
         <Columns>
-            <HierarchyColumn T="Item" ButtonDisabledFunc="@(x => x.ItemId == 1)" InitiallyExpandedFunc="@(x => x.ItemId == 1)"  />
+            <HierarchyColumn T="Item"  />
             <PropertyColumn Property="x => x.ItemId" Title="Item" Editable="false" />
             <PropertyColumn Property="x => x.ItemName" Title="Name" />
             <PropertyColumn Property="x => x.Description" />
