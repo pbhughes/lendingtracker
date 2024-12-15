@@ -1,0 +1,121 @@
+﻿
+@using System.ComponentModel.DataAnnotations
+@using System.Text.RegularExpressions
+@using LendingView.Models
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+
+
+
+@inject HttpClient Http
+@inject IAccessTokenProvider TokenProvider
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<h3>AddNewItem</h3>
+<EditForm Model="@model" OnValidSubmit="OnValidSubmit">
+    <DataAnnotationsValidator />
+    <MudGrid>
+        <MudItem xs="12" sm="7">
+            <MudCard>
+                <MudCardContent>
+                    <MudTextField Label="Name" HelperText="Max. 100 characters"
+                    @bind-Value="model.ItemName" For="@(() => model.ItemName)" RequiredError="User name is required!" />
+                    <MudTextField Label="Desciption" HelperText="Max. 200 Characters" @bind-Value="model.Description" For="@(() => model.Description)" />
+                    <MudSwitch @bind-Value=model.IsAvailable>Available</MudSwitch>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButtonGroup Color="Color.Secondary" Variant="Variant.Outlined">
+                        <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="() => CancelAdd()">Cancel</MudButton>
+                    </MudButtonGroup>
+                    <MudSpacer></MudSpacer>
+                    <MudButtonGroup Color="Color.Primary" Variant="Variant.Filled">
+                        <MudButton ButtonType="ButtonType.Reset" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Reset</MudButton>
+                        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Save</MudButton>
+                    </MudButtonGroup>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+        <MudItem xs="12" sm="5">
+            <MudPaper Class="pa-4 mud-height-full">
+                <MudText Typo="Typo.subtitle2">Validation Summary</MudText>
+                @if (success)
+                {
+                    <MudText Color="Color.Success">Success</MudText>
+                }
+                else
+                {
+                    <MudText Color="@Color.Error">
+                        <ValidationSummary />
+                    </MudText>
+                }
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12">
+            <MudText Typo="Typo.body2" Align="Align.Center">
+                If the data in form is correct you will see a success message
+            </MudText>
+        </MudItem>
+    </MudGrid>
+</EditForm>
+@code {
+    Item model = new Item();
+    bool success;
+    private string? accessToken;
+    private string? error;
+    [Parameter] public bool AddingNew { get; set; }
+    [Parameter] public EventCallback<string> OnAddNew { get; set; }
+
+
+    private async void OnValidSubmit(EditContext context)
+    {
+        success = true;
+        StateHasChanged();
+
+        //call the put AI and commit the changes
+        await GetAccessToken();
+        var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+        Http.DefaultRequestHeaders.Authorization = value;
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        model.OwnerId = Guid.Parse(authState.User.Claims.First(nameof => nameof.Type == "sub").Value);
+
+        var response = await Http.PostAsJsonAsync<Item>("https://localhost:5002/items", model);
+
+        await OnAddNew.InvokeAsync();
+
+    }
+
+    private async void CancelAdd(){
+        AddingNew = false;
+        await  OnAddNew.InvokeAsync();
+    }
+
+ 
+
+    private async Task GetAccessToken()
+    {
+        var tokenResult = await TokenProvider.RequestAccessToken(new AccessTokenRequestOptions
+            {
+                Scopes = new[] { "https://needthatback.onmicrosoft.com/lender/lender" }
+            });
+
+        if (tokenResult.TryGetToken(out var token))
+        {
+            accessToken = token.Value;
+        }
+        else
+        {
+            error = tokenResult.Status switch
+            {
+                AccessTokenResultStatus.RequiresRedirect => "Redirect required. Navigating...",
+                AccessTokenResultStatus.Success => null,
+                _ => "An unknown error occurred."
+            };
+
+            if (tokenResult.Status == AccessTokenResultStatus.RequiresRedirect)
+            {
+                Navigation.NavigateTo(tokenResult.InteractiveRequestUrl!);
+            }
+        }
+    }
+}
