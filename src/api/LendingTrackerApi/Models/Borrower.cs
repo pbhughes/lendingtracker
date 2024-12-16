@@ -7,7 +7,7 @@ namespace LendingTrackerApi.Models;
 
 public partial class Borrower
 {
-     [RegularExpression("^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$")]
+    
     public Guid BorrowerId { get; set; }
 
     [Required]

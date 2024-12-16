@@ -219,6 +219,7 @@ app.MapPost("/borrowers", async (Borrower borrower, LendingTrackerContext db) =>
     db.Borrowers.Add(borrower);
     await db.SaveChangesAsync();
     return Results.Created($"/borrowers/{borrower.BorrowerId}", borrower);
+
 }).WithTags("Borrowers").RequireAuthorization("authorized_user");
 
 app.MapPut("/borrowers/{id}", async (int id, Borrower updatedBorrower, LendingTrackerContext db) =>

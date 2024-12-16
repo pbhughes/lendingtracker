@@ -11,7 +11,7 @@ namespace LendingTrackerApi.Services
         }
         public ValidationMessage ValidateBorrower(Borrower borrower)
         {
-            if (borrower.BorrowerId == Guid.Empty)
+            if (borrower.UserId == Guid.Empty)
             {
                 return new ValidationMessage
                 {

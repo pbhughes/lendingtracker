@@ -27,7 +27,9 @@ else
         </ToolBarContent>
         <Columns>
             <HierarchyColumn T="Borrower" />
-            <PropertyColumn Property="x => x.BorrowerId" Title="ID" Editable="false" />
+    
+                <PropertyColumn Class="d-none" Property="x => x.BorrowerId" Title="ID" Editable="false" Hidden="true" />
+          
             <PropertyColumn Property="x => x.Name" Title="Name" />
             <PropertyColumn Property="x => x.BorrowerEmail" Title="Email" />
             <PropertyColumn Property="x => x.CountryCode" Title="Country" />
@@ -47,7 +49,7 @@ else
             <MudCard>
                 <MudCardHeader>
                     <CardHeaderContent>
-                        <MudText Typo="Typo.h6">@context.Item.BorrowerId</MudText>
+                        <MudText Typo="Typo.h6">Borrower ID: @context.Item.BorrowerId</MudText>
                     </CardHeaderContent>
                 </MudCardHeader>
                 <MudCardContent>

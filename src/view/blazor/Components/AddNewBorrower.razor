@@ -2,6 +2,7 @@
 @using System.Text.RegularExpressions
 @using LendingView.Models
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using PhoneNumbers
 
 
 
@@ -20,18 +21,17 @@
                     <MudTextField Label="Name" HelperText="Max. 100 characters"
                     @bind-Value="model.Name" For="@(() => model.Name)" RequiredError="Borrower name is required!" />
                     <MudTextField Label="Email" HelperText="Valid Email Address" @bind-Value="model.BorrowerEmail" For="@(() => model.BorrowerEmail)" />
-                    <MudTextField Label="Phone" HelperText="Valid Phone" @bind-Value="model.BorrowerSms" For="@(() => model.BorrowerSms)" />
                     <MudStack Row Class="justify-space-between mud-width-full">
                         <MudStack Style="width: 300px">
-                            <MudSelect @bind-Value="_value"
-                            Margin="_margin"
-                            Dense="_dense"
-                            Disabled="_disabled"
-                            ReadOnly="_readonly"
-                            Placeholder="@(_placeholder ? "Country Code" : null)"
-                            HelperText="@(_helperText ? "Valid Country Code" : null)"
-                            HelperTextOnFocus="_helperTextOnFocus"
-                            Clearable="_clearable">
+                            <MudSelect @bind-Value="model.CountryCode"
+                                       Margin="_margin"
+                                       Dense="_dense"
+                                       Disabled="_disabled"
+                                       ReadOnly="_readonly"
+                                       Placeholder="@(_placeholder ? "Country Code" : null)"
+                                       HelperText="@(_helperText ? "Valid Country Code" : null)"
+                                       HelperTextOnFocus="_helperTextOnFocus"
+                                       Clearable="_clearable">
                                 @foreach (var country in _countries)
                                 {
                                     <MudSelectItem Value="country.Code">@country.Name</MudSelectItem>
@@ -39,6 +39,8 @@
                             </MudSelect>
                         </MudStack>
                     </MudStack>
+                    <MudTextField Label="Phone" HelperText="Valid Phone" @bind-Value="model.BorrowerSms" For="@(() => model.BorrowerSms)" />
+                    <MudTextField Class="d-none" Label="Combined" HelperText="Valid Phone" @bind-Value="model.CombinedSms" For="@(() => model.CombinedSms)" ReadOnly="true" />
                 </MudCardContent>
                 <MudCardActions>
                     <MudButtonGroup Color="Color.Secondary" Variant="Variant.Outlined">
