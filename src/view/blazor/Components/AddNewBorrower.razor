@@ -1,5 +1,151 @@
-﻿<h3>AddNewBorrower</h3>
+﻿@using System.ComponentModel.DataAnnotations
+@using System.Text.RegularExpressions
+@using LendingView.Models
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using PhoneNumbers
 
+
+
+@inject HttpClient Http
+@inject IAccessTokenProvider TokenProvider
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<h3>Add New Borrower</h3>
+<EditForm Model="@model" OnValidSubmit="OnValidSubmit">
+    <DataAnnotationsValidator />
+    <MudGrid>
+        <MudItem xs="12" sm="7">
+            <MudCard>
+                <MudCardContent>
+                    <MudTextField Label="Name" HelperText="Max. 100 characters"
+                    @bind-Value="model.Name" For="@(() => model.Name)" RequiredError="Borrower name is required!" />
+                    <MudTextField Label="Email" HelperText="Valid Email Address" @bind-Value="model.BorrowerEmail" For="@(() => model.BorrowerEmail)" />
+                    <MudStack Row Class="justify-space-between mud-width-full">
+                        <MudStack Style="width: 300px">
+                            <MudSelect @bind-Value="model.CountryCode"
+                                       Margin="_margin"
+                                       Dense="_dense"
+                                       Disabled="_disabled"
+                                       ReadOnly="_readonly"
+                                       Placeholder="@(_placeholder ? "Country Code" : null)"
+                                       HelperText="@(_helperText ? "Valid Country Code" : null)"
+                                       HelperTextOnFocus="_helperTextOnFocus"
+                                       Clearable="_clearable">
+                                @foreach (var country in _countries)
+                                {
+                                    <MudSelectItem Value="country.Code">@country.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudStack>
+                    </MudStack>
+                    <MudTextField Label="Phone" HelperText="Valid Phone" @bind-Value="model.BorrowerSms" For="@(() => model.BorrowerSms)" />
+                    <MudTextField Class="d-none" Label="Combined" HelperText="Valid Phone" @bind-Value="model.CombinedSms" For="@(() => model.CombinedSms)" ReadOnly="true" />
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButtonGroup Color="Color.Secondary" Variant="Variant.Outlined">
+                        <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="() => CancelAdd()">Cancel</MudButton>
+                    </MudButtonGroup>
+                    <MudSpacer></MudSpacer>
+                    <MudButtonGroup Color="Color.Primary" Variant="Variant.Filled">
+                        <MudButton ButtonType="ButtonType.Reset" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Reset</MudButton>
+                        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Save</MudButton>
+                    </MudButtonGroup>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+        <MudItem xs="12" sm="5">
+            <MudPaper Class="pa-4 mud-height-full">
+                <MudText Typo="Typo.subtitle2">Validation Summary</MudText>
+                @if (success)
+                {
+                    <MudText Color="Color.Success">Success</MudText>
+                }
+                else
+                {
+                    <MudText Color="@Color.Error">
+                        <ValidationSummary />
+                    </MudText>
+                }
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12">
+            <MudText Typo="Typo.body2" Align="Align.Center">
+                If the data in form is correct you will see a success message
+            </MudText>
+        </MudItem>
+    </MudGrid>
+</EditForm>
 @code {
+    Borrower model = new Borrower();
+    bool success;
+    private string? accessToken;
+    private string? error;
+    [Parameter] public bool AddingNew { get; set; }
+    [Parameter] public EventCallback<string> OnAddNew { get; set; }
+    //Country selector support
+    private static List<Country> _countries = CountryData.GetCountries();
+    string _value;
+    Margin _margin;
+    bool _dense;
+    bool _disabled;
+    bool _readonly;
+    bool _placeholder = true;
+    bool _helperText = true;
+    bool _helperTextOnFocus;
+    bool _clearable = true;
 
+    private async void OnValidSubmit(EditContext context)
+    {
+        success = true;
+        StateHasChanged();
+
+        //call the put AI and commit the changes
+        await GetAccessToken();
+        var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+        Http.DefaultRequestHeaders.Authorization = value;
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        model.UserId = Guid.Parse(authState.User.Claims.First(nameof => nameof.Type == "sub").Value);
+
+        var response = await Http.PostAsJsonAsync<Borrower>("https://localhost:5002/borrowers", model);
+
+        await OnAddNew.InvokeAsync();
+
+    }
+
+    private async void CancelAdd()
+    {
+        AddingNew = false;
+        await OnAddNew.InvokeAsync();
+    }
+
+
+
+    private async Task GetAccessToken()
+    {
+        var tokenResult = await TokenProvider.RequestAccessToken(new AccessTokenRequestOptions
+            {
+                Scopes = new[] { "https://needthatback.onmicrosoft.com/lender/lender" }
+            });
+
+        if (tokenResult.TryGetToken(out var token))
+        {
+            accessToken = token.Value;
+        }
+        else
+        {
+            error = tokenResult.Status switch
+            {
+                AccessTokenResultStatus.RequiresRedirect => "Redirect required. Navigating...",
+                AccessTokenResultStatus.Success => null,
+                _ => "An unknown error occurred."
+            };
+
+            if (tokenResult.Status == AccessTokenResultStatus.RequiresRedirect)
+            {
+                Navigation.NavigateTo(tokenResult.InteractiveRequestUrl!);
+            }
+        }
+    }
 }

@@ -1,10 +1,13 @@
-﻿using System;
+﻿using LendingView.Extensions;
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace LendingView.Models
 {
     public class Borrower
     {
+        private string _trash = null;
+
         [RegularExpression("^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$")]
         public Guid BorrowerId { get; set; }
 
@@ -14,15 +17,32 @@ namespace LendingView.Models
 
         public bool? IsEligible { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "The email address is required")]
+        [EmailAddress(ErrorMessage = "Invalid Email Address")]
         public string? BorrowerEmail { get; set; }
 
+
         [Required]
-        public string BorrowerSms { get; set; } = null!;
+        public string BorrowerSms { get; set; } = null;
+
+        [ValidInternationalPhone(ErrorMessage = "Must provide a valid phone number")]
+        public string CombinedSms
+        {
+            get
+            {
+                return $"{CountryCode} {BorrowerSms}";
+            }
+            set
+            {
+                _trash = value; 
+            }
+        }
+
+        [Required]
+        public string Name {  get; set; }   
 
         [RegularExpression(@"^\+\d{1,3}$")]
-        [MaxLength(5)]
-        [AllowedValues("+93, +355, +213, +1, +376, +244, +1, +672, +1, +54, +374, +297, +61, +43, +994, +1, +973, +880, +1, +375, +32, +501, +229, +1, +975, +591, +599, +387, +267, +55, +246, +673, +359, +226, +257, +238, +855, +237, +1, +1, +236, +235, +56, +86, +61, +57, +269, +243, +242, +682, +506, +385, +53, +599, +357, +420, +45, +253, +1, +1, +593, +20, +503, +240, +291, +372, +268, +251, +500, +679, +358, +33, +594, +689, +262, +241, +220, +49, +233, +350, +30, +299, +1, +590, +1, +502, +44, +224, +245, +592, +509, +672, +39, +504, +852, +36, +354, +91, +62, +98, +964, +353, +44, +972, +39, +1, +44, +81, +254, +686, +850, +82, +965, +996, +856, +371, +961, +266, +231, +218, +423, +370, +352, +853, +261, +265, +60, +960, +223, +356, +692, +596,")]
+        [MaxLength(4)]
         public string? CountryCode { get; set; }
     }
 }
