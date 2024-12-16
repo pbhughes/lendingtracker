@@ -108,7 +108,7 @@
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         model.UserId = Guid.Parse(authState.User.Claims.First(nameof => nameof.Type == "sub").Value);
 
-        var response = await Http.PostAsJsonAsync<Borrower>("https://localhost:5002/borrowers", model);
+        var response = await Http.PostAsJsonAsync<Borrower>("/borrowers", model);
 
         await OnAddNew.InvokeAsync();
 
