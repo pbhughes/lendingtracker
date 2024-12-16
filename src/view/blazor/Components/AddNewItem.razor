@@ -79,7 +79,7 @@
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         model.OwnerId = Guid.Parse(authState.User.Claims.First(nameof => nameof.Type == "sub").Value);
 
-        var response = await Http.PostAsJsonAsync<Item>("https://localhost:5002/items", model);
+        var response = await Http.PostAsJsonAsync<Item>("/items", model);
 
         await OnAddNew.InvokeAsync();
 

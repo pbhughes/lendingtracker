@@ -154,7 +154,7 @@ else
         var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
         Http.DefaultRequestHeaders.Authorization = value;
 
-        IEnumerable<Borrower> data = await Http.GetFromJsonAsync<List<Borrower>>("https://localhost:5002/borrowers");
+        IEnumerable<Borrower> data = await Http.GetFromJsonAsync<List<Borrower>>("/borrowers");
         await Task.Delay(300);
         data = data.Where(element =>
         {

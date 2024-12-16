@@ -33,7 +33,10 @@ builder.Services.AddCors(options =>
 
 // Configure DbContext
 builder.Services.AddDbContext<LendingTrackerContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"), options =>
+    {
+        options.CommandTimeout(6);
+    }));
 
 // Add services to the container.
 builder.Services.AddControllers();
