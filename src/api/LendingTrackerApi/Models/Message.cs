@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace LendingTrackerApi.Models;
 
@@ -20,4 +21,9 @@ public partial class Message
     public int? ItemId { get; set; }
 
     public Guid TransactionId { get; set; }
+
+    public virtual Item? Item { get; set; }
+
+    [JsonIgnore]
+    public virtual Transaction Transaction { get; set; } = null!;
 }

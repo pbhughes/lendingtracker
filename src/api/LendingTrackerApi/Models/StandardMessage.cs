@@ -1,13 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.Collections.Generic;
 
-namespace LendingTrackerApi.Models
+namespace LendingTrackerApi.Models;
+
+public partial class StandardMessage
 {
-    public class StandardMessage
-    {
-        public int Id { get; set; }
+    public int Id { get; set; }
 
-        [Required]
-        [MaxLength(166)]
-        public string Text { get; set; }
-    }
+    public string Text { get; set; } = null!;
 }

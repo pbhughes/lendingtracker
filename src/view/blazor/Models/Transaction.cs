@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
@@ -32,5 +33,6 @@ namespace LendingView.Models
         public virtual Item Item { get; set; } = null!;
 
         public virtual User Lender { get; set; } = null!;
+        public virtual ICollection<Message> Messages { get; set; } = new List<Message>();
     }
 }
