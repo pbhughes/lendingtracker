@@ -65,7 +65,7 @@ namespace LendingTrackerApi.Migrations
                     b.HasIndex(new[] { "BorrowerEmail" }, "UQ__Borrower__14F16AF6B87CB05D")
                         .IsUnique();
 
-                    b.ToTable("Borrowers");
+                    b.ToTable("Borrowers", (string)null);
                 });
 
             modelBuilder.Entity("LendingTrackerApi.Models.Item", b =>
@@ -103,7 +103,7 @@ namespace LendingTrackerApi.Migrations
 
                     b.HasIndex("OwnerId");
 
-                    b.ToTable("Items");
+                    b.ToTable("Items", (string)null);
                 });
 
             modelBuilder.Entity("LendingTrackerApi.Models.Transaction", b =>
@@ -147,7 +147,7 @@ namespace LendingTrackerApi.Migrations
 
                     b.HasIndex("LenderId");
 
-                    b.ToTable("Transactions");
+                    b.ToTable("Transactions", (string)null);
                 });
 
             modelBuilder.Entity("LendingTrackerApi.Models.User", b =>
@@ -191,7 +191,7 @@ namespace LendingTrackerApi.Migrations
                     b.HasIndex(new[] { "Email" }, "UQ__Users__A9D105344616AE11")
                         .IsUnique();
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("LendingTrackerApi.Models.Borrower", b =>

@@ -1,5 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System;
+using System.Collections.Generic;
+using System.Transactions;
 
 namespace LendingView.Models
 {
@@ -21,5 +23,7 @@ namespace LendingView.Models
         public bool IsAvailable { get; set; }
 
         public DateTime? CreatedAt { get; set; }
+
+        public virtual ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
     }
 }

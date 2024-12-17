@@ -176,7 +176,7 @@ app.MapPost("/users", async (User user, LendingTrackerContext db, IValidationSer
 }).WithTags("Users").RequireAuthorization("authorized_user");
 
 
-app.MapPut("/users/{id}", async (int id, User updatedUser, LendingTrackerContext db) =>
+app.MapPut("/users/{id}", async (Guid id, User updatedUser, LendingTrackerContext db) =>
 {
     var user = await db.Users.FindAsync(id);
     if (user is null) return Results.NotFound();
@@ -225,14 +225,20 @@ app.MapPost("/borrowers", async (Borrower borrower, LendingTrackerContext db) =>
 
 }).WithTags("Borrowers").RequireAuthorization("authorized_user");
 
-app.MapPut("/borrowers/{id}", async (int id, Borrower updatedBorrower, LendingTrackerContext db) =>
+app.MapPut("/borrowers/{id}", async (Guid id, Borrower updatedBorrower, LendingTrackerContext db, ClaimsPrincipal currentUser) =>
 {
+    Guid sub = Guid.Parse(currentUser.GetNameIdentifierId());
+    if (sub != updatedBorrower.UserId) 
+        return Results.NotFound();
+
     var borrower = await db.Borrowers.FindAsync(id);
     if (borrower is null) return Results.NotFound();
 
     borrower.IsEligible = updatedBorrower.IsEligible;
     borrower.BorrowerEmail = updatedBorrower.BorrowerEmail;
     borrower.BorrowerSms = updatedBorrower.BorrowerSms;
+    borrower.Name = updatedBorrower.Name;
+    borrower.CountryCode = updatedBorrower.CountryCode;
 
     await db.SaveChangesAsync();
     return Results.NoContent();
@@ -268,10 +274,10 @@ app.MapGet("/items", async (LendingTrackerContext db, IHttpContextAccessor httpC
         return Results.Unauthorized();
 
 
-    var items = db.Items.Where(i => i.OwnerId == parsedGuid);
-
+    var items = db.Items.Include(trans => trans.Transactions).ThenInclude(trans => trans.Borrower).Where(i => i.OwnerId == parsedGuid);
 
     return items is null ? Results.NotFound() : Results.Ok(items.ToList());
+
 }).WithTags("Items").RequireAuthorization("authorized_user");
 
 app.MapGet("/items/{id}", async (int id, LendingTrackerContext db) =>
@@ -285,8 +291,14 @@ app.MapPost("/items", async (Item item, LendingTrackerContext db) =>
     return Results.Created($"/items/{item.ItemId}", item);
 }).WithTags("Items").RequireAuthorization("authorized_user");
 
-app.MapPut("/items/{id}", async (int id, Item updatedItem, LendingTrackerContext db) =>
+app.MapPut("/items/{id}", async (int id, Item updatedItem, LendingTrackerContext db, ClaimsPrincipal currentUser) =>
 {
+Guid sub = Guid.Parse(currentUser.GetNameIdentifierId());
+
+    if(updatedItem.OwnerId != sub){
+        return Results.Unauthorized();
+    }
+
     var item = await db.Items.FindAsync(id);
     if (item is null) return Results.NotFound();
 

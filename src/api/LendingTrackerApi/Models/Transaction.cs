@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace LendingTrackerApi.Models;
 
@@ -28,7 +29,7 @@ public partial class Transaction
     public string? Status { get; set; }
 
     public virtual Borrower Borrower { get; set; } = null!;
-
+    [JsonIgnore]
     public virtual Item Item { get; set; } = null!;
 
     public virtual User Lender { get; set; } = null!;

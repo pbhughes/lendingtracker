@@ -1,6 +1,9 @@
 ﻿@page "/items"
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 @using LendingView.Models
+@using MudBlazor
+@using LendingView.Components
+@using System.Net
 
 
 @inject HttpClient Http
@@ -21,7 +24,7 @@ else{
             <MudText Typo="Typo.h6">Items</MudText>
             <MudIconButton Size="@Size.Large" Icon="@Icons.Material.Filled.Add" aria-label="add" OnClick="() => AddNew()" />
             <MudSpacer />
-            <MudTextField T="string" ValueChanged="@(s=>OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
+            <MudTextField T="string" ValueChanged="@(s => OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
             AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
 
         </ToolBarContent>
@@ -43,23 +46,65 @@ else{
             </TemplateColumn>
         </Columns>
         <ChildRowContent>
-            <MudCard>
-                <MudCardHeader>
-                    <CardHeaderContent>
-                        <MudText Typo="Typo.h6">@context.Item.ItemId</MudText>
-                    </CardHeaderContent>
-                </MudCardHeader>
-                <MudCardContent>
-                    <MudText>@context.Item.ItemName</MudText>
-                    <MudText> @context.Item.Description</MudText>
-                </MudCardContent>
-            </MudCard>
+            <MudGrid>
+                <MudItem xs="3">
+                    <MudCard Outlined="true" Class="border-solid border-2 mud-border-primary pa-4">
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.h6">@context.Item.ItemId</MudText>
+                            </CardHeaderContent>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            <MudText>@context.Item.ItemName</MudText>
+                            <MudText> @context.Item.Description</MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+                <MudItem xs="5">
+                    @if (context.Item.Transactions.Count() > 0)
+                    {
+                        <MudCard Outlined="true" Class="border-solid border-2 mud-border-primary pa-4">
+                            <MudCardHeader>
+                                <h3>Borrower</h3>
+                            </MudCardHeader>
+                            <MudCardContent>
+
+                                <MudTable Items="@context.Item.Transactions">
+                                    <HeaderContent>
+                                        <MudTh>Name</MudTh>
+                                        <MudTh>Email</MudTh>
+                                        <MudTh>Phone</MudTh>
+                                    </HeaderContent>
+                                    <RowTemplate Context="transactions">
+                                        <MudTd>@transactions.Borrower.Name</MudTd>
+                                        <MudTd>
+                                            @if (transactions.Borrower.BorrowerEmail != null)
+                                            {
+
+                                                <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="() => SendSmsMessage(context.Item, transactions.Borrower, "email")">
+                                                    @transactions.Borrower.BorrowerEmail
+                                                </MudButton>
+                                            }
+                                        </MudTd>
+                                        <MudTd>
+                                            <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="() => SendSmsMessage(context.Item, transactions.Borrower,"sms")">
+                                                       @transactions.Borrower.BorrowerSms
+                                            </MudButton>
+                                        </MudTd>
+                                    </RowTemplate>
+                                </MudTable>
+                        </MudCardContent>
+                    </MudCard>
+                    }
+                </MudItem>
+            </MudGrid>
+           
         </ChildRowContent>
         <PagerContent>
             <MudDataGridPager T="Item" />
         </PagerContent>
     </MudDataGrid>
-
+}
     <div class="d-flex flex-wrap mt-4">
         <MudSwitch T="bool" @bind-Value="_isReadOnly" Color="@Color.Primary">Read Only</MudSwitch>
         <div class="d-flex justify-start align-center">
@@ -87,7 +132,7 @@ else{
             }
         </MudExpansionPanel>
     </MudExpansionPanels>
-}
+
 
 @code {
     private MudDataGrid<Item> Elements;
@@ -195,6 +240,11 @@ else{
                 TotalItems = totalItems,
                 Items = pagedData
             };
+    }
+
+    private async void SendSmsMessage(Item item, Borrower borrower, string type)
+    {
+
     }
 
     // events

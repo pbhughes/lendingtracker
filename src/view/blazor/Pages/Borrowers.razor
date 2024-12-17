@@ -1,6 +1,8 @@
 ﻿@page "/borrowers"
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 @using LendingView.Models
+@using MudBlazor
+@using LendingView.Components
 
 
 @inject HttpClient Http
@@ -225,7 +227,7 @@ else
         var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
         Http.DefaultRequestHeaders.Authorization = value;
 
-        var response = await Http.PutAsJsonAsync<Borrower>($"https://localhost:5002/items/{borrower.BorrowerId}", borrower);
+        var response = await Http.PutAsJsonAsync<Borrower>($"https://localhost:5002/borrowers/{borrower.BorrowerId}", borrower);
     }
 
     async void DeleteItemAsync(Borrower borrower)

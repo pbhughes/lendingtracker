@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel;
+using System.Text.Json.Serialization;
 
 namespace LendingTrackerApi.Models;
 
@@ -30,6 +31,7 @@ public partial class Borrower
     [AllowedValues("+1", "+44", "+91", "+49")]
     public string? CountryCode { get; set; }
 
+    [JsonIgnore]
     public virtual ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
 
     public virtual User User { get; set; } = null!;
