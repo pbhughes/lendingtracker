@@ -6,7 +6,7 @@ namespace LendingView.Models
 {
     public class Transaction
     {
-        public int TransactionId { get; set; }
+        public Guid TransactionId { get; set; }
 
         [Required]
         [RegularExpression("^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$")]

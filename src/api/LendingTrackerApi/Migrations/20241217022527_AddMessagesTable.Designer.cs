@@ -4,6 +4,7 @@ using LendingTrackerApi.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LendingTrackerApi.Migrations
 {
     [DbContext(typeof(LendingTrackerContext))]
-    partial class LendingTrackerContextModelSnapshot : ModelSnapshot
+    [Migration("20241217022527_AddMessagesTable")]
+    partial class AddMessagesTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -25,6 +28,7 @@ namespace LendingTrackerApi.Migrations
             modelBuilder.Entity("LendingTrackerApi.Models.Borrower", b =>
                 {
                     b.Property<Guid>("BorrowerId")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("BorrowerEmail")
@@ -48,9 +52,7 @@ namespace LendingTrackerApi.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("nvarchar(max)")
-                        .HasDefaultValue("");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
@@ -58,7 +60,10 @@ namespace LendingTrackerApi.Migrations
                     b.HasKey("BorrowerId")
                         .HasName("PK__Borrower__568EDB576270152D");
 
-                    b.HasIndex(new[] { "UserId" }, "IX_Borrowers_UserId");
+                    b.HasIndex("UserId");
+
+                    b.HasIndex(new[] { "BorrowerSms" }, "UQ__Borrower__0E4EE86AE3B83218")
+                        .IsUnique();
 
                     b.HasIndex(new[] { "BorrowerEmail" }, "UQ__Borrower__14F16AF6B87CB05D")
                         .IsUnique();
@@ -99,7 +104,7 @@ namespace LendingTrackerApi.Migrations
                     b.HasKey("ItemId")
                         .HasName("PK__Items__727E838BC5CFABC7");
 
-                    b.HasIndex(new[] { "OwnerId" }, "IX_Items_OwnerId");
+                    b.HasIndex("OwnerId");
 
                     b.ToTable("Items");
                 });
@@ -107,12 +112,13 @@ namespace LendingTrackerApi.Migrations
             modelBuilder.Entity("LendingTrackerApi.Models.Message", b =>
                 {
                     b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Direction")
                         .HasColumnType("int");
 
-                    b.Property<int?>("ItemId")
+                    b.Property<int>("ItemId")
                         .HasColumnType("int");
 
                     b.Property<string>("MessageDate")
@@ -132,42 +138,20 @@ namespace LendingTrackerApi.Migrations
                         .HasMaxLength(300)
                         .HasColumnType("nvarchar(300)");
 
-                    b.Property<Guid>("TransactionId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.HasKey("Id");
 
                     b.HasIndex("ItemId");
 
-                    b.HasIndex(new[] { "TransactionId" }, "IX_Message_ItemId")
-                        .HasDatabaseName("IX_Message_ItemId1");
-
-                    b.ToTable("Message", (string)null);
-                });
-
-            modelBuilder.Entity("LendingTrackerApi.Models.StandardMessage", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Text")
-                        .IsRequired()
-                        .HasMaxLength(166)
-                        .HasColumnType("nvarchar(166)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("StandardMessages");
+                    b.ToTable("Message");
                 });
 
             modelBuilder.Entity("LendingTrackerApi.Models.Transaction", b =>
                 {
-                    b.Property<Guid>("TransactionId")
+                    b.Property<int>("TransactionId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TransactionId"));
 
                     b.Property<DateTime>("BorrowedAt")
                         .HasColumnType("datetime");
@@ -196,11 +180,11 @@ namespace LendingTrackerApi.Migrations
                     b.HasKey("TransactionId")
                         .HasName("PK__Transact__55433A6B92A192EE");
 
-                    b.HasIndex(new[] { "BorrowerId" }, "IX_Transactions_BorrowerId");
+                    b.HasIndex("BorrowerId");
 
-                    b.HasIndex(new[] { "ItemId" }, "IX_Transactions_ItemId");
+                    b.HasIndex("ItemId");
 
-                    b.HasIndex(new[] { "LenderId" }, "IX_Transactions_LenderId");
+                    b.HasIndex("LenderId");
 
                     b.ToTable("Transactions");
                 });
@@ -208,6 +192,7 @@ namespace LendingTrackerApi.Migrations
             modelBuilder.Entity("LendingTrackerApi.Models.User", b =>
                 {
                     b.Property<Guid>("UserId")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Address")
@@ -216,10 +201,8 @@ namespace LendingTrackerApi.Migrations
 
                     b.Property<string>("CountryCode")
                         .IsRequired()
-                        .ValueGeneratedOnAdd()
                         .HasMaxLength(5)
-                        .HasColumnType("nvarchar(5)")
-                        .HasDefaultValue("");
+                        .HasColumnType("nvarchar(5)");
 
                     b.Property<DateTime?>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -276,17 +259,13 @@ namespace LendingTrackerApi.Migrations
 
             modelBuilder.Entity("LendingTrackerApi.Models.Message", b =>
                 {
-                    b.HasOne("LendingTrackerApi.Models.Item", null)
+                    b.HasOne("LendingTrackerApi.Models.Item", "Item")
                         .WithMany("Messages")
-                        .HasForeignKey("ItemId");
-
-                    b.HasOne("LendingTrackerApi.Models.Transaction", "Transaction")
-                        .WithMany("Messages")
-                        .HasForeignKey("TransactionId")
+                        .HasForeignKey("ItemId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Transaction");
+                    b.Navigation("Item");
                 });
 
             modelBuilder.Entity("LendingTrackerApi.Models.Transaction", b =>
@@ -326,11 +305,6 @@ namespace LendingTrackerApi.Migrations
                     b.Navigation("Messages");
 
                     b.Navigation("Transactions");
-                });
-
-            modelBuilder.Entity("LendingTrackerApi.Models.Transaction", b =>
-                {
-                    b.Navigation("Messages");
                 });
 
             modelBuilder.Entity("LendingTrackerApi.Models.User", b =>

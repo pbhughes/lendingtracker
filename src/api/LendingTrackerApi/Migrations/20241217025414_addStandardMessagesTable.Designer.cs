@@ -4,6 +4,7 @@ using LendingTrackerApi.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LendingTrackerApi.Migrations
 {
     [DbContext(typeof(LendingTrackerContext))]
-    partial class LendingTrackerContextModelSnapshot : ModelSnapshot
+    [Migration("20241217025414_addStandardMessagesTable")]
+    partial class addStandardMessagesTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -112,7 +115,7 @@ namespace LendingTrackerApi.Migrations
                     b.Property<int>("Direction")
                         .HasColumnType("int");
 
-                    b.Property<int?>("ItemId")
+                    b.Property<int>("ItemId")
                         .HasColumnType("int");
 
                     b.Property<string>("MessageDate")
@@ -132,42 +135,20 @@ namespace LendingTrackerApi.Migrations
                         .HasMaxLength(300)
                         .HasColumnType("nvarchar(300)");
 
-                    b.Property<Guid>("TransactionId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("ItemId");
-
-                    b.HasIndex(new[] { "TransactionId" }, "IX_Message_ItemId")
-                        .HasDatabaseName("IX_Message_ItemId1");
+                    b.HasIndex(new[] { "ItemId" }, "IX_Message_ItemId");
 
                     b.ToTable("Message", (string)null);
                 });
 
-            modelBuilder.Entity("LendingTrackerApi.Models.StandardMessage", b =>
+            modelBuilder.Entity("LendingTrackerApi.Models.Transaction", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<int>("TransactionId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Text")
-                        .IsRequired()
-                        .HasMaxLength(166)
-                        .HasColumnType("nvarchar(166)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("StandardMessages");
-                });
-
-            modelBuilder.Entity("LendingTrackerApi.Models.Transaction", b =>
-                {
-                    b.Property<Guid>("TransactionId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TransactionId"));
 
                     b.Property<DateTime>("BorrowedAt")
                         .HasColumnType("datetime");
@@ -276,17 +257,13 @@ namespace LendingTrackerApi.Migrations
 
             modelBuilder.Entity("LendingTrackerApi.Models.Message", b =>
                 {
-                    b.HasOne("LendingTrackerApi.Models.Item", null)
+                    b.HasOne("LendingTrackerApi.Models.Item", "Item")
                         .WithMany("Messages")
-                        .HasForeignKey("ItemId");
-
-                    b.HasOne("LendingTrackerApi.Models.Transaction", "Transaction")
-                        .WithMany("Messages")
-                        .HasForeignKey("TransactionId")
+                        .HasForeignKey("ItemId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Transaction");
+                    b.Navigation("Item");
                 });
 
             modelBuilder.Entity("LendingTrackerApi.Models.Transaction", b =>
@@ -326,11 +303,6 @@ namespace LendingTrackerApi.Migrations
                     b.Navigation("Messages");
 
                     b.Navigation("Transactions");
-                });
-
-            modelBuilder.Entity("LendingTrackerApi.Models.Transaction", b =>
-                {
-                    b.Navigation("Messages");
                 });
 
             modelBuilder.Entity("LendingTrackerApi.Models.User", b =>

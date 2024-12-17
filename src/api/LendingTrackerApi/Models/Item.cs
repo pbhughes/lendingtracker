@@ -20,6 +20,8 @@ public partial class Item
 
     public DateTime? CreatedAt { get; set; }
 
+    public virtual ICollection<Message> Messages { get; set; } = new List<Message>();
+
     public virtual User Owner { get; set; } = null!;
 
     public virtual ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
