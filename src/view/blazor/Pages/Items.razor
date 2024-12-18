@@ -80,16 +80,19 @@ else{
                                         <MudTd>
                                             @if (transactions.Borrower.BorrowerEmail != null)
                                             {
-
-                                                <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="() => SendSmsMessage(context.Item, transactions.Borrower, "email")">
+                                                string method = "email";
+                                                <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="() => SendSmsMessage(context.Item, transactions.Borrower, method)">
                                                     @transactions.Borrower.BorrowerEmail
                                                 </MudButton>
                                             }
                                         </MudTd>
                                         <MudTd>
-                                            <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="() => SendSmsMessage(context.Item, transactions.Borrower,"sms")">
+                                            @if (transactions.Borrower.CombinedSms != null){
+                                                string method = "sms";
+                                                <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="() => SendSmsMessage(context.Item, transactions.Borrower,method)">
                                                        @transactions.Borrower.BorrowerSms
                                             </MudButton>
+                                            }
                                         </MudTd>
                                     </RowTemplate>
                                 </MudTable>
