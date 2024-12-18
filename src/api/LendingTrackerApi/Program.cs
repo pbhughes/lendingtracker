@@ -13,6 +13,8 @@ using Microsoft.OpenApi.Models;
 using System.Security.Claims;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using Microsoft.AspNetCore.Mvc;
+
 
 
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
@@ -262,19 +264,25 @@ app.MapDelete("/borrowers/{id}", async (Guid id, LendingTrackerContext db, Claim
 }).WithTags("Borrowers").RequireAuthorization("authorized_user");
 
 // For Items
-app.MapGet("/items", async (LendingTrackerContext db, IHttpContextAccessor httpContext) =>
+app.MapGet("/items", async (LendingTrackerContext db, IHttpContextAccessor httpContext, ClaimsPrincipal currentUser) =>
 {
-    if (httpContext == null) return Results.Unauthorized();
+    string sub = currentUser.GetNameIdentifierId();
 
-    var id = httpContext.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
+    if (sub is null) return Results.Unauthorized();
 
-    if (id is null) return Results.Unauthorized();
-
-    if (!Guid.TryParse(id, out var parsedGuid))
+    if (!Guid.TryParse(sub, out var parsedGuid))
         return Results.Unauthorized();
 
 
-    var items = db.Items.Include(trans => trans.Transactions).ThenInclude(trans => trans.Borrower).Where(i => i.OwnerId == parsedGuid);
+
+    var items = db.Items
+            .Include(trans => trans.Transactions)
+            .ThenInclude(trans => trans.Borrower)
+            .Include(trans => trans.Transactions)
+            .ThenInclude(trans => trans.Messages)
+            
+            
+        .Where(i => i.OwnerId == parsedGuid);
 
     return items is null ? Results.NotFound() : Results.Ok(items.ToList());
 
@@ -367,6 +375,50 @@ app.MapDelete("/transactions/{id}", async (int id, LendingTrackerContext db) =>
     }
     return Results.NotFound();
 }).WithTags("Transactions").RequireAuthorization("authorized_user");
+
+//messaging
+app.MapPost("/messages", async ([FromBody] Transaction transaction, string message, string phone, string method, string direction,   LendingTrackerContext db, ClaimsPrincipal currentUser) =>
+{
+    Guid sub = Guid.Parse(currentUser.GetNameIdentifierId());
+
+    if(transaction.LenderId != sub)
+    {
+        Console.WriteLine($"Borrower {transaction} is not associated to user");
+        return Results.Unauthorized();
+    }
+    Message msg = new Message()
+    {
+        Method = method,
+        Text = message,
+        MessageDate = DateTime.Now.ToString(),
+        Phone = phone,
+        Transaction = transaction,
+        TransactionId = transaction.TransactionId
+
+    };
+    db.Messages.Add(msg);
+    await db.SaveChangesAsync();
+    return Results.Created($"/message/{msg.Id}", message);
+
+}).WithTags("Messages").RequireAuthorization("authorized_user");
+
+app.MapGet("/messages", async ([FromBody] Transaction transaction, LendingTrackerContext db, ClaimsPrincipal currentUser) =>
+{
+    Guid sub = Guid.Parse(currentUser.GetNameIdentifierId());
+
+    if (transaction.LenderId != sub)
+    {
+        Console.WriteLine($"Transaction {transaction.TransactionId} does not belong to user");
+        return Results.Unauthorized();
+
+    }
+
+    var messages = db.Messages.Where(m => m.TransactionId == transaction.TransactionId);
+
+
+    return messages is null ? Results.NotFound() : Results.Ok(messages.ToList());
+
+}).WithTags("Messages").RequireAuthorization("authorized_user");
 
 // Run the application
 app.Run();
