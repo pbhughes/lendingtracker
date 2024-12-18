@@ -4,10 +4,12 @@
 @using MudBlazor
 @using LendingView.Components
 @using System.Net
-
+@using Microsoft.Extensions.Logging
+@using Microsoft.AspNetCore.SignalR.Client
 
 @inject HttpClient Http
 @inject IAccessTokenProvider TokenProvider
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager Navigation
 
 @if(_isAddNew)
@@ -15,8 +17,12 @@
     <LendingView.Components.AddNewItem AddingNew="@_isAddNew" OnAddNew="HandleAddnew"></LendingView.Components.AddNewItem>
 }
 else{
-
-
+    <div style="display:flex; justify-content:flex-end">
+        @if(_newMessages){
+            <MudIcon Icon="@Icons.Material.Filled.NewLabel" Color="Color.Secondary" Style="display:flex;justify-content:flex-end" Title="New Items" />
+        }
+    </div>
+   
     <MudDataGrid T="Item" @ref="Elements" ServerData="ServerReload" Filterable="false" ReadOnly="@_readOnly" EditMode="@(_isCellEditMode ? DataGridEditMode.Cell : DataGridEditMode.Form)"
     StartedEditingItem="@StartedEditingItem"  CanceledEditingItem="@CanceledEditingItem" CommittedItemChanges="@CommittedItemChanges"
     Bordered="true" Dense="true" EditTrigger="@(_editTriggerRowClick ? DataGridEditTrigger.OnRowClick : DataGridEditTrigger.Manual)">
@@ -109,10 +115,10 @@ else{
                 <MudItem xs="12">
                     @if(context.Item.Transactions.Count() > 0){
 
-                    
+
                         @if (context.Item.Transactions.ToArray()[0].Messages.Count() > 0)
                         {
-                             <MudCard Outlined="true" Class="border-solid border-2 mud-border-primary pa-4">
+                            <MudCard Outlined="true" Class="border-solid border-2 mud-border-primary pa-4">
                                 <MudCardHeader>
                                     <h3>Messages</h3>
                                 </MudCardHeader>
@@ -139,9 +145,9 @@ else{
                                         </RowTemplate>
                                     </MudTable>
                                 </MudCardContent>
-                             </MudCard>
+                            </MudCard>
                         }
-                   }
+                    }
                 </MudItem>
             </MudGrid>
 
@@ -192,9 +198,45 @@ else{
     public bool _isAddNew = false;
     private string? accessToken;
     private string? error;
+    private bool _newMessages = false;
+
+    //signalr support
+    private HubConnection hubConnection;
+    private List<string> messages = new List<string>();
 
     protected override async Task OnInitializedAsync()
     {
+        await GetAccessToken();
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl("https://localhost:5002/messagehub")
+            .WithAutomaticReconnect()
+            .ConfigureLogging(logging =>
+            {
+                logging.SetMinimumLevel(LogLevel.Debug);
+               
+            })
+            .Build();
+
+        
+        hubConnection.On<string, string>("ReceiveMessage", (user, message) =>
+        {
+            var encodedMsg = $"{user}: {message}";
+            messages.Add(encodedMsg);
+            InvokeAsync(StateHasChanged);
+            _newMessages = true;
+        });
+
+        await hubConnection.StartAsync();
+        Console.WriteLine("Connection to message hub started");
+
+    }
+
+    private async Task Send()
+    {
+        await GetAccessToken();
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        string userId = Guid.Parse(authState.User.Claims.First(nameof => nameof.Type == "sub").Value).ToString();
+        await hubConnection.SendAsync("SendMessage", userId, "signal");
     }
 
     private Task OnSearch(string text)
@@ -241,6 +283,7 @@ else{
         Http.DefaultRequestHeaders.Authorization = value;
 
         IEnumerable<Item> data = await Http.GetFromJsonAsync<List<Item>>("/items");
+
         await Task.Delay(300);
         data = data.Where(element =>
         {
@@ -286,6 +329,8 @@ else{
                 TotalItems = totalItems,
                 Items = pagedData
             };
+
+            _newMessages = false;
     }
 
     private async void SendSmsMessage(Item item, Transaction transaction, string method)

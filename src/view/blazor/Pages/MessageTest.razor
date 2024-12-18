@@ -1,0 +1,11 @@
+﻿@page "/messages/{transactionId}"
+
+<h3>MessageTest</h3>
+
+<LendingView.Components.RealtimeMessages transactionId="@transactionId"></LendingView.Components.RealtimeMessages>
+
+@code {
+    [Parameter]
+    public string transactionId { get; set; }
+
+}
