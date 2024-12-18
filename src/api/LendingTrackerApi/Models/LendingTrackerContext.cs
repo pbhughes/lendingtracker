@@ -19,13 +19,21 @@ public partial class LendingTrackerContext : DbContext
 
     public virtual DbSet<Item> Items { get; set; }
 
+    public virtual DbSet<Message> Messages { get; set; }
+
+    public virtual DbSet<StandardMessage> StandardMessages { get; set; }
+
     public virtual DbSet<Transaction> Transactions { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
 
+    
+
+
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Server=localhost;Database=LendingTracker;User Id=SA;Password=Reguxalo26@;TrustServerCertificate=true");
+        => optionsBuilder.UseSqlServer("Server=localhost;Database=LendingTracker;User Id=SA;Password=Reguxalo26@;Connect Timeout=5;TrustServerCertificate=true");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -33,13 +41,16 @@ public partial class LendingTrackerContext : DbContext
         {
             entity.HasKey(e => e.BorrowerId).HasName("PK__Borrower__568EDB576270152D");
 
-            entity.HasIndex(e => e.BorrowerSms, "UQ__Borrower__0E4EE86AE3B83218").IsUnique();
+            entity.HasIndex(e => e.UserId, "IX_Borrowers_UserId");
 
             entity.HasIndex(e => e.BorrowerEmail, "UQ__Borrower__14F16AF6B87CB05D").IsUnique();
 
+            entity.Property(e => e.BorrowerId).ValueGeneratedNever();
             entity.Property(e => e.BorrowerEmail).HasMaxLength(100);
             entity.Property(e => e.BorrowerSms).HasMaxLength(15);
+            entity.Property(e => e.CountryCode).HasMaxLength(5);
             entity.Property(e => e.IsEligible).HasDefaultValue(true);
+            entity.Property(e => e.Name).HasDefaultValue("");
 
             entity.HasOne(d => d.User).WithMany(p => p.Borrowers)
                 .HasForeignKey(d => d.UserId)
@@ -49,6 +60,8 @@ public partial class LendingTrackerContext : DbContext
         modelBuilder.Entity<Item>(entity =>
         {
             entity.HasKey(e => e.ItemId).HasName("PK__Items__727E838BC5CFABC7");
+
+            entity.HasIndex(e => e.OwnerId, "IX_Items_OwnerId");
 
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(getdate())")
@@ -62,10 +75,36 @@ public partial class LendingTrackerContext : DbContext
                 .HasConstraintName("FK__Items__OwnerId__4316F928");
         });
 
+        modelBuilder.Entity<Message>(entity =>
+        {
+            entity.ToTable("Message");
+
+            entity.HasIndex(e => e.ItemId, "IX_Message_ItemId");
+
+            entity.HasIndex(e => e.TransactionId, "IX_Message_ItemId1");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Text).HasMaxLength(300);
+            entity.Property(e => e.TransactionId).HasDefaultValueSql("(newid())");
+
+            entity.HasOne(d => d.Item).WithMany(p => p.Messages).HasForeignKey(d => d.ItemId);
+
+            entity.HasOne(d => d.Transaction).WithMany(p => p.Messages).HasForeignKey(d => d.TransactionId);
+        });
+
+        modelBuilder.Entity<StandardMessage>(entity =>
+        {
+            entity.HasNoKey();
+
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.Property(e => e.Text).HasMaxLength(166);
+        });
+
         modelBuilder.Entity<Transaction>(entity =>
         {
             entity.HasKey(e => e.TransactionId).HasName("PK__Transact__55433A6B92A192EE");
 
+            entity.Property(e => e.TransactionId).HasDefaultValueSql("(newid())");
             entity.Property(e => e.BorrowedAt).HasColumnType("datetime");
             entity.Property(e => e.DueDate).HasColumnType("datetime");
             entity.Property(e => e.ReturnedAt).HasColumnType("datetime");
@@ -95,7 +134,11 @@ public partial class LendingTrackerContext : DbContext
 
             entity.HasIndex(e => e.Email, "UQ__Users__A9D105344616AE11").IsUnique();
 
+            entity.Property(e => e.UserId).ValueGeneratedNever();
             entity.Property(e => e.Address).HasMaxLength(255);
+            entity.Property(e => e.CountryCode)
+                .HasMaxLength(5)
+                .HasDefaultValue("");
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");

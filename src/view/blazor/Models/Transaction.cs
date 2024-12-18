@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
@@ -6,7 +7,7 @@ namespace LendingView.Models
 {
     public class Transaction
     {
-        public int TransactionId { get; set; }
+        public Guid TransactionId { get; set; }
 
         [Required]
         [RegularExpression("^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$")]
@@ -32,5 +33,6 @@ namespace LendingView.Models
         public virtual Item Item { get; set; } = null!;
 
         public virtual User Lender { get; set; } = null!;
+        public virtual ICollection<Message> Messages { get; set; } = new List<Message>();
     }
 }
