@@ -1,0 +1,39 @@
+﻿
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using LendingView.Models
+@using MudBlazor
+@using LendingView.Components
+@using System.Net
+@using Microsoft.Extensions.Logging
+
+<MudButtonGroup Color="Color.Primary" Variant="Variant.Text">
+    <MudButton Icon="@Icons.Material.Filled.Inbox"  Color="@Color.Success" Variant="Variant.Filled" Disabled="!_showCheckInButton" OnClick="@( () => CheckIn.InvokeAsync(item))">Check In</MudButton>
+    <MudButton Icon="@Icons.Material.Filled.Outbox" Color="@Color.Success" Variant="Variant.Filled" Disabled="_showCheckInButton" OnClick="@( () => CheckOut.InvokeAsync(item))">Check Out</MudButton>
+</MudButtonGroup>
+
+
+@code {
+    [Parameter]
+    public Item item { get; set; } = null;
+
+    [Parameter] public EventCallback<Item> CheckIn { get; set; }
+    [Parameter] public EventCallback<Item> CheckOut { get; set; }
+
+    private bool _showCheckInButton = false;
+    private bool _showCheckoutButton = false;
+
+
+    protected override Task OnInitializedAsync()
+    {
+
+            if (item.Transactions.Count() > 0)
+            {
+                //item is out
+                _showCheckInButton = true;
+            }
+          
+     
+        return base.OnInitializedAsync();
+    }
+
+}

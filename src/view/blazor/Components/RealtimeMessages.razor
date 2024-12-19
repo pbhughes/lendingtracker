@@ -1,0 +1,117 @@
+﻿@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using LendingView.Models
+@using MudBlazor
+@using LendingView.Components
+@using System.Net
+@using Microsoft.Extensions.Logging
+@using Microsoft.AspNetCore.SignalR.Client
+
+@inject HttpClient Http
+@inject IAccessTokenProvider TokenProvider
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+
+
+
+
+<MudDataGrid T="Message" Items="@Elements">
+    <Columns>
+        <PropertyColumn Property="x => x.Text" Title="Text" />
+        <PropertyColumn Property="x => x.Method" Title="Method" />
+        <PropertyColumn Property="x => x.Direction" Title="Direction">
+            <CellTemplate>
+                @if (context.Item.Direction == 0)
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.ArrowRight" Title="Favorite" />
+                }
+                else
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.ArrowLeft" Title="Favorite" />
+                }
+            </CellTemplate>
+        </PropertyColumn>
+        <PropertyColumn Property="x => x.MessageDate" Title="Date" />
+        <PropertyColumn Property="x => x.Phone" Title="Phone" />
+    </Columns>
+</MudDataGrid>
+
+
+@code {
+    [Parameter]
+    public Guid transactionId { get; set; }
+
+    private IEnumerable<Message> Elements = new List<Message>();
+    string _accessToken;
+    string _error;
+
+    //signalr support
+    private HubConnection hubConnection;
+    private List<string> messages = new List<string>();
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        await GetData();
+
+        //wire up signalr
+        hubConnection = new HubConnectionBuilder()
+           .WithUrl("https://localhost:5002/messagehub", options => {
+               options.AccessTokenProvider = () => Task.FromResult(_accessToken);
+           })
+           .WithAutomaticReconnect()
+           .ConfigureLogging(logging =>
+           {
+               logging.SetMinimumLevel(LogLevel.Debug);
+
+           })
+           .Build();
+
+
+        hubConnection.On<string, string>("ReceiveMessage", (user, message) =>
+        {
+            var encodedMsg = $"{user}: {message}";
+            messages.Add(encodedMsg);
+            GetData();
+            InvokeAsync(StateHasChanged);
+        });
+
+        await hubConnection.StartAsync();
+    }
+
+    private async Task GetData(){
+
+        await GetAccessToken();
+        var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _accessToken);
+        Http.DefaultRequestHeaders.Authorization = value;
+
+        Elements = await Http.GetFromJsonAsync<List<Message>>($"/messages/{transactionId}");
+    }
+    
+
+    private async Task GetAccessToken()
+    {
+        var tokenResult = await TokenProvider.RequestAccessToken(new AccessTokenRequestOptions
+            {
+                Scopes = new[] { "https://needthatback.onmicrosoft.com/lender/lender" }
+            });
+
+        if (tokenResult.TryGetToken(out var token))
+        {
+            _accessToken = token.Value;
+        }
+        else
+        {
+            _error = tokenResult.Status switch
+            {
+                AccessTokenResultStatus.RequiresRedirect => "Redirect required. Navigating...",
+                AccessTokenResultStatus.Success => null,
+                _ => "An unknown error occurred."
+            };
+
+            if (tokenResult.Status == AccessTokenResultStatus.RequiresRedirect)
+            {
+                Navigation.NavigateTo(tokenResult.InteractiveRequestUrl!);
+            }
+        }
+    }
+}

@@ -14,6 +14,8 @@ using System.Security.Claims;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Mvc;
+using LendingTrackerApi.Hubs;
+using Microsoft.AspNetCore.SignalR;
 
 
 
@@ -42,6 +44,9 @@ builder.Services.AddDbContext<LendingTrackerContext>(options =>
 
 // Add services to the container.
 builder.Services.AddControllers();
+
+// Adding SignalR
+builder.Services.AddSignalR();
 
 // Add Swagger services
 builder.Services.AddEndpointsApiExplorer();
@@ -81,12 +86,18 @@ builder.Services.AddAuthorization(options =>
 });
 
 //inject model validators
+builder.Services.AddScoped<MessageSignalr>();
 builder.Services.AddScoped(typeof(IValidationServices), typeof(ValidatorService));
+
 
 var app = builder.Build();
 
 // Use CORS
 app.UseCors(MyAllowSpecificOrigins);
+
+//use routing for signlR
+app.UseRouting();
+app.MapHub<MessagesHub>("/messagehub");
 
 //use authorization
 app.UseAuthentication();
@@ -105,6 +116,7 @@ app.UseReDoc(c =>
     c.RoutePrefix = ""; // Set the URL where Redoc will be served
     c.InjectStylesheet("/styles/redoc.css");
 });
+
 
 
 // Configure the HTTP request pipeline.
@@ -365,7 +377,7 @@ app.MapPut("/transactions/{id}", async (int id, Transaction updatedTransaction, 
     return Results.NoContent();
 }).WithTags("Transactions").RequireAuthorization("authorized_user");
 
-app.MapDelete("/transactions/{id}", async (int id, LendingTrackerContext db) =>
+app.MapDelete("/transactions/{id}", async (Guid id, LendingTrackerContext db) =>
 {
     if (await db.Transactions.FindAsync(id) is Transaction transaction)
     {
@@ -377,7 +389,7 @@ app.MapDelete("/transactions/{id}", async (int id, LendingTrackerContext db) =>
 }).WithTags("Transactions").RequireAuthorization("authorized_user");
 
 //messaging
-app.MapPost("/messages", async ([FromBody] Transaction transaction, string message, string phone, string method, string direction,   LendingTrackerContext db, ClaimsPrincipal currentUser) =>
+app.MapPost("/messages", async ([FromBody] Transaction transaction, string message, string phone, string method, string direction,   LendingTrackerContext db, ClaimsPrincipal currentUser, IHubContext<MessagesHub> hub) =>
 {
     Guid sub = Guid.Parse(currentUser.GetNameIdentifierId());
 
@@ -388,35 +400,39 @@ app.MapPost("/messages", async ([FromBody] Transaction transaction, string messa
     }
     Message msg = new Message()
     {
+        Id = Guid.NewGuid(),
         Method = method,
         Text = message,
-        MessageDate = DateTime.Now.ToString(),
         Phone = phone,
-        Transaction = transaction,
         TransactionId = transaction.TransactionId
 
     };
     db.Messages.Add(msg);
     await db.SaveChangesAsync();
+    
+    await hub.Clients.All.SendAsync("ReceiveMessage","user", "signlr");
+
     return Results.Created($"/message/{msg.Id}", message);
+
+  
 
 }).WithTags("Messages").RequireAuthorization("authorized_user");
 
-app.MapGet("/messages", async ([FromBody] Transaction transaction, LendingTrackerContext db, ClaimsPrincipal currentUser) =>
+app.MapGet("/messages/{transactionId}", async ( Guid transactionId, LendingTrackerContext db, ClaimsPrincipal currentUser) =>
 {
     Guid sub = Guid.Parse(currentUser.GetNameIdentifierId());
 
-    if (transaction.LenderId != sub)
-    {
-        Console.WriteLine($"Transaction {transaction.TransactionId} does not belong to user");
-        return Results.Unauthorized();
+    //if (lenderId != sub)
+    //{
+    //    Console.WriteLine($"Transaction {transactionId} does not belong to user");
+    //    return Results.Unauthorized();
 
-    }
+    //}
 
-    var messages = db.Messages.Where(m => m.TransactionId == transaction.TransactionId);
+    var messages = db.Messages.Where(m => m.TransactionId == transactionId);
 
 
-    return messages is null ? Results.NotFound() : Results.Ok(messages.ToList());
+    return messages is null ? Results.NotFound() : Results.Ok(messages.OrderByDescending(m => m.MessageDate).ToList());
 
 }).WithTags("Messages").RequireAuthorization("authorized_user");
 

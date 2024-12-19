@@ -14,7 +14,7 @@ public partial class Message
 
     public string Text { get; set; } = null!;
 
-    public string MessageDate { get; set; } = null!;
+    public DateTime MessageDate { get; set; }
 
     public string Phone { get; set; } = null!;
 
