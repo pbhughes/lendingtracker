@@ -18,7 +18,18 @@
     <Columns>
         <PropertyColumn Property="x => x.Text" Title="Text" />
         <PropertyColumn Property="x => x.Method" Title="Method" />
-        <PropertyColumn Property="x => x.Direction" Title="Direction" />
+        <PropertyColumn Property="x => x.Direction" Title="Direction">
+            <CellTemplate>
+                @if (context.Item.Direction == 0)
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.ArrowRight" Title="Favorite" />
+                }
+                else
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.ArrowLeft" Title="Favorite" />
+                }
+            </CellTemplate>
+        </PropertyColumn>
         <PropertyColumn Property="x => x.MessageDate" Title="Date" />
         <PropertyColumn Property="x => x.Phone" Title="Phone" />
     </Columns>
@@ -27,7 +38,7 @@
 
 @code {
     [Parameter]
-    public string transactionId { get; set; }
+    public Guid transactionId { get; set; }
 
     private IEnumerable<Message> Elements = new List<Message>();
     string _accessToken;

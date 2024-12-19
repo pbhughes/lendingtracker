@@ -377,7 +377,7 @@ app.MapPut("/transactions/{id}", async (int id, Transaction updatedTransaction, 
     return Results.NoContent();
 }).WithTags("Transactions").RequireAuthorization("authorized_user");
 
-app.MapDelete("/transactions/{id}", async (int id, LendingTrackerContext db) =>
+app.MapDelete("/transactions/{id}", async (Guid id, LendingTrackerContext db) =>
 {
     if (await db.Transactions.FindAsync(id) is Transaction transaction)
     {

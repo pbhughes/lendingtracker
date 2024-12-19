@@ -62,7 +62,7 @@ Welcome to your new app.
         var newUserClaim = await GetClaimAsync("newUser");
         if ( newUserClaim == null)
         {
-            Navigation.NavigateTo("/counter");
+            Navigation.NavigateTo("/items");
         }
 
         me.UserId = Guid.Parse(authState.User.Claims.First(nameof => nameof.Type == "sub").Value);

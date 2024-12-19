@@ -22,7 +22,7 @@ else{
             <MudIcon Icon="@Icons.Material.Filled.NewLabel" Color="Color.Secondary" Style="display:flex;justify-content:flex-end" Title="New Items" />
         }
     </div>
-   
+
     <MudDataGrid T="Item" @ref="Elements" ServerData="ServerReload" Filterable="false" ReadOnly="@_readOnly" EditMode="@(_isCellEditMode ? DataGridEditMode.Cell : DataGridEditMode.Form)"
     StartedEditingItem="@StartedEditingItem"  CanceledEditingItem="@CanceledEditingItem" CommittedItemChanges="@CommittedItemChanges"
     Bordered="true" Dense="true" EditTrigger="@(_editTriggerRowClick ? DataGridEditTrigger.OnRowClick : DataGridEditTrigger.Manual)">
@@ -54,6 +54,17 @@ else{
                     <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Filled.Delete" aria-label="delete" OnClick="() => DeleteItemAsync(context.Item)" />
                 </CellTemplate>
             </TemplateColumn>
+            <TemplateColumn>
+                <CellTemplate>
+                    @if(context.Item.IsAvailable){
+                        <ItemActions item="context.Item" CheckIn="CheckInHandler" CheckOut="CheckOutHandler"></ItemActions>
+                    }
+                    else{
+                        <MudPaper>Out of Commission</MudPaper>
+                    }
+
+                </CellTemplate>
+            </TemplateColumn>
         </Columns>
         <ChildRowContent>
             <MudGrid>
@@ -70,7 +81,7 @@ else{
                         </MudCardContent>
                     </MudCard>
                 </MudItem>
-                <MudItem xs="5">
+                <MudItem xs="6">
                     @if (context.Item.Transactions.Count() > 0)
                     {
                         <MudCard Outlined="true" Class="border-solid border-2 mud-border-primary pa-4">
@@ -114,36 +125,14 @@ else{
                 </MudItem>
                 <MudItem xs="12">
                     @if(context.Item.Transactions.Count() > 0){
-
-
                         @if (context.Item.Transactions.ToArray()[0].Messages.Count() > 0)
                         {
                             <MudCard Outlined="true" Class="border-solid border-2 mud-border-primary pa-4">
                                 <MudCardHeader>
                                     <h3>Messages</h3>
                                 </MudCardHeader>
-                                <MudCardContent>
-                                    <MudTable Items="@context.Item.Transactions.ToArray()[0].Messages">
-                                        <HeaderContent>
-                                            <MudTh>Text</MudTh>
-                                            <MudTh>Direction</MudTh>
-                                            <MudTh>Method</MudTh>
-                                            <MudTh>Date</MudTh>
-                                        </HeaderContent>
-                                        <RowTemplate Context="messages">
-                                            <MudTd>@messages.Text</MudTd>
-                                            <MudTd>
-                                                @if(messages.Direction == 0){
-                                                    <MudIcon Icon="@Icons.Material.Filled.ArrowCircleRight" Title="Favorite" />
-                                                }
-                                                else{
-                                                    <MudIcon Icon="@Icons.Material.Filled.ArrowCircleLeft" Title="Favorite" />
-                                                }
-                                            </MudTd>
-                                            <MudTd>@messages.Method</MudTd>
-                                            <MudTd>@messages.MessageDate</MudTd>
-                                        </RowTemplate>
-                                    </MudTable>
+                                <MudCardContent Style="max-height: 400px; overflow-y: auto;">
+                                    <RealtimeMessages transactionId="@context.Item.Transactions.ToArray()[0].TransactionId"></RealtimeMessages>
                                 </MudCardContent>
                             </MudCard>
                         }
@@ -213,11 +202,11 @@ else{
             .ConfigureLogging(logging =>
             {
                 logging.SetMinimumLevel(LogLevel.Debug);
-               
+
             })
             .Build();
 
-        
+
         hubConnection.On<string, string>("ReceiveMessage", (user, message) =>
         {
             var encodedMsg = $"{user}: {message}";
@@ -330,7 +319,7 @@ else{
                 Items = pagedData
             };
 
-            _newMessages = false;
+        _newMessages = false;
     }
 
     private async void SendSmsMessage(Item item, Transaction transaction, string method)
@@ -340,7 +329,7 @@ else{
         var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
         Http.DefaultRequestHeaders.Authorization = value;
 
-      
+
     }
 
     // events
@@ -396,5 +385,23 @@ else{
     private void HandleAddnew(string msg)
     {
         _isAddNew = false;
+    }
+
+    //*******************Item Actions***********************************/
+    async  void CheckInHandler(Item item)
+    {
+
+        await GetAccessToken();
+        var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+        Http.DefaultRequestHeaders.Authorization = value;
+
+        await Http.DeleteAsync($"/transactions/{item.Transactions.ToArray()[0].TransactionId}");
+
+        Elements.ReloadServerData();
+    }
+
+    async void CheckOutHandler(Item item)
+    {
+        
     }
 }
