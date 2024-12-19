@@ -44,7 +44,7 @@ else{
                     <MudSwitch @bind-Value="context.Item.IsAvailable" Label="Is Avialable" />
                 </EditTemplate>
             </PropertyColumn>
-            <TemplateColumn Hidden="@(_isCellEditMode || _readOnly || _editTriggerRowClick)" CellClass="d-flex justify-end">
+            <TemplateColumn Hidden="@(_isCellEditMode || _readOnly || _editTriggerRowClick)" >
                 <CellTemplate>
                     <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" OnClick="@context.Actions.StartEditingItemAsync" />
                 </CellTemplate>
