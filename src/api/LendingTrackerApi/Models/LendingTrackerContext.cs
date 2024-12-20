@@ -102,9 +102,9 @@ public partial class LendingTrackerContext : DbContext
             entity.HasKey(e => e.TransactionId).HasName("PK__Transact__55433A6B92A192EE");
 
             entity.Property(e => e.TransactionId).HasDefaultValueSql("(newid())");
-            entity.Property(e => e.BorrowedAt).HasColumnType("datetime");
-            entity.Property(e => e.DueDate).HasColumnType("datetime");
-            entity.Property(e => e.ReturnedAt).HasColumnType("datetime");
+            entity.Property(e => e.BorrowedAt).HasColumnType("datetime2");
+            entity.Property(e => e.DueDate).HasColumnType("datetime2");
+            entity.Property(e => e.ReturnedAt).HasColumnType("datetime2");
             entity.Property(e => e.Status)
                 .HasMaxLength(50)
                 .HasDefaultValue("Pending");

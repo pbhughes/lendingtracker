@@ -1,0 +1,152 @@
+﻿@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using LendingView.Models
+@using MudBlazor
+@using LendingView.Components
+@using System.Net
+@using Microsoft.Extensions.Logging
+@using System.Threading
+
+@inject HttpClient Http
+@inject IAccessTokenProvider TokenProvider
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+
+
+@if(_loading){
+    <p>Loading....</p>
+}
+else{
+
+    <MudCard Outlined="true" Class="border-solid border-2 mud-border-primary pa-4">
+        <MudCardHeader>
+            Item: @ItemId
+        </MudCardHeader>
+        <MudCardContent Style="max-height: 400px; overflow-y: auto;">
+            <MudSelect T="Borrower" Label="choose borrower" @bind-Value="_selectedBorrower" >
+                @foreach (var borrower in _borrowers)
+                {
+                    <MudSelectItem Value="@borrower">@borrower.Name - @borrower.BorrowerEmail</MudSelectItem>
+                }
+            </MudSelect>
+
+        </MudCardContent>
+        <MudCardActions>
+            <MudButton OnClick="Close" Variant="@Variant.Outlined" Color="@Color.Secondary">Close</MudButton>
+            @if(! _checkedOut && _selectedBorrower != null){
+                <MudButton OnClick="CheckOut" Variant="@Variant.Outlined" Color="@Color.Primary">Check Out</MudButton>
+            }
+
+            @if(_checkedOut){
+                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="@Color.Success"></MudIcon>
+            }
+
+        </MudCardActions>
+    </MudCard>
+}
+
+@code {
+
+    [Parameter] public int ItemId { get; set; }
+    [Parameter] public EventCallback Close { get; set; }
+
+    private IEnumerable<Borrower> _borrowers;
+    private IEnumerable<Borrower> _filteredBorrowers;
+    private Borrower _selectedBorrower;
+    private string _borrowerSearchString = string.Empty;
+    private string _accessToken;
+    private string _error;
+    private bool _loading = true;
+    private bool _checkedOut = false;
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        await GetAccessToken();
+        var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _accessToken);
+        Http.DefaultRequestHeaders.Authorization = value;
+
+        _borrowers = await Http.GetFromJsonAsync<List<Borrower>>("/borrowers");
+        _loading = false;
+        await base.OnInitializedAsync();
+    }
+
+    private void Search()
+    {
+        IEnumerable<Borrower> data = _borrowers;
+
+        data = data.Where(element =>
+        {
+            if (string.IsNullOrWhiteSpace(_borrowerSearchString))
+                return true;
+            if (element.Name.Contains(_borrowerSearchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+            if (element.BorrowerEmail.Contains(_borrowerSearchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+            if (element.BorrowerSms.Contains(_borrowerSearchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+            return false;
+        }).ToArray();
+        var totalItems = data.Count();
+
+
+        _filteredBorrowers = data;
+    }
+
+    private async Task GetAccessToken()
+    {
+        var tokenResult = await TokenProvider.RequestAccessToken(new AccessTokenRequestOptions
+            {
+                Scopes = new[] { "https://needthatback.onmicrosoft.com/lender/lender" }
+            });
+
+        if (tokenResult.TryGetToken(out var token))
+        {
+            _accessToken = token.Value;
+        }
+        else
+        {
+            _error = tokenResult.Status switch
+            {
+                AccessTokenResultStatus.RequiresRedirect => "Redirect required. Navigating...",
+                AccessTokenResultStatus.Success => null,
+                _ => "An unknown error occurred."
+            };
+
+            if (tokenResult.Status == AccessTokenResultStatus.RequiresRedirect)
+            {
+                Navigation.NavigateTo(tokenResult.InteractiveRequestUrl!);
+            }
+        }
+    }
+
+
+
+    private async void CheckOut(){
+
+        await GetAccessToken();
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        string userId = Guid.Parse(authState.User.Claims.First(nameof => nameof.Type == "sub").Value).ToString();
+
+        Transaction transaction = new Transaction()
+            {
+                TransactionId = Guid.NewGuid(),
+                LenderId = Guid.Parse(userId),
+                BorrowerId = _selectedBorrower.BorrowerId,
+                BorrowedAt = DateTime.Now,
+                ItemId = ItemId
+            };
+
+        HttpResponseMessage response = await Http.PostAsJsonAsync<Transaction>("/transactions", transaction);
+
+        if (response.StatusCode == HttpStatusCode.Created)
+            _checkedOut = true;
+
+        await Close.InvokeAsync();
+
+     }
+
+
+
+}

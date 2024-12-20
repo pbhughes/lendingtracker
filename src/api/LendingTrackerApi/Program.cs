@@ -19,6 +19,7 @@ using Microsoft.AspNetCore.SignalR;
 
 
 
+
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
 var builder = WebApplication.CreateBuilder(args);
@@ -356,11 +357,30 @@ app.MapGet("/transactions/{id}", async (int id, LendingTrackerContext db) =>
     await db.Transactions.FindAsync(id) is Transaction transaction ? Results.Ok(transaction) : Results.NotFound())
     .WithTags("Transactions").RequireAuthorization("authorized_user");
 
-app.MapPost("/transactions", async (Transaction transaction, LendingTrackerContext db) =>
+app.MapPost("/transactions", async (Transaction transaction, LendingTrackerContext db,  ClaimsPrincipal user) =>
 {
+    string sub = user.GetNameIdentifierId();
+
+    if (Guid.Parse(sub) != transaction.LenderId)
+        return Results.Unauthorized();
+    //notify the user the item was checked out
+    Borrower b = db.Borrowers.Find(transaction.BorrowerId);
+    Item i = db.Items.Find(transaction.ItemId);
+
+    Message msg = new Message()
+    {
+        Transaction = transaction,
+        Method = "sms",
+        Text = $"Item {i.ItemName} was checked out to you",
+        MessageDate = DateTime.Now,
+        Phone = b.BorrowerSms,
+    };
+    
     db.Transactions.Add(transaction);
+    db.Messages.Add(msg);
     await db.SaveChangesAsync();
     return Results.Created($"/transactions/{transaction.TransactionId}", transaction);
+
 }).WithTags("Transactions").RequireAuthorization("authorized_user");
 
 app.MapPut("/transactions/{id}", async (int id, Transaction updatedTransaction, LendingTrackerContext db) =>
@@ -377,8 +397,10 @@ app.MapPut("/transactions/{id}", async (int id, Transaction updatedTransaction, 
     return Results.NoContent();
 }).WithTags("Transactions").RequireAuthorization("authorized_user");
 
-app.MapDelete("/transactions/{id}", async (Guid id, LendingTrackerContext db) =>
+app.MapDelete("/transactions/{id}", async (Guid id, LendingTrackerContext db, ClaimsPrincipal user) =>
 {
+
+
     if (await db.Transactions.FindAsync(id) is Transaction transaction)
     {
         db.Transactions.Remove(transaction);
