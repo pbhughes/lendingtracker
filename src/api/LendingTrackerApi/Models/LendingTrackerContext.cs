@@ -79,7 +79,7 @@ public partial class LendingTrackerContext : DbContext
 
             entity.HasIndex(e => e.TransactionId, "IX_Message_ItemId1");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
             entity.Property(e => e.MessageDate).HasDefaultValueSql("(getdate())");
             entity.Property(e => e.Text).HasMaxLength(300);
             entity.Property(e => e.TransactionId).HasDefaultValueSql("(newid())");

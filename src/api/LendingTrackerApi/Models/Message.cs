@@ -6,7 +6,7 @@ namespace LendingTrackerApi.Models;
 
 public partial class Message
 {
-    public Guid Id { get; set; }
+    public Guid Id { get; set; } = new Guid();
 
     public string Method { get; set; } = null!;
 

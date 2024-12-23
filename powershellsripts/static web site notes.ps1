@@ -1,0 +1,1 @@
+﻿static web site primary url: https://needthatbackstorage.z5.web.core.windows.net/

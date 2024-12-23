@@ -16,6 +16,7 @@ using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Mvc;
 using LendingTrackerApi.Hubs;
 using Microsoft.AspNetCore.SignalR;
+using Azure.Communication.Sms;
 
 
 
@@ -85,6 +86,13 @@ builder.Services.AddAuthorization(options =>
         policy.RequireClaim("http://schemas.microsoft.com/identity/claims/scope", "lender"));
 
 });
+
+//add SMS config support
+// Bind configuration section
+builder.Services.Configure<MessageSMSSettings>(
+    builder.Configuration.GetSection("MessageSMS"));
+
+builder.Services.AddScoped<MessageSMS>();
 
 //inject model validators
 builder.Services.AddScoped<MessageSignalr>();
@@ -357,7 +365,7 @@ app.MapGet("/transactions/{id}", async (int id, LendingTrackerContext db) =>
     await db.Transactions.FindAsync(id) is Transaction transaction ? Results.Ok(transaction) : Results.NotFound())
     .WithTags("Transactions").RequireAuthorization("authorized_user");
 
-app.MapPost("/transactions", async (Transaction transaction, LendingTrackerContext db,  ClaimsPrincipal user) =>
+app.MapPost("/transactions", async (Transaction transaction, LendingTrackerContext db,  ClaimsPrincipal user, MessageSMS smg) =>
 {
     string sub = user.GetNameIdentifierId();
 
@@ -369,15 +377,17 @@ app.MapPost("/transactions", async (Transaction transaction, LendingTrackerConte
 
     Message msg = new Message()
     {
-        Transaction = transaction,
+        Id = new Guid(),
         Method = "sms",
         Text = $"Item {i.ItemName} was checked out to you",
         MessageDate = DateTime.Now,
         Phone = b.BorrowerSms,
     };
+    //await SendMessageToPorrower(transaction, msg.Text, db, smg);
+
+    transaction.Messages.Add(msg);
     
     db.Transactions.Add(transaction);
-    db.Messages.Add(msg);
     await db.SaveChangesAsync();
     return Results.Created($"/transactions/{transaction.TransactionId}", transaction);
 
@@ -411,11 +421,12 @@ app.MapDelete("/transactions/{id}", async (Guid id, LendingTrackerContext db, Cl
 }).WithTags("Transactions").RequireAuthorization("authorized_user");
 
 //messaging
-app.MapPost("/messages", async ([FromBody] Transaction transaction, string message, string phone, string method, string direction,   LendingTrackerContext db, ClaimsPrincipal currentUser, IHubContext<MessagesHub> hub) =>
+app.MapPost("/messages", async ([FromBody] Transaction transaction, string message, string phone, string method, string direction, 
+    LendingTrackerContext db, ClaimsPrincipal currentUser, IHubContext<MessagesHub> hub, MessageSMS sms) =>
 {
     Guid sub = Guid.Parse(currentUser.GetNameIdentifierId());
 
-    if(transaction.LenderId != sub)
+    if (transaction.LenderId != sub)
     {
         Console.WriteLine($"Borrower {transaction} is not associated to user");
         return Results.Unauthorized();
@@ -429,14 +440,18 @@ app.MapPost("/messages", async ([FromBody] Transaction transaction, string messa
         TransactionId = transaction.TransactionId
 
     };
+
+    //look up borrower to pull SMS device
+    //await SendMessageToPorrower(transaction, message, db, sms);
+
     db.Messages.Add(msg);
     await db.SaveChangesAsync();
-    
-    await hub.Clients.All.SendAsync("ReceiveMessage","user", "signlr");
+
+    await hub.Clients.All.SendAsync("ReceiveMessage", "user", "signlr");
 
     return Results.Created($"/message/{msg.Id}", message);
 
-  
+
 
 }).WithTags("Messages").RequireAuthorization("authorized_user");
 
@@ -460,3 +475,15 @@ app.MapGet("/messages/{transactionId}", async ( Guid transactionId, LendingTrack
 
 // Run the application
 app.Run();
+
+static async Task SendMessageToPorrower(Transaction transaction, string message, LendingTrackerContext db, MessageSMS sms)
+{
+    Borrower b = await db.Borrowers.FindAsync(transaction.BorrowerId);
+    if (b != null)
+    {
+        if (b.BorrowerId != null)
+        {
+            SmsSendResult sendResult = await sms.SendSMS($"{b.CountryCode}{b.BorrowerSms}", sms.Number, message);
+        }
+    }
+}
