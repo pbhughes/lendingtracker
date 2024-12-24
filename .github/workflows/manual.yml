@@ -12,6 +12,10 @@ on:
                 type: 'string'
                 default: 'test'
 
+permissions:
+    issues: write
+    contents: write
+    pull-requests: write
 
 jobs:
   build-and-deploy:
