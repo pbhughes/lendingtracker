@@ -56,24 +56,24 @@ Welcome to your new app.
 
     protected override async Task OnInitializedAsync(){
 
-        await GetAccessToken();
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        // await GetAccessToken();
+        // var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
 
-        var newUserClaim = await GetClaimAsync("newUser");
-        if ( newUserClaim == null)
-        {
-            Navigation.NavigateTo("/items");
-        }
+        // var newUserClaim = await GetClaimAsync("newUser");
+        // if ( newUserClaim == null)
+        // {
+        //     Navigation.NavigateTo("/open");
+        // }
 
-        me.UserId = Guid.Parse(authState.User.Claims.First(nameof => nameof.Type == "sub").Value);
-        me.Email = await ParseEmails(authState.User.Identities.First().Claims.First(n => n.Type == "emails").Value);
-        me.FullName = authState.User.Identities.First().Claims.First(n => n.Type == "name").Value;
+        // me.UserId = Guid.Parse(authState.User.Claims.First(nameof => nameof.Type == "sub").Value);
+        // me.Email = await ParseEmails(authState.User.Identities.First().Claims.First(n => n.Type == "emails").Value);
+        // me.FullName = authState.User.Identities.First().Claims.First(n => n.Type == "name").Value;
 
-        string address = await GetClaimAsync("streetAddress");
-        string city = await GetClaimAsync("city");
-        string state = await GetClaimAsync("state");
-        string zip = await GetClaimAsync("postalCode"); 
-        me.Address = $"{address}\n{city}, {state} {zip}";
+        // string address = await GetClaimAsync("streetAddress");
+        // string city = await GetClaimAsync("city");
+        // string state = await GetClaimAsync("state");
+        // string zip = await GetClaimAsync("postalCode"); 
+        // me.Address = $"{address}\n{city}, {state} {zip}";
 
     }
 
