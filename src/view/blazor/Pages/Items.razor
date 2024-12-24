@@ -213,7 +213,7 @@ else{
     {
         await GetAccessToken();
         hubConnection = new HubConnectionBuilder()
-            .WithUrl("https://localhost:5002/messagehub")
+            .WithUrl("/messagehub")
             .WithAutomaticReconnect()
             .ConfigureLogging(logging =>
             {

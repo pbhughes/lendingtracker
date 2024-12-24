@@ -55,7 +55,7 @@
 
         //wire up signalr
         hubConnection = new HubConnectionBuilder()
-           .WithUrl("https://localhost:5002/messagehub", options => {
+           .WithUrl("/messagehub", options => {
                options.AccessTokenProvider = () => Task.FromResult(_accessToken);
            })
            .WithAutomaticReconnect()

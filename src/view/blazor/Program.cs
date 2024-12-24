@@ -40,7 +40,7 @@ namespace LendingView
 
                 return new HttpClient(interceptor)
                 {
-                    BaseAddress = new Uri("https://localhost:5002"),
+                    BaseAddress = new Uri("https://localhost:32771"),
                     Timeout = TimeSpan.FromSeconds(6)
                 };
             });
