@@ -1,9 +1,8 @@
-name: Deploy BlazorWASM App to Azure Static Website
+name: Manual Work Flow For Development
 
 on:
-  push:
-    branches:
-    - main
+    workflow_dispatch:
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -29,11 +28,3 @@ jobs:
     #     uses: Elskom/build-dotnet@main
     #     with:
     #       SOLUTION_FILE_PATH: /src/view/blazor/LendingView.sln
-
-      
-        
-      
-          
-          
-          
-      
