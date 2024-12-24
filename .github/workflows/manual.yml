@@ -16,6 +16,7 @@ jobs:
       - run: echo "We actually did something"
       - run: echo "${{inputs.name}}"
       - run: echo "${{ secrets.GITHUB_TOKEN}}"
+      - run: echo "${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN}}"
 
     # steps:
     #   - name: Checkout code
