@@ -2,6 +2,7 @@ name: Manual Work Flow For Development
 
 env:
     APP_LOCATION: "/src/view/blazor"
+    OUTPUT_LOCATION: "build"
 
 on:
     workflow_dispatch:
@@ -21,6 +22,7 @@ jobs:
       - run: echo "${{ secrets.GITHUB_TOKEN}}"
       - run: echo "${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN}}"
       - run: echo "${{ env.APP_LOCATION}}"
+      - run: echo "Artifact location ${{ env.OUTPUT_LOCATION }}"
 
     # steps:
     #   - name: Checkout code
