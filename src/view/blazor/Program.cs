@@ -45,6 +45,8 @@ namespace LendingView
                 options.ProviderOptions.DefaultAccessTokenScopes.Add("https://needthatback.onmicrosoft.com/lender/lender");
             });
 
+
+
             builder.Services.AddMudServices();
            
             await builder.Build().RunAsync();
