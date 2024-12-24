@@ -10,4 +10,30 @@ jobs:
 
     steps:
       - name: Checkout code
+        uses: actions/checkout@v4.2.2
+        with:
+          repository: Lendingtracker
+          branches: main
+
+      - name: Setup .Net
+        uses: actions/setup-dotnet@v4.1.0
+        with:
+          dotnet-version: '9.0'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build DotNet
+        with:
+          SOLUTION_FILE_PATH: /src/view/blazor/LendingView.sln
+
+      - name: Publish Dotnet
+        with:
+          PROJECT_FILE_PATH: /src/view/blazor/LendingView.csproj
+      
+        
+      
+          
+          
+          
       
