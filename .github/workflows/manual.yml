@@ -14,6 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: echo "We actually did something"
+      - run: echo name
 
     # steps:
     #   - name: Checkout code
