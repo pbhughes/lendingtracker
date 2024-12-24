@@ -2,6 +2,12 @@ name: Manual Work Flow For Development
 
 on:
     workflow_dispatch:
+        inputs:
+            name:
+                description: 'Nme'
+                type: 'string'
+                default: 'test'
+
 
 jobs:
   build-and-deploy:
