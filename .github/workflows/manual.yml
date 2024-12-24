@@ -1,5 +1,8 @@
 name: Manual Work Flow For Development
 
+env:
+    APP_LOCATION: "/src/view/blazor"
+
 on:
     workflow_dispatch:
         inputs:
@@ -17,6 +20,7 @@ jobs:
       - run: echo "${{inputs.name}}"
       - run: echo "${{ secrets.GITHUB_TOKEN}}"
       - run: echo "${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN}}"
+      - run: echo "${{ env.APP_LOCATION}}"
 
     # steps:
     #   - name: Checkout code
