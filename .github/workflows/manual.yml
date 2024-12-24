@@ -4,6 +4,7 @@ env:
     APP_LOCATION: "/src/view/blazor"
     OUTPUT_LOCATION: "build"
     deployment_token: ${{secrets.DEPLOYMENT_TOKEN}}
+    GITHUB_TOKEN: ${{secrets.DEPLOYMENT_TOKEN}}
 
 on:
     workflow_dispatch:
