@@ -27,6 +27,14 @@ app {
     z-index: 10;
 }
 
+video {
+    width: 50%; /* Make it responsive */
+    height: 50%; /* Make it responsive */
+    object-fit: cover; /* Cover the container */
+    border: none;
+    outline: none;
+}
+
 .main {
     flex: 1;
 }

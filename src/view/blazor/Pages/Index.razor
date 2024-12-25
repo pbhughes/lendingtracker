@@ -6,40 +6,59 @@
 @using System.ComponentModel.DataAnnotations
 @using System.Net.Http
 @using System.Text.RegularExpressions
-@inject HttpClient Http
-@inject NavigationManager Navigation
-@inject AuthenticationStateProvider AuthenticationStateProvider
-@inject IAccessTokenProvider TokenProvider
 @using System.IdentityModel.Tokens.Jwt
 
-<h1>Hello, world!</h1>
 
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider ast
+@inject IAccessTokenProvider TokenProvider
 
 
 <AuthorizeView>
     <Authorized Context="authContext">
         Hello, @authContext.User.Identity.Name
 
-        <h3>Please add a phone number to support SMS messaging.</h3>
-        <h5>This can be different than the phone used during authentication</h5>
-        <EditForm Model="@me" method="post" OnValidSubmit="HandleValidSubmit">
-            <DataAnnotationsValidator />
-            <ValidationSummary />
+        @if(_collectPhone){
 
-            <input type="hidden" id="name" @bind="me.UserId" />
-            <select @bind="me.CountryCode" class="country-select">
-                @foreach (var country in countries)
-                {
-                    <option value="@country.Code" data-flag="@country.FlagUrl">
-                        @country.Name (@country.Code)
-                    </option>
-                }
-            </select>
-            <input type="tel" id="phone" @bind="me.PhoneNumber" placeholder="Phone Number xxx-xxx-xxxx" />
-            <button type="submit">Submit</button>
-        </EditForm>
+
+            <h3>Please add a phone number to support SMS messaging.</h3>
+            <h5>This can be different than the phone used during authentication</h5>
+            <MudGrid >
+                <MudItem xs="12" sm="7">
+                    <MudPaper Class="pa-4">
+                        <EditForm Model="@me" method="post" OnValidSubmit="HandleValidSubmit">
+                            <DataAnnotationsValidator />
+                            <MudTextField T="string" ReadOnly="true" Label="@me.FullName" Value="@me.FullName"></MudTextField>
+                            <MudSelect @bind-Value="me.CountryCode">
+                                @foreach (var country in countries)
+                                {
+                                    <MudSelectItem Value="country.Code">@country.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <MudTextField T="string" ReadOnly="true" Label="Phone Number" @bind-Value="me.PhoneNumber" For="() => me.PhoneNumber" Placeholder="Enter valid phone"></MudTextField>
+                            <MudSpacer/>
+                            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto d-flex justify-end align-center">Register</MudButton>
+                        </EditForm>
+                    </MudPaper>
+                </MudItem>
+
+            </MudGrid>
+        }
     </Authorized>
+    <NotAuthorized>
+        <MudChip  T="string" Color="Color.Tertiary">Lending Tracker allows you to keep track of the stuff you own and lend out</MudChip>
+        <MudPaper Class="d-flex flex-grow-1 border-none" Outlined="false">
+            <video controls>
+                <source src="https://needthatbackstorage.blob.core.windows.net/media/video.mp4?sp=r&st=2024-12-25T17:51:45Z&se=2024-12-26T01:51:45Z&sv=2022-11-02&sr=c&sig=B6xEux5LXRgDvht1Z0CGUJ61E5kICQxebZpgujJ5b%2BU%3D" />
+                Your browser does not support the video tag sorry
+            </video>
+        </MudPaper>
+
+    </NotAuthorized>
 </AuthorizeView>
+
+
 
 @code{
 
@@ -51,29 +70,33 @@
     private ClaimsIdentity identity;
     private string accessToken = string.Empty;
     private string error;
-
+    private bool _collectPhone = false;
 
     protected override async Task OnInitializedAsync(){
 
         // await GetAccessToken();
-        // var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var authState = await ast.GetAuthenticationStateAsync();
 
-        // var newUserClaim = await GetClaimAsync("newUser");
-        // if ( newUserClaim == null)
-        // {
-        //     Navigation.NavigateTo("/open");
-        // }
 
-        // me.UserId = Guid.Parse(authState.User.Claims.First(nameof => nameof.Type == "sub").Value);
-        // me.Email = await ParseEmails(authState.User.Identities.First().Claims.First(n => n.Type == "emails").Value);
-        // me.FullName = authState.User.Identities.First().Claims.First(n => n.Type == "name").Value;
+        if(authState.User.Identity.IsAuthenticated){
+            await GetAccessToken();
+            string userId = await GetClaimAsync("UserId");
 
-        // string address = await GetClaimAsync("streetAddress");
-        // string city = await GetClaimAsync("city");
-        // string state = await GetClaimAsync("state");
-        // string zip = await GetClaimAsync("postalCode"); 
-        // me.Address = $"{address}\n{city}, {state} {zip}";
 
+            me.UserId = Guid.Parse(authState.User.Claims.First(nameof => nameof.Type == "sub").Value);
+            me.Email = await ParseEmails(authState.User.Identities.First().Claims.First(n => n.Type == "emails").Value);
+            me.FullName = authState.User.Identities.First().Claims.First(n => n.Type == "name").Value;
+
+            User theUser = await GetUserPhone(userId);
+
+            if(theUser != null && !string.IsNullOrEmpty(theUser.PhoneNumber))
+            {
+                Navigation.NavigateTo("/items");
+            }
+            else{
+                _collectPhone = true;
+            }
+        }
     }
 
     private async void HandleValidSubmit()
@@ -89,6 +112,7 @@
     {
         var tokenResult = await TokenProvider.RequestAccessToken(new AccessTokenRequestOptions
             {
+
                 Scopes = new[] { "https://needthatback.onmicrosoft.com/lender/lender" ,
                                  "profile", "openid"
                 }
@@ -171,5 +195,14 @@
         }
     }
 
+    private async Task<User> GetUserPhone(string userId)
+    {
+        await GetAccessToken();
+        var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+        Http.DefaultRequestHeaders.Authorization = value;
+
+        User user = await Http.GetFromJsonAsync<User>($"/users/{userId}");
+        return user;
+    }
 }
 
