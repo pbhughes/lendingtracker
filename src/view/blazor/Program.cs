@@ -5,6 +5,9 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor.Services;
+using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.AspNetCore.Builder;
+
 
 
 
@@ -45,8 +48,7 @@ namespace LendingView
                 };
             });
 
-
-
+                     
             builder.Services.AddMsalAuthentication(options =>
             {
                 builder.Configuration.Bind("AzureAdB2C", options.ProviderOptions.Authentication);
@@ -55,9 +57,17 @@ namespace LendingView
                 options.ProviderOptions.DefaultAccessTokenScopes.Add("https://needthatback.onmicrosoft.com/lender/lender");
             });
 
+            //support static file video streaming
+            var staticprovider = new FileExtensionContentTypeProvider();
+            
 
+            builder.Services.Configure<StaticFileOptions>(options =>
+            {
+                options.ContentTypeProvider = staticprovider;
+            });
 
             builder.Services.AddMudServices();
+           
            
             await builder.Build().RunAsync();
         }

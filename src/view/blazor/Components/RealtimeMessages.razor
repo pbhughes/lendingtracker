@@ -30,7 +30,11 @@
                 }
             </CellTemplate>
         </PropertyColumn>
-        <PropertyColumn Property="x => x.MessageDate" Title="Date" />
+        <PropertyColumn Property="x => x.MessageDate" Title="Date">
+            <CellTemplate>
+                @DateTime.Parse(context.Item.MessageDate).ToLocalTime().ToString("yyyy - MM - dd HH: mm:ss")
+            </CellTemplate>
+        </PropertyColumn>
         <PropertyColumn Property="x => x.Phone" Title="Phone" />
     </Columns>
 </MudDataGrid>
@@ -55,7 +59,8 @@
 
         //wire up signalr
         hubConnection = new HubConnectionBuilder()
-           .WithUrl("/messagehub", options => {
+           .WithUrl($"{Http.BaseAddress}messagehub", options =>
+           {
                options.AccessTokenProvider = () => Task.FromResult(_accessToken);
            })
            .WithAutomaticReconnect()
