@@ -12,6 +12,7 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager Navigation
 
+
 @if(_isAddNew)
 {
     <LendingView.Components.AddNewItem AddingNew="@_isAddNew" OnAddNew="HandleAddnew"></LendingView.Components.AddNewItem>
@@ -211,9 +212,10 @@ else{
 
     protected override async Task OnInitializedAsync()
     {
+        
         await GetAccessToken();
         hubConnection = new HubConnectionBuilder()
-            .WithUrl("/messagehub")
+            .WithUrl($"{Http.BaseAddress}messagehub")
             .WithAutomaticReconnect()
             .ConfigureLogging(logging =>
             {
