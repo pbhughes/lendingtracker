@@ -22,6 +22,7 @@ public partial class Message
 
     public Guid TransactionId { get; set; }
 
+    [JsonIgnore]
     public virtual Item? Item { get; set; }
 
     [JsonIgnore]

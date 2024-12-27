@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.002.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LendingTrackerApi", "LendingTrackerApi\LendingTrackerApi.csproj", "{93666F04-5A6D-40D6-88B2-CBF23743DB92}"
+EndProject
+Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{A064157A-74DB-42AA-A702-9DF9E4AFEEE2}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{93666F04-5A6D-40D6-88B2-CBF23743DB92}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{93666F04-5A6D-40D6-88B2-CBF23743DB92}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{93666F04-5A6D-40D6-88B2-CBF23743DB92}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{93666F04-5A6D-40D6-88B2-CBF23743DB92}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A064157A-74DB-42AA-A702-9DF9E4AFEEE2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A064157A-74DB-42AA-A702-9DF9E4AFEEE2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A064157A-74DB-42AA-A702-9DF9E4AFEEE2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A064157A-74DB-42AA-A702-9DF9E4AFEEE2}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E97F7713-EE0A-4941-9511-6AD99E9BECD4}
+	EndGlobalSection
+EndGlobal

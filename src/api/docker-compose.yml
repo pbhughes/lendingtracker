@@ -1,0 +1,29 @@
+services:
+  lendingtrackerapi:
+    image: ${DOCKER_REGISTRY-}lendingtrackerapi
+    build:
+      context: LendingTrackerApi
+      dockerfile: Dockerfile
+    networks:
+      - lendingviewnetwork
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:latest
+    container_name: sqlserver
+    environment:
+      ACCEPT_EULA: "Y"                  # Required to accept the license agreement
+      SA_PASSWORD: "Reguxalo26@" # Replace with a secure password
+    ports:
+      - "1433:1433"                     # Map SQL Server port to localhost
+    volumes:
+      - sqlserver-data:/var/opt/mssql  # Persist data across container restarts
+    networks:
+      - lendingviewnetwork
+
+networks:
+  lendingviewnetwork:
+    driver: bridge
+    external: false
+
+volumes:
+  sqlserver-data:

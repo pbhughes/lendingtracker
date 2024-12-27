@@ -17,21 +17,21 @@ else
 {
 
     <MudDataGrid T="Borrower" @ref="Elements" ServerData="ServerReload" Filterable="false" ReadOnly="@_readOnly" EditMode="@(_isCellEditMode ? DataGridEditMode.Cell : DataGridEditMode.Form)"
-                 StartedEditingItem="@StartedEditingItem" CanceledEditingItem="@CanceledEditingItem" CommittedItemChanges="@CommittedItemChanges"
-                 Bordered="true" Dense="true" EditTrigger="@(_editTriggerRowClick ? DataGridEditTrigger.OnRowClick : DataGridEditTrigger.Manual)">
+    StartedEditingItem="@StartedEditingItem" CanceledEditingItem="@CanceledEditingItem" CommittedItemChanges="@CommittedItemChanges"
+    Bordered="true" Dense="true" EditTrigger="@(_editTriggerRowClick ? DataGridEditTrigger.OnRowClick : DataGridEditTrigger.Manual)">
         <ToolBarContent>
             <MudText Typo="Typo.h6">Borrowers</MudText>
             <MudIconButton Size="@Size.Large" Icon="@Icons.Material.Filled.Add" aria-label="add" OnClick="() => AddNew()" />
             <MudSpacer />
             <MudTextField T="string" ValueChanged="@(s=>OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
-                          AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+            AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
 
         </ToolBarContent>
         <Columns>
             <HierarchyColumn T="Borrower" />
-    
-                <PropertyColumn Class="d-none" Property="x => x.BorrowerId" Title="ID" Editable="false" Hidden="true" />
-          
+
+            <PropertyColumn Class="d-none" Property="x => x.BorrowerId" Title="ID" Editable="false" Hidden="true" />
+
             <PropertyColumn Property="x => x.Name" Title="Name" />
             <PropertyColumn Property="x => x.BorrowerEmail" Title="Email" />
             <PropertyColumn Property="x => x.CountryCode" Title="Country" />
@@ -98,7 +98,7 @@ else
 
 @code {
     private MudDataGrid<Borrower> Elements;
-    
+
 
     private bool _isReadOnly = true;
     private bool _readOnly;
@@ -222,13 +222,14 @@ else
     async void CommittedItemChanges(Borrower borrower)
     {
         _events.Insert(0, $"Event = CommittedItemChanges, Data = {System.Text.Json.JsonSerializer.Serialize(borrower)}");
+        borrower.BorrowerId = new Guid();
 
         //call the put AI and commit the changes
         await GetAccessToken();
         var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
         Http.DefaultRequestHeaders.Authorization = value;
 
-        var response = await Http.PutAsJsonAsync<Borrower>($"/borrowers/{borrower.BorrowerId}", borrower);
+        var response = await Http.PutAsJsonAsync<Borrower>($"/borrowers", borrower);
     }
 
     async void DeleteItemAsync(Borrower borrower)

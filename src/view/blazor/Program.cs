@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using MudBlazor.Services;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.AspNetCore.Builder;
+using LendingView.Models;
 
 
 
@@ -29,6 +30,8 @@ namespace LendingView
                 .AddJsonFile($"appsettings.{builder.HostEnvironment.Environment}.json", optional: false, reloadOnChange: true) // Environment-specific
                 .Build();
 
+            var apiHostUrl = config["HostAPI:BaseURL"];
+
             // Add the configuration to the services
             builder.Services.AddSingleton<IConfiguration>(config);
 
@@ -43,7 +46,7 @@ namespace LendingView
 
                 return new HttpClient(interceptor)
                 {
-                    BaseAddress = new Uri("https://localhost:32771"),
+                    BaseAddress = new Uri($"{apiHostUrl}"),
                     Timeout = TimeSpan.FromSeconds(6)
                 };
             });

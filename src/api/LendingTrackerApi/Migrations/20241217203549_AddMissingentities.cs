@@ -11,25 +11,24 @@ namespace LendingTrackerApi.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-           
 
-            migrationBuilder.AlterColumn<Guid>(
+
+            migrationBuilder.AddColumn<Guid>(
                 name: "TransactionId",
                 table: "Transactions",
                 type: "uniqueidentifier",
                 nullable: false,
-                defaultValueSql: "(newid())",
-                oldClrType: typeof(Guid),
-                oldType: "uniqueidentifier");
+                defaultValueSql: "(newid())");
 
-            migrationBuilder.AlterColumn<Guid>(
-                name: "TransactionId",
-                table: "Message",
-                type: "uniqueidentifier",
-                nullable: false,
-                defaultValueSql: "(newid())",
-                oldClrType: typeof(Guid),
-                oldType: "uniqueidentifier");
+            migrationBuilder.AddPrimaryKey("PK__Transactions", "Transactions", "TransactionID");
+
+            migrationBuilder.AddForeignKey(
+             name: "FK_Message_Transactions_TransactionId",
+             table: "Message",
+             column: "TransactionId",
+             principalTable: "Transactions",
+             principalColumn: "TransactionId",
+             onDelete: ReferentialAction.Cascade);
         }
 
         /// <inheritdoc />
