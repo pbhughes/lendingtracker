@@ -29,17 +29,11 @@ public class HttpClientInterceptor : DelegatingHandler
             var statusCode = response.StatusCode;
             switch (statusCode)
             {
-                case HttpStatusCode.NotFound:
-                    _navManager.NavigateTo($"/error/{response.StatusCode}/{request.RequestUri} not found");
-                    break;
                 case HttpStatusCode.Unauthorized:
                     _navManager.NavigateTo($"/error/{response.StatusCode}/Not Authorized not found");
                     break;
                 case HttpStatusCode.BadRequest:
                     _navManager.NavigateTo($"/error/{response.StatusCode}/{content}");
-                    break;
-                default:
-                    _navManager.NavigateTo($"/error/{response.StatusCode}/Unhandled exception");
                     break;
             }
         }

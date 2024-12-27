@@ -1,0 +1,95 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "virtualNetworkGateways_VPN_name": {
+            "defaultValue": "VPN2",
+            "type": "String"
+        },
+        "publicIPAddresses_vpn_ip_externalid": {
+            "defaultValue": "/subscriptions/a4a511b2-aaab-42a0-b7a5-103321c86780/resourceGroups/needthatback/providers/Microsoft.Network/publicIPAddresses/vpn-ip",
+            "type": "String"
+        },
+        "virtualNetworks_vnet_free_sql_mi_2047952_externalid": {
+            "defaultValue": "/subscriptions/a4a511b2-aaab-42a0-b7a5-103321c86780/resourceGroups/needthatback/providers/Microsoft.Network/virtualNetworks/vnet-free-sql-mi-2047952",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Network/virtualNetworkGateways",
+            "apiVersion": "2024-01-01",
+            "name": "[parameters('virtualNetworkGateways_VPN_name')]",
+            "location": "westus2",
+            "properties": {
+                "enablePrivateIpAddress": false,
+                "ipConfigurations": [
+                    {
+                        "name": "default",
+                        "id": "[concat(resourceId('Microsoft.Network/virtualNetworkGateways', parameters('virtualNetworkGateways_VPN_name')), '/ipConfigurations/default')]",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[parameters('publicIPAddresses_vpn_ip_externalid')]"
+                            },
+                            "subnet": {
+                                "id": "[concat(parameters('virtualNetworks_vnet_free_sql_mi_2047952_externalid'), '/subnets/GatewaySubnet')]"
+                            }
+                        }
+                    }
+                ],
+                "natRules": [],
+                "virtualNetworkGatewayPolicyGroups": [],
+                "enableBgpRouteTranslationForNat": false,
+                "disableIPSecReplayProtection": false,
+                "sku": {
+                    "name": "VpnGw2",
+                    "tier": "VpnGw2"
+                },
+                "gatewayType": "Vpn",
+                "vpnType": "RouteBased",
+                "enableBgp": false,
+                "activeActive": false,
+                "vpnClientConfiguration": {
+                    "vpnClientAddressPool": {
+                        "addressPrefixes": [
+                            "172.16.202.0/27"
+                        ]
+                    },
+                    "vpnClientProtocols": [
+                        "[concat('Open', parameters('virtualNetworkGateways_VPN_name'))]"
+                    ],
+                    "vpnAuthenticationTypes": [
+                        "AAD"
+                    ],
+                    "vpnClientRootCertificates": [],
+                    "vpnClientRevokedCertificates": [],
+                    "vngClientConnectionConfigurations": [],
+                    "radiusServers": [],
+                    "vpnClientIpsecPolicies": [],
+                    "aadTenant": "https://login.microsoftonline.com/6a820391-e29e-4958-b96e-e5ab9cddff0c",
+                    "aadAudience": "c632b3df-fb67-4d84-bdcf-b95ad541b5c8",
+                    "aadIssuer": "https://sts.windows.net/6a820391-e29e-4958-b96e-e5ab9cddff0c/"
+                },
+                "bgpSettings": {
+                    "asn": 65515,
+                    "bgpPeeringAddress": "10.1.0.62",
+                    "peerWeight": 0,
+                    "bgpPeeringAddresses": [
+                        {
+                            "ipconfigurationId": "[concat(resourceId('Microsoft.Network/virtualNetworkGateways', parameters('virtualNetworkGateways_VPN_name')), '/ipConfigurations/default')]",
+                            "customBgpIpAddresses": []
+                        }
+                    ]
+                },
+                "customRoutes": {
+                    "addressPrefixes": []
+                },
+                "vpnGatewayGeneration": "Generation2",
+                "allowRemoteVnetTraffic": false,
+                "allowVirtualWanTraffic": false
+            }
+        }
+    ]
+}

@@ -36,7 +36,7 @@
                                     <MudSelectItem Value="country.Code">@country.Name</MudSelectItem>
                                 }
                             </MudSelect>
-                            <MudTextField T="string" ReadOnly="true" Label="Phone Number" @bind-Value="me.PhoneNumber" For="() => me.PhoneNumber" Placeholder="Enter valid phone"></MudTextField>
+                            <MudTextField T="string" Label="Phone Number" @bind-Value="me.PhoneNumber" For="() => me.PhoneNumber" Placeholder="Enter valid phone"></MudTextField>
                             <MudSpacer/>
                             <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto d-flex justify-end align-center">Register</MudButton>
                         </EditForm>
@@ -87,7 +87,17 @@
             me.Email = await ParseEmails(authState.User.Identities.First().Claims.First(n => n.Type == "emails").Value);
             me.FullName = authState.User.Identities.First().Claims.First(n => n.Type == "name").Value;
 
-            User theUser = await GetUserPhone(userId);
+            User theUser = null;
+            try
+            {
+                 theUser = await GetUserPhone(userId);
+            }
+            catch (Exception)
+            {
+                //eat this exception  we have never seen this user
+                //TODO: come back and log
+            }
+          
 
             if(theUser != null && !string.IsNullOrEmpty(theUser.PhoneNumber))
             {
@@ -106,6 +116,9 @@
         Http.DefaultRequestHeaders.Authorization = value;
 
         var response = await Http.PostAsJsonAsync<User>("/users", me);
+
+        if(response.StatusCode == System.Net.HttpStatusCode.Created)
+            Navigation.NavigateTo("/items");
     }
 
     private async Task GetAccessToken()

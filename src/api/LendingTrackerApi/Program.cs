@@ -382,6 +382,7 @@ app.MapPost("/transactions", async (Transaction transaction, LendingTrackerConte
         Text = $"Item {i.ItemName} was checked out to you",
         MessageDate = DateTime.Now,
         Phone = b.BorrowerSms,
+        ItemId = i.ItemId
     };
     //await SendMessageToPorrower(transaction, msg.Text, db, smg);
 
