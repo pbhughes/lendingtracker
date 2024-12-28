@@ -222,14 +222,14 @@ else
     async void CommittedItemChanges(Borrower borrower)
     {
         _events.Insert(0, $"Event = CommittedItemChanges, Data = {System.Text.Json.JsonSerializer.Serialize(borrower)}");
-        borrower.BorrowerId = new Guid();
+        
 
         //call the put AI and commit the changes
         await GetAccessToken();
         var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
         Http.DefaultRequestHeaders.Authorization = value;
 
-        var response = await Http.PutAsJsonAsync<Borrower>($"/borrowers", borrower);
+        var response = await Http.PutAsJsonAsync<Borrower>($"/borrowers/{borrower.BorrowerId}", borrower);
     }
 
     async void DeleteItemAsync(Borrower borrower)

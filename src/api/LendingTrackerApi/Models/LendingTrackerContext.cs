@@ -39,7 +39,7 @@ public partial class LendingTrackerContext : DbContext
 
             entity.HasIndex(e => e.UserId, "IX_Borrowers_UserId");
 
-            entity.HasIndex(e => e.BorrowerEmail, "UQ__Borrower__14F16AF6B87CB05D").IsUnique();
+            entity.HasIndex(e => new { e.BorrowerEmail, e.UserId }, "UQ__Borrower__User__14F16AF6B87CB05D").IsUnique();
 
             entity.Property(e => e.BorrowerId).ValueGeneratedNever();
             entity.Property(e => e.BorrowerEmail).HasMaxLength(100);
@@ -51,6 +51,9 @@ public partial class LendingTrackerContext : DbContext
             entity.HasOne(d => d.User).WithMany(p => p.Borrowers)
                 .HasForeignKey(d => d.UserId)
                 .HasConstraintName("FK__Borrowers__UserI__3E52440B");
+
+            entity.HasIndex(i => new { i.BorrowerId, i.UserId })
+            .IsUnique();
         });
 
         modelBuilder.Entity<Item>(entity =>
