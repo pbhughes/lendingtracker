@@ -44,10 +44,16 @@ namespace LendingView
                 // Assign the default HttpClientHandler as the inner handler
                 interceptor.InnerHandler = new HttpClientHandler();
 
+                double leadTime = 6;
+                if(builder.HostEnvironment.Environment.ToLower() == "production")
+                {
+                    leadTime = 10;
+
+                }
                 return new HttpClient(interceptor)
                 {
                     BaseAddress = new Uri($"{apiHostUrl}"),
-                    Timeout = TimeSpan.FromSeconds(6)
+                    Timeout = TimeSpan.FromSeconds(leadTime)
                 };
             });
 
