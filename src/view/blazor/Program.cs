@@ -47,7 +47,7 @@ namespace LendingView
                 double leadTime = 6;
                 if(builder.HostEnvironment.Environment.ToLower() == "production")
                 {
-                    leadTime = 10;
+                    leadTime = 30;
 
                 }
                 return new HttpClient(interceptor)
