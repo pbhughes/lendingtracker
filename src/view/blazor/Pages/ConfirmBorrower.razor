@@ -1,0 +1,56 @@
+﻿@page "/borrower/confirm/{borrowerId}"
+
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using LendingView.Models
+@using MudBlazor
+@using LendingView.Components
+@using System.Net
+@using Microsoft.Extensions.Logging
+@using Microsoft.AspNetCore.WebUtilities
+
+
+@inject HttpClient Http
+@inject IAccessTokenProvider TokenProvider
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+
+<h3>Confirm Borrower</h3>
+<div>
+    <div class="d-block pa-2 mud-theme-primary">
+        <p>A Lending Tracker user has recently added you as borrower and most likely you have borrowed something from them.</p>
+        <p>Click OK to be allowed to borrow items</p>
+        
+    </div>
+    <MudButton OnClick="SendReply">OK</MudButton>
+</div>
+
+@code {
+
+    //route data
+    [Parameter] public string? borrowerId { get; set; }
+
+    //query string data
+    private string? _apikey;
+
+
+    protected override void OnInitialized()
+    {
+        //capture the url
+        var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+
+        // Parse the query string
+        var query = QueryHelpers.ParseQuery(uri.Query);
+
+        //retrieve api key
+        string theKey = query.TryGetValue("apikey", out var _apikey) ? _apikey.FirstOrDefault() : null;
+
+        _apikey = theKey;
+
+        base.OnInitialized();
+    }
+
+    async void SendReply(){
+        var response = await Http.GetAsync($"/borrowers/confirm/{borrowerId}?apikey={_apikey}");
+        Navigation.NavigateTo("/");
+    }
+}

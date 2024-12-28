@@ -30,7 +30,7 @@
                         <EditForm Model="@me" method="post" OnValidSubmit="HandleValidSubmit">
                             <DataAnnotationsValidator />
                             <MudTextField T="string" ReadOnly="true" Label="@me.FullName" Value="@me.FullName"></MudTextField>
-                            <MudSelect @bind-Value="me.CountryCode">
+                            <MudSelect @bind-Value="me.CountryCode" Placeholder="Choosee Country Code">
                                 @foreach (var country in countries)
                                 {
                                     <MudSelectItem Value="country.Code">@country.Name</MudSelectItem>
