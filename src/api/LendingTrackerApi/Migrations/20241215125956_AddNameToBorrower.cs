@@ -14,8 +14,7 @@ namespace LendingTrackerApi.Migrations
                 name: "Name",
                 table: "Borrowers",
                 type: "nvarchar(max)",
-                nullable: false,
-                defaultValue: "");
+                nullable: true);
         }
 
         /// <inheritdoc />
