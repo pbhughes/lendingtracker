@@ -1,16 +1,18 @@
 ﻿@using LendingView.Extensions
+@inject AuthenticationStateProvider ast
 
 <CascadingAuthenticationState>
     <Router AppAssembly="@typeof(Program).Assembly">
         <Found Context="routeData">
             @if(RouteHelper.IsExcludedRoute(routeData.PageType.FullName))
             {
-                <RouteView RouteData="@routeData" DefaultLayout="@typeof(OpenLayout)"></RouteView>
+                <RouteView RouteData="@routeData" DefaultLayout="@(_isAuthenticated ? typeof(MainLayout) : typeof(OpenLayout))"></RouteView>
             }
             else
             {
                 <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
-                    <NotAuthorized>
+                    <NotAuthorized >
+                       
                         @if (!context.User.Identity.IsAuthenticated)
                         {
                             <RedirectToLogin />
@@ -32,8 +34,12 @@
 </CascadingAuthenticationState>
 
 @code{
-    protected override void OnInitialized()
+    private bool _isAuthenticated;
+
+    protected override async void OnInitialized()
     {
+        var authState = await ast.GetAuthenticationStateAsync();
+        _isAuthenticated = authState.User.Identity?.IsAuthenticated ?? false;
         Console.WriteLine("App.razor");
     }
 }

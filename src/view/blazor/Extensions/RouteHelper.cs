@@ -6,7 +6,7 @@ namespace LendingView.Extensions
     {
         private static readonly HashSet<string> ExcludedRoutes = new HashSet<string>
     {
-        "LendingView.Pages.Open", // Add the full type name of your excluded page
+        "LendingView.Pages.Open", "LendingView.Pages.ConfirmBorrower",// Add the full type name of your excluded page
     };
 
         public static bool IsExcludedRoute(string pageType)

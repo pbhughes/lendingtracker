@@ -18,6 +18,9 @@ using LendingTrackerApi.Hubs;
 using Microsoft.AspNetCore.SignalR;
 using Azure.Communication.Sms;
 using Azure.Communication.Email;
+using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+
 
 
 
@@ -96,6 +99,7 @@ builder.Services.Configure<MessageSMSSettings>(
 builder.Services.AddScoped<MessageSMS>();
 
 //inject model validators and services
+builder.Services.AddScoped(typeof(IHmacSigner), typeof(HmacSigner));
 builder.Services.AddScoped(typeof(IMessageMailer), typeof(MessageMailer));
 builder.Services.AddScoped<MessageSignalr>();
 builder.Services.AddScoped(typeof(IValidationServices), typeof(ValidatorService));
@@ -142,7 +146,7 @@ app.MapGet("/error", (HttpContext context) =>
         : Results.Problem("An unexpected error occurred.", statusCode: 500);
 });
 
-// Define CRUD endpoints for User
+// Define CRUD endpoints for User*************************************************User***********************************
 app.MapGet("/users", async (LendingTrackerContext db, IHttpContextAccessor httpContext) => {
 
     if (httpContext == null) return Results.Unauthorized();
@@ -227,9 +231,18 @@ app.MapDelete("/users/{id}", async (int id, LendingTrackerContext db) =>
     return Results.NotFound();
 }).WithTags("Users").RequireAuthorization("authorized_user");
 
-// Repeat the above pattern for Borrowers, Items, and Transactions
 
-// For Borrowers
+// For Borrowers************************************************************************BORROWERS***************************************************
+
+app.MapGet("/borrowers/confirm/{borrowerId}", async ([FromRoute] string borrowerId, [FromQuery] string apikey, LendingTrackerContext db, IHmacSigner signer) => {
+   Borrower b = await db.Borrowers.FindAsync(Guid.Parse(borrowerId));
+    if (signer.Verify(b.BorrowerEmail, apikey))
+    {
+        return Results.Ok(b);
+    }
+    return Results.Unauthorized();
+
+}).WithTags("Borrowers");
 
 app.MapGet("/borrowers", async (LendingTrackerContext db, ClaimsPrincipal currentUser ) =>
 {
@@ -238,15 +251,27 @@ app.MapGet("/borrowers", async (LendingTrackerContext db, ClaimsPrincipal curren
 
 }).WithTags("Borrowers").RequireAuthorization("authorized_user");
 
+
+
 app.MapGet("/borrowers/{id}", async (int id, LendingTrackerContext db) =>
     await db.Borrowers.FindAsync(id) is Borrower borrower ? Results.Ok(borrower) : Results.NotFound()).WithTags("Borrowers")
     .RequireAuthorization("authorized_user");
 
-app.MapPost("/borrowers", async (Borrower borrower, LendingTrackerContext db) =>
+
+
+app.MapPost("/borrowers", async (Borrower borrower, LendingTrackerContext db, IMessageMailer mailer) =>
 {
+    User lender = await db.Users.FindAsync(borrower.UserId);
+    if(lender != null)
+    {
+        await mailer.SendBorrowerAddedNotification(lender, borrower);
+    }
     db.Borrowers.Add(borrower);
     await db.SaveChangesAsync();
+
     return Results.Created($"/borrowers/{borrower.BorrowerId}", borrower);
+
+
 
 }).WithTags("Borrowers").RequireAuthorization("authorized_user");
 
@@ -286,7 +311,7 @@ app.MapDelete("/borrowers/{id}", async (Guid id, LendingTrackerContext db, Claim
     return Results.NotFound();
 }).WithTags("Borrowers").RequireAuthorization("authorized_user");
 
-// For Items
+// For Items****************************************************************************************ITEMS********************************************
 app.MapGet("/items", async (LendingTrackerContext db, IHttpContextAccessor httpContext, ClaimsPrincipal currentUser) =>
 {
     string sub = currentUser.GetNameIdentifierId();
@@ -359,7 +384,7 @@ app.MapDelete("/items/{id}", async (int id, LendingTrackerContext db, ClaimsPrin
     return Results.NotFound();
 }).WithTags("Items").RequireAuthorization("authorized_user");
 
-// For Transactions
+// For Transactions*****************************************************************************************TRANSACTION**********************************************************
 app.MapGet("/transactions", async (LendingTrackerContext db) =>
     await db.Transactions.ToListAsync()).WithTags("Transactions").RequireAuthorization("authorized_user");
 
@@ -433,7 +458,7 @@ app.MapDelete("/transactions/{id}", async (Guid id, LendingTrackerContext db, Cl
     return Results.NotFound();
 }).WithTags("Transactions").RequireAuthorization("authorized_user");
 
-//messaging
+//messaging********************************************************************************************************MESSAGES*******************************************************
 app.MapPost("/messages", async ([FromBody] Transaction transaction, string message, string phone, string method, string direction, 
     LendingTrackerContext db, ClaimsPrincipal currentUser, IHubContext<MessagesHub> hub, IMessageMailer mailer) =>
 {
@@ -489,6 +514,7 @@ app.MapGet("/messages/{transactionId}", async ( Guid transactionId, LendingTrack
 // Run the application
 app.Run();
 
+//hELPER FUNCTIONS****************************************************************************************HELPER FUNCTIONS****************************************************
 static async Task SendMessageToPorrower(Transaction transaction, string message, LendingTrackerContext db, IMessageMailer emailer)
 {
     Borrower b = await db.Borrowers.FindAsync(transaction.BorrowerId);
