@@ -25,7 +25,7 @@ jobs:
         run: dotnet build src/view/blazor/LendingView.csproj --configuration Release
 
       - name: dotnet publish
-        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
+        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/bin/Release/net9.0/wwwroot
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
