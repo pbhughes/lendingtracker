@@ -1,13 +1,12 @@
 using System;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor.Services;
-using Microsoft.AspNetCore.StaticFiles;
-using Microsoft.AspNetCore.Builder;
-using LendingView.Models;
+
 
 
 
@@ -34,6 +33,10 @@ namespace LendingView
 
             // Add the configuration to the services
             builder.Services.AddSingleton<IConfiguration>(config);
+
+            //add local storage support
+            builder.Services.AddBlazoredLocalStorage();
+
 
             builder.Services.AddScoped<HttpClientInterceptor>();
             // Configure HttpClient with the interceptor
@@ -66,14 +69,7 @@ namespace LendingView
                 options.ProviderOptions.DefaultAccessTokenScopes.Add("https://needthatback.onmicrosoft.com/lender/lender");
             });
 
-            //support static file video streaming
-            var staticprovider = new FileExtensionContentTypeProvider();
-            
 
-            builder.Services.Configure<StaticFileOptions>(options =>
-            {
-                options.ContentTypeProvider = staticprovider;
-            });
 
             builder.Services.AddMudServices();
            

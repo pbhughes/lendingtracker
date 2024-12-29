@@ -9,7 +9,7 @@
 
 @inject HttpClient Http
 @inject IAccessTokenProvider TokenProvider
-@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject AuthenticationStateProvider authStateProvider
 @inject NavigationManager Navigation
 
 
@@ -37,11 +37,11 @@ else{
         <Columns>
             <HierarchyColumn T="Item" />
             <TemplateColumn>
-               <CellTemplate>
-                 
-                   
-               </CellTemplate>
-                
+                <CellTemplate>
+
+
+                </CellTemplate>
+
             </TemplateColumn>
             <PropertyColumn Property="x => x.ItemId" Title="Item" Editable="false">
                 <CellTemplate>
@@ -212,36 +212,47 @@ else{
 
     protected override async Task OnInitializedAsync()
     {
-        
-        await GetAccessToken();
-        hubConnection = new HubConnectionBuilder()
-            .WithUrl($"{Http.BaseAddress}messagehub")
-            .WithAutomaticReconnect()
-            .ConfigureLogging(logging =>
-            {
-                logging.SetMinimumLevel(LogLevel.Debug);
 
-            })
-            .Build();
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        bool isAuthenticated = authState.User.Identity?.IsAuthenticated ?? false;
 
-
-        hubConnection.On<string, string>("ReceiveMessage", (user, message) =>
+        if (!isAuthenticated)
         {
-            var encodedMsg = $"{user}: {message}";
-            messages.Add(encodedMsg);
-            InvokeAsync(StateHasChanged);
-            _newMessages = true;
-        });
+            Navigation.NavigateTo("authentication/login");
+        }
+        else
+        {
 
-        await hubConnection.StartAsync();
-        Console.WriteLine("Connection to message hub started");
+            await GetAccessToken();
+            hubConnection = new HubConnectionBuilder()
+                .WithUrl($"{Http.BaseAddress}messagehub")
+                .WithAutomaticReconnect()
+                .ConfigureLogging(logging =>
+                {
+                    logging.SetMinimumLevel(LogLevel.Debug);
+
+                })
+                .Build();
+
+
+            hubConnection.On<string, string>("ReceiveMessage", (user, message) =>
+            {
+                var encodedMsg = $"{user}: {message}";
+                messages.Add(encodedMsg);
+                InvokeAsync(StateHasChanged);
+                _newMessages = true;
+            });
+
+            await hubConnection.StartAsync();
+            Console.WriteLine("Connection to message hub started");
+        }
 
     }
 
     private async Task Send()
     {
         await GetAccessToken();
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
         string userId = Guid.Parse(authState.User.Claims.First(nameof => nameof.Type == "sub").Value).ToString();
         await hubConnection.SendAsync("SendMessage", userId, "signal");
     }

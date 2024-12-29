@@ -8,6 +8,8 @@
 @inject HttpClient Http
 @inject IAccessTokenProvider TokenProvider
 @inject NavigationManager Navigation
+@inject AuthenticationStateProvider authStateProvider
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 
 @if (_isAddNew)
 {
@@ -109,25 +111,20 @@ else
     public bool _isAddNew = false;
     private string? accessToken;
     private string? error;
+    private string _returnUrl = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
-    }
-
-    private Task OnSearch(string text)
-    {
-        searchString = text;
-        return Elements.ReloadServerData();
-    }
-
-
-
+        _returnUrl = Navigation.Uri;
+        await LocalStorage.SetItemAsStringAsync(key: "redirectUrl", data: _returnUrl);
+     }
 
     private async Task GetAccessToken()
     {
         var tokenResult = await TokenProvider.RequestAccessToken(new AccessTokenRequestOptions
             {
-                Scopes = new[] { "https://needthatback.onmicrosoft.com/lender/lender" }
+                Scopes = new[] { "https://needthatback.onmicrosoft.com/lender/lender" },
+
             });
 
         if (tokenResult.TryGetToken(out var token))
@@ -152,50 +149,65 @@ else
 
     private async Task<GridData<Borrower>> ServerReload(GridState<Borrower> state)
     {
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        bool isAuthenticated = authState.User.Identity?.IsAuthenticated ?? false;
+        IEnumerable<Borrower> data = new List<Borrower>();
+        int totalItems = 0;
 
-        await GetAccessToken();
-        var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
-        Http.DefaultRequestHeaders.Authorization = value;
-
-        IEnumerable<Borrower> data = await Http.GetFromJsonAsync<List<Borrower>>("/borrowers");
-        await Task.Delay(300);
-        data = data.Where(element =>
+        if (!isAuthenticated)
         {
-            if (string.IsNullOrWhiteSpace(searchString))
-                return true;
-            if (element.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
-                return true;
-            if (element.BorrowerEmail.Contains(searchString, StringComparison.OrdinalIgnoreCase))
-                return true;
-            if (element.BorrowerSms.Contains(searchString, StringComparison.OrdinalIgnoreCase))
-                return true;
-            return false;
-        }).ToArray();
-        var totalItems = data.Count();
-
-        var sortDefinition = state.SortDefinitions.FirstOrDefault();
-        if (sortDefinition != null)
+            //store the return to url in session state
+            string loginReturnUrl = $"authentication/login?state={Uri.EscapeDataString(_returnUrl)}";
+            Navigation.NavigateTo(loginReturnUrl);
+        }
+        else
         {
-            switch (sortDefinition.SortBy)
+
+            await GetAccessToken();
+
+            var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+            Http.DefaultRequestHeaders.Authorization = value;
+
+             data = await Http.GetFromJsonAsync<List<Borrower>>("/borrowers");
+            await Task.Delay(300);
+            data = data.Where(element =>
             {
-                case nameof(Borrower.Name):
-                    data = data.OrderByDirection(
-                        sortDefinition.Descending ? SortDirection.Descending : SortDirection.Ascending,
-                        o => o.Name
-                    );
-                    break;
-                case nameof(Borrower.BorrowerEmail):
-                    data = data.OrderByDirection(
-                        sortDefinition.Descending ? SortDirection.Descending : SortDirection.Ascending,
-                        o => o.BorrowerEmail
-                    );
-                    break;
-                case nameof(Borrower.BorrowerSms):
-                    data = data.OrderByDirection(
-                        sortDefinition.Descending ? SortDirection.Descending : SortDirection.Ascending,
-                        o => o.BorrowerSms
-                    );
-                    break;
+                if (string.IsNullOrWhiteSpace(searchString))
+                    return true;
+                if (element.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                    return true;
+                if (element.BorrowerEmail.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                    return true;
+                if (element.BorrowerSms.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                    return true;
+                return false;
+            }).ToArray();
+            totalItems = data.Count();
+
+            var sortDefinition = state.SortDefinitions.FirstOrDefault();
+            if (sortDefinition != null)
+            {
+                switch (sortDefinition.SortBy)
+                {
+                    case nameof(Borrower.Name):
+                        data = data.OrderByDirection(
+                            sortDefinition.Descending ? SortDirection.Descending : SortDirection.Ascending,
+                            o => o.Name
+                        );
+                        break;
+                    case nameof(Borrower.BorrowerEmail):
+                        data = data.OrderByDirection(
+                            sortDefinition.Descending ? SortDirection.Descending : SortDirection.Ascending,
+                            o => o.BorrowerEmail
+                        );
+                        break;
+                    case nameof(Borrower.BorrowerSms):
+                        data = data.OrderByDirection(
+                            sortDefinition.Descending ? SortDirection.Descending : SortDirection.Ascending,
+                            o => o.BorrowerSms
+                        );
+                        break;
+                }
             }
         }
 
@@ -205,6 +217,7 @@ else
                 TotalItems = totalItems,
                 Items = pagedData
             };
+        
     }
 
     // events
@@ -255,4 +268,11 @@ else
     {
         _isAddNew = false;
     }
+
+    private Task OnSearch(string text)
+    {
+        searchString = text;
+        return Elements.ReloadServerData();
+    }
+
 }

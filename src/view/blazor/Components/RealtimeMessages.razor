@@ -8,7 +8,7 @@
 
 @inject HttpClient Http
 @inject IAccessTokenProvider TokenProvider
-@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject AuthenticationStateProvider authStateProvider
 @inject NavigationManager Navigation
 
 
@@ -48,7 +48,7 @@
     string _accessToken;
     string _error;
 
-    //signalr support
+    //signalr support wire up connection if authenticated
     private HubConnection hubConnection;
     private List<string> messages = new List<string>();
 
@@ -57,30 +57,37 @@
 
         await GetData();
 
-        //wire up signalr
-        hubConnection = new HubConnectionBuilder()
-           .WithUrl($"{Http.BaseAddress}messagehub", options =>
-           {
-               options.AccessTokenProvider = () => Task.FromResult(_accessToken);
-           })
-           .WithAutomaticReconnect()
-           .ConfigureLogging(logging =>
-           {
-               logging.SetMinimumLevel(LogLevel.Debug);
-
-           })
-           .Build();
-
-
-        hubConnection.On<string, string>("ReceiveMessage", (user, message) =>
+        //wire up signalr if authenticated
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        bool isAuthenticated = authState.User.Identity?.IsAuthenticated ?? false;
+        if (isAuthenticated)
         {
-            var encodedMsg = $"{user}: {message}";
-            messages.Add(encodedMsg);
-            GetData();
-            InvokeAsync(StateHasChanged);
-        });
 
-        await hubConnection.StartAsync();
+
+            hubConnection = new HubConnectionBuilder()
+               .WithUrl($"{Http.BaseAddress}messagehub", options =>
+               {
+                   options.AccessTokenProvider = () => Task.FromResult(_accessToken);
+               })
+               .WithAutomaticReconnect()
+               .ConfigureLogging(logging =>
+               {
+                   logging.SetMinimumLevel(LogLevel.Debug);
+
+               })
+               .Build();
+
+
+            hubConnection.On<string, string>("ReceiveMessage", (user, message) =>
+            {
+                var encodedMsg = $"{user}: {message}";
+                messages.Add(encodedMsg);
+                GetData();
+                InvokeAsync(StateHasChanged);
+            });
+
+            await hubConnection.StartAsync();
+        }
     }
 
     private async Task GetData(){
