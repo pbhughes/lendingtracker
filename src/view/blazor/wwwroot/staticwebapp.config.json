@@ -4,6 +4,13 @@
       "route": "/*",
       "serve": "/index.html",
       "statusCode": 200
+    },
+    {
+      "route": "/borrower/*",
+      "methods": [
+        "get"
+      ],
+      "rewrite": "/index.html"
     }
   ]
 }
