@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using Azure;
 using Azure.Communication.Email;
 using LendingTrackerApi.Models;
+using System.Web;
 
 namespace LendingTrackerApi.Services
 {
@@ -28,7 +29,7 @@ namespace LendingTrackerApi.Services
 
         public async Task<EmailSendOperation> SendBorrowerAddedNotification(Models.User lender, Borrower borrower)
         {
-            string hmacSignature = _hmacSigner.Sign(borrower.BorrowerEmail.ToString());
+            string encodeHmacSignatuer = HttpUtility.UrlEncode(_hmacSigner.Sign(borrower.BorrowerEmail.ToString()));
             var emailMessage = new EmailMessage(senderAddress: _senderAddress,
                 content: new EmailContent($"{lender.FullName} at {lender.Email} has added you as a borrower")
                 {
@@ -36,7 +37,7 @@ namespace LendingTrackerApi.Services
                     Html = $@"<html>
                     <p>Welcome to our tracker</p>
                     <p>{lender.FullName} has added you to {_config["ViewHost:BaseUrl"]}</p>
-                    <a href={_config["ViewHost:BaseUrl"]}/borrower/confirm/{borrower.BorrowerId}?apikey={hmacSignature}> click here to confirm addition</a>
+                    <a href={_config["ViewHost:BaseUrl"]}/borrower/confirm/{borrower.BorrowerId}?apikey={encodeHmacSignatuer}> click here to confirm addition</a>
                     </html>"
                 },
                 recipients: new EmailRecipients(new List<EmailAddress> { new EmailAddress(borrower.BorrowerEmail) }));
