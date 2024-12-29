@@ -23,5 +23,6 @@ public partial class Borrower
     [JsonIgnore]
     public virtual ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
 
+    [JsonIgnore]
     public virtual User User { get; set; } = null!;
 }
