@@ -25,13 +25,13 @@ jobs:
         run: dotnet build src/view/blazor/LendingView.csproj --configuration Release
 
       - name: dotnet publish
-        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/src/view/blazor/LendingView.csproj
+        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/my_app
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: .net-app
-          path: ${{env.DOTNET_ROOT}}/src/view/blazor/bin/release/net9.0/publish
+          path: ${{env.DOTNET_ROOT}}/my_app
 
   deploy:
     runs-on: ubuntu-latest
