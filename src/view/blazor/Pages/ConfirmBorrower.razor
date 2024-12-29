@@ -5,6 +5,7 @@
 @using MudBlazor
 @using LendingView.Components
 @using System.Net
+@using System.Web
 @using Microsoft.Extensions.Logging
 @using Microsoft.AspNetCore.WebUtilities
 
@@ -19,7 +20,7 @@
     <div class="d-block pa-2 mud-theme-primary">
         <p>A Lending Tracker user has recently added you as borrower and most likely you have borrowed something from them.</p>
         <p>Click OK to be allowed to borrow items</p>
-        
+
     </div>
     <MudButton OnClick="SendReply">OK</MudButton>
 </div>
@@ -44,7 +45,7 @@
         //retrieve api key
         string theKey = query.TryGetValue("apikey", out var _apikey) ? _apikey.FirstOrDefault() : null;
 
-        _apikey = theKey;
+        _apikey = HttpUtility.UrlDecode(theKey);
 
         base.OnInitialized();
     }
