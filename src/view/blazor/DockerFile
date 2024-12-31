@@ -1,0 +1,29 @@
+# Stage 1: Build the BlazorWASM app
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy the project files into the container
+COPY . ./
+
+# Restore dependencies
+RUN dotnet restore
+
+# Publish the Blazor WebAssembly app (Release configuration)
+RUN dotnet publish -c Release -o /out
+
+# Stage 2: Serve the BlazorWASM app using a lightweight web server
+FROM nginx:alpine AS final
+
+# Set the working directory for the Nginx web server
+WORKDIR /usr/share/nginx/html
+
+# Copy the build output from the first stage to Nginx's web root directory
+COPY --from=build /out/wwwroot .
+
+# Expose port 80 for the container
+EXPOSE 8081
+
+# Start the Nginx server
+CMD ["nginx", "-g", "daemon off;"]
