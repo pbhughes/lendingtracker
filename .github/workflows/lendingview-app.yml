@@ -21,8 +21,16 @@ jobs:
       with:
         include-prerelease: True
         dotnet-version: ${{ env.DOTNET_CORE_VERSION }}
+
     - name: Install WebAssembly Workload
       run: dotnet workload install wasm-tools
+
+    - name: Clear nuget cache
+      run: dotnet nuget locals all --clear
+
+    - name: Restore packages
+      run: dotnet restore
+
     - name: Log in to container registry
       uses: azure/docker-login@v2
       with:
