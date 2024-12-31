@@ -1,4 +1,4 @@
-name: Build and deploy .NET application to container app lendingview-app
+name: Lending Tracker View Build and deploy
 on:
   push:
     branches:
