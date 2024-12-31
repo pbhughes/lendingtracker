@@ -8,7 +8,7 @@ env:
   CONTAINER_APP_NAME: lendingview-app
   CONTAINER_APP_RESOURCE_GROUP_NAME: needthatback
   CONTAINER_REGISTRY_LOGIN_SERVER: lendingviewacr.azurecr.io
-  DOTNET_CORE_VERSION: 9.0.x
+  DOTNET_CORE_VERSION: 8.0.x
   PROJECT_NAME_FOR_DOCKER: lendingview
 jobs:
   build:
