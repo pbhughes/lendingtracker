@@ -1,4 +1,4 @@
-name: Trigger auto deployment for lending-view-api
+name: Lending Tracker API Build and Deploy
 
 # When this action will be executed
 on:
