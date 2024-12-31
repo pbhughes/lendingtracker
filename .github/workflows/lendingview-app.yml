@@ -1,4 +1,4 @@
-name: Lending Tracker View Build and deploy
+name: Lending Tracker View App Build and deploy
 on:
   push:
     branches:
