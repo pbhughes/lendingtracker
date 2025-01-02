@@ -19,11 +19,18 @@ FROM nginx:alpine AS final
 # Set the working directory for the Nginx web server
 WORKDIR /usr/share/nginx/html
 
+# Set the ASP.NET Core environment variable
+ENV ASPNETCORE_ENVIRONMENT=Development
+
 # Copy the build output from the first stage to Nginx's web root directory
 COPY --from=build /out/wwwroot .
+COPY nginx.conf  /etc/nginx/nginx.conf
+# Copy the certificate into the container
+COPY ./my-cert.pfx /etc/ssl/certs/my-cert.pfx
 
 # Expose port 80 for the container
-EXPOSE 8081
+EXPOSE 8082
+EXPOSE 8083
 
 # Start the Nginx server
 CMD ["nginx", "-g", "daemon off;"]
