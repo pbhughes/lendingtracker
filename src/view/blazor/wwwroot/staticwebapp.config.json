@@ -28,9 +28,8 @@
         "options",
         "trace",
         "patch"
-      ],
-      "rewrite": "/index.html",
-      "statusCode": 200
+      ]
+      "rewrite": "/index.html"
     }
   ]
 }
