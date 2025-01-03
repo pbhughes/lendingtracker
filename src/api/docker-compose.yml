@@ -1,6 +1,6 @@
 services:
   lendingtrackerapi:
-    image: ${DOCKER_REGISTRY-}lendingtrackerapi
+    image: lendingviewacr.azurecr.io/lendingtrackerapi:latest
     build:
       context: LendingTrackerApi
       dockerfile: Dockerfile
