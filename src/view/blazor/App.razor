@@ -38,8 +38,6 @@
 
     protected override async void OnInitialized()
     {
-        var authState = await ast.GetAuthenticationStateAsync();
-        _isAuthenticated = authState.User.Identity?.IsAuthenticated ?? false;
-        Console.WriteLine("App.razor");
+
     }
 }
