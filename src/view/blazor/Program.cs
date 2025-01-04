@@ -64,7 +64,7 @@ namespace LendingView
             builder.Services.AddMsalAuthentication(options =>
             {
                 builder.Configuration.Bind("AzureAdB2C", options.ProviderOptions.Authentication);
-                options.ProviderOptions.AdditionalScopesToConsent.Add("profile");
+                options.ProviderOptions.AdditionalScopesToConsent.Add("profile"); 
                 options.ProviderOptions.AdditionalScopesToConsent.Add("openid");
                 options.ProviderOptions.DefaultAccessTokenScopes.Add("https://needthatback.onmicrosoft.com/lender/lender");
             });
