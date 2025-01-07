@@ -22,7 +22,7 @@ namespace LendingView
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
             builder.RootComponents.Add<App>("app");
 
-            //manage configuration
+ 
             // Build the configuration
             var config = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true) // Default settings
