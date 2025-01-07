@@ -246,8 +246,17 @@ app.MapGet("/borrowers/confirm/{borrowerId}", async ([FromRoute] string borrower
 
 app.MapGet("/borrowers", async (LendingTrackerContext db, ClaimsPrincipal currentUser ) =>
 {
-    var items = await db.Borrowers.Where(b => b.UserId == Guid.Parse(currentUser.GetNameIdentifierId())).ToListAsync();
-    return items is null ? Results.NotFound() : Results.Ok(items.ToList());
+
+
+    //var items = db.Items
+    //        .Include(trans => trans.Transactions)
+    //        .ThenInclude(trans => trans.Borrower)
+    //        .Include(trans => trans.Transactions)
+    //        .ThenInclude(trans => trans.Messages)
+
+
+    var borrowers = await db.Borrowers.Where(b => b.UserId == Guid.Parse(currentUser.GetNameIdentifierId())).ToListAsync();
+    return borrowers is null ? Results.NotFound() : Results.Ok(borrowers.ToList());
 
 }).WithTags("Borrowers").RequireAuthorization("authorized_user");
 
@@ -257,15 +266,33 @@ app.MapGet("/borrowers/{id}", async (int id, LendingTrackerContext db) =>
     await db.Borrowers.FindAsync(id) is Borrower borrower ? Results.Ok(borrower) : Results.NotFound()).WithTags("Borrowers")
     .RequireAuthorization("authorized_user");
 
+app.MapGet("/borrowers/{email}", async ([FromQuery] string email, LendingTrackerContext db) =>
+    db.Borrowers.Where(b => b.BorrowerEmail == email) is Borrower borrower ? Results.Conflict( $"Borrower with email {email} aleady exists") : Results.Ok()).WithTags("Borrowers")
+    .RequireAuthorization("authorized_user");
 
 
-app.MapPost("/borrowers", async (Borrower borrower, LendingTrackerContext db, IMessageMailer mailer) =>
+
+app.MapPost("/borrowers", async ( [FromBody] Borrower borrower,
+                                    [FromServices] LendingTrackerContext db,
+                                    [FromServices] IMessageMailer mailer,
+                                    [FromQuery(Name = "duplicate")] bool duplicate = false) =>
 {
+    var currentBorrowers = await db.Borrowers.Where<Borrower>(b =>
+      b.UserId == borrower.UserId && b.BorrowerEmail == borrower.BorrowerEmail).ToListAsync<Borrower>();
+
+    if (currentBorrowers.Count() > 0 && !duplicate)
+    {
+        return Results.Conflict($"{borrower.BorrowerEmail} is used already used by another borrower");
+    }
+
     User lender = await db.Users.FindAsync(borrower.UserId);
     if(lender != null)
     {
         await mailer.SendBorrowerAddedNotification(lender, borrower);
     }
+
+   
+
     db.Borrowers.Add(borrower);
     await db.SaveChangesAsync();
 
