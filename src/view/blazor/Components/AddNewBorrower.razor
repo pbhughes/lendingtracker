@@ -10,6 +10,8 @@
 @inject IAccessTokenProvider TokenProvider
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JSRuntime
+@inject IDialogService DialogService
 
 <h3>Add New Borrower</h3>
 <EditForm Model="@model" OnValidSubmit="OnValidSubmit">
@@ -24,14 +26,14 @@
                     <MudStack Row Class="justify-space-between mud-width-full">
                         <MudStack Style="width: 300px">
                             <MudSelect @bind-Value="model.CountryCode"
-                                       Margin="_margin"
-                                       Dense="_dense"
-                                       Disabled="_disabled"
-                                       ReadOnly="_readonly"
-                                       Placeholder="@(_placeholder ? "Country Code" : null)"
-                                       HelperText="@(_helperText ? "Valid Country Code" : null)"
-                                       HelperTextOnFocus="_helperTextOnFocus"
-                                       Clearable="_clearable">
+                            Margin="_margin"
+                            Dense="_dense"
+                            Disabled="_disabled"
+                            ReadOnly="_readonly"
+                            Placeholder="@(_placeholder ? "Country Code" : null)"
+                            HelperText="@(_helperText ? "Valid Country Code" : null)"
+                            HelperTextOnFocus="_helperTextOnFocus"
+                            Clearable="_clearable">
                                 @foreach (var country in _countries)
                                 {
                                     <MudSelectItem Value="country.Code">@country.Name</MudSelectItem>
@@ -94,6 +96,8 @@
     bool _helperText = true;
     bool _helperTextOnFocus;
     bool _clearable = true;
+    bool _allowDuplicates = false;
+
 
     private async void OnValidSubmit(EditContext context)
     {
@@ -108,9 +112,18 @@
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         model.UserId = Guid.Parse(authState.User.Claims.First(nameof => nameof.Type == "sub").Value);
 
+
+
+
         var response = await Http.PostAsJsonAsync<Borrower>("/borrowers", model);
 
-        await OnAddNew.InvokeAsync();
+        if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
+        {
+            await OpenDialogAsync( model.BorrowerEmail);
+        }
+
+        if(_allowDuplicates)
+            await OnAddNew.InvokeAsync();
 
     }
 
@@ -148,4 +161,25 @@
             }
         }
     }
+
+
+    private async Task OpenDialogAsync(string email)
+    {
+
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        var parameters = new DialogParameters<OverrideDuplicateEmail>(){
+            
+               {x => x.Title, "Duplicate Email" },
+               {x => x.Description, $"A borrower with this email {email} already exists, click OK to continue" }
+            
+        };
+
+        var dialog = await DialogService.ShowAsync <OverrideDuplicateEmail>("", parameters, options);
+        var result = await dialog.Result;
+        if (!result.Canceled)
+            _allowDuplicates = true;
+    }
+   
 }
+
+

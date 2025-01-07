@@ -50,19 +50,25 @@ else
             </TemplateColumn>
         </Columns>
         <ChildRowContent>
-            <MudCard>
-                <MudCardHeader>
-                    <CardHeaderContent>
-                        <MudText Typo="Typo.h6">Borrower ID: @context.Item.BorrowerId</MudText>
-                    </CardHeaderContent>
-                </MudCardHeader>
-                <MudCardContent>
-                    <MudText>@context.Item.Name</MudText>
-                    <MudText> @context.Item.BorrowerEmail</MudText>
-                    <MudText> @context.Item.CountryCode</MudText>
-                    <MudText> @context.Item.BorrowerSms</MudText>
-                </MudCardContent>
-            </MudCard>
+            <MudGrid>
+                <MudItem xs="6">
+                    <MudCard>
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.h6">Borrower ID: @context.Item.Name</MudText>
+                            </CardHeaderContent>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            <MudText> @context.Item.BorrowerEmail</MudText>
+                            <MudText> @context.Item.CountryCode</MudText>
+                            <MudText> @context.Item.BorrowerSms</MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+                <MudItem xs="6">
+                    <BorrowerIItems Borrower="@context.Item"></BorrowerIItems>
+                </MudItem>
+            </MudGrid>
         </ChildRowContent>
         <PagerContent>
             <MudDataGridPager T="Borrower" />
@@ -117,7 +123,7 @@ else
     {
         _returnUrl = Navigation.Uri;
         await LocalStorage.SetItemAsStringAsync(key: "redirectUrl", data: _returnUrl);
-     }
+    }
 
     private async Task GetAccessToken()
     {
@@ -168,7 +174,7 @@ else
             var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
             Http.DefaultRequestHeaders.Authorization = value;
 
-             data = await Http.GetFromJsonAsync<List<Borrower>>("/borrowers");
+            data = await Http.GetFromJsonAsync<List<Borrower>>("/borrowers");
             await Task.Delay(300);
             data = data.Where(element =>
             {
@@ -217,7 +223,7 @@ else
                 TotalItems = totalItems,
                 Items = pagedData
             };
-        
+
     }
 
     // events
@@ -235,7 +241,7 @@ else
     async void CommittedItemChanges(Borrower borrower)
     {
         _events.Insert(0, $"Event = CommittedItemChanges, Data = {System.Text.Json.JsonSerializer.Serialize(borrower)}");
-        
+
 
         //call the put AI and commit the changes
         await GetAccessToken();
@@ -243,6 +249,7 @@ else
         Http.DefaultRequestHeaders.Authorization = value;
 
         var response = await Http.PutAsJsonAsync<Borrower>($"/borrowers/{borrower.BorrowerId}", borrower);
+
     }
 
     async void DeleteItemAsync(Borrower borrower)

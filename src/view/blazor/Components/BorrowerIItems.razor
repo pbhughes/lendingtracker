@@ -1,0 +1,53 @@
+﻿@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using LendingView.Models
+@using MudBlazor
+@using LendingView.Components
+@using System.Net
+@using Microsoft.Extensions.Logging
+@using Microsoft.AspNetCore.SignalR.Client
+
+@inject HttpClient Http
+@inject IAccessTokenProvider TokenProvider
+@inject AuthenticationStateProvider authStateProvider
+@inject NavigationManager Navigation
+
+<MudCard>
+    <MudCardHeader>
+        <p>@Borrower.BorrowerSms</p>
+    </MudCardHeader>
+</MudCard>
+@code {
+
+    [Parameter] public Borrower Borrower { get; set; }
+    private string? accessToken;
+    private string? error;
+
+
+    private async Task GetAccessToken()
+    {
+        var tokenResult = await TokenProvider.RequestAccessToken(new AccessTokenRequestOptions
+            {
+                Scopes = new[] { "https://needthatback.onmicrosoft.com/lender/lender" }
+            });
+
+        if (tokenResult.TryGetToken(out var token))
+        {
+            accessToken = token.Value;
+        }
+        else
+        {
+            error = tokenResult.Status switch
+            {
+                AccessTokenResultStatus.RequiresRedirect => "Redirect required. Navigating...",
+                AccessTokenResultStatus.Success => null,
+                _ => "An unknown error occurred."
+            };
+
+            if (tokenResult.Status == AccessTokenResultStatus.RequiresRedirect)
+            {
+                Navigation.NavigateTo(tokenResult.InteractiveRequestUrl!);
+            }
+        }
+    }
+
+}
