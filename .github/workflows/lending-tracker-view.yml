@@ -1,4 +1,4 @@
-name: Build and deploy .NET Core application to Web App lending-tracker-view
+name: Build and deploy lending-tracker-view
 on:
   pull_request:
     types:
