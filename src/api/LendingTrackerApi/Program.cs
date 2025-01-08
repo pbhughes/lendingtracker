@@ -20,6 +20,7 @@ using Azure.Communication.Sms;
 using Azure.Communication.Email;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System.Net.Http;
 
 
 
@@ -247,16 +248,26 @@ app.MapGet("/borrowers/confirm/{borrowerId}", async ([FromRoute] string borrower
 app.MapGet("/borrowers", async (LendingTrackerContext db, ClaimsPrincipal currentUser ) =>
 {
 
-
-    //var items = db.Items
-    //        .Include(trans => trans.Transactions)
-    //        .ThenInclude(trans => trans.Borrower)
-    //        .Include(trans => trans.Transactions)
-    //        .ThenInclude(trans => trans.Messages)
-
-
     var borrowers = await db.Borrowers.Where(b => b.UserId == Guid.Parse(currentUser.GetNameIdentifierId())).ToListAsync();
     return borrowers is null ? Results.NotFound() : Results.Ok(borrowers.ToList());
+
+}).WithTags("Borrowers").RequireAuthorization("authorized_user");
+
+
+app.MapGet("/borrowers/transactions/{borrowerId}", async (string borrowerId,LendingTrackerContext db, ClaimsPrincipal currentUser, IHttpContextAccessor httpContext) =>
+{
+    if (httpContext == null) return Results.Unauthorized();
+
+    var id = httpContext.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+    if (id is null) return Results.Unauthorized();
+
+    var transactions = db.Transactions
+     .Include(b => b.Borrower)
+     .Join(db.Items, tran => tran.ItemId, item => item.ItemId, (trans, item) => new { BorrowedAt = trans.BorrowedAt, ItemName = item.ItemName, BorrorwerId = trans.BorrowerId, LenderId = trans.LenderId, BorrowerId = trans.BorrowerId })
+     .Where(t => t.BorrowerId == Guid.Parse(borrowerId) && t.LenderId == Guid.Parse(id));
+   
+    return transactions is null ? Results.NotFound() : Results.Ok(transactions.ToList());
 
 }).WithTags("Borrowers").RequireAuthorization("authorized_user");
 
