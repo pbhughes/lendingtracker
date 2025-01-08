@@ -13,15 +13,36 @@
 
 <MudCard>
     <MudCardHeader>
-        <p>@Borrower.BorrowerSms</p>
+        <MudDataGrid Items="@Elements.Take(4)">
+            <Columns>
+                <PropertyColumn Property="x => x.ItemName" Title="Item Name" />
+                <PropertyColumn Property="x => x.BorrowedAt" Title="Borrowed At" />
+            </Columns>
+        </MudDataGrid>
     </MudCardHeader>
 </MudCard>
 @code {
 
     [Parameter] public Borrower Borrower { get; set; }
+    private IEnumerable<BorrowerItems> Elements = new List<BorrowerItems>();
     private string? accessToken;
     private string? error;
+    List<AlignItems> _items;
 
+    protected override Task OnInitializedAsync()
+    {
+        return base.OnInitializedAsync();
+    }
+
+    protected override async Task  OnParametersSetAsync()
+    {
+        await GetAccessToken();
+        var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+        Http.DefaultRequestHeaders.Authorization = value;
+
+        Elements = await Http.GetFromJsonAsync<List<BorrowerItems>>($"/borrowers/transactions/{Borrower.BorrowerId}");
+      
+    }
 
     private async Task GetAccessToken()
     {
