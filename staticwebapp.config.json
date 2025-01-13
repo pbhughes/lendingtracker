@@ -12,7 +12,8 @@
         "options",
         "trace",
         "patch"
-      ]
+      ],
+      "rewrite": "/index.html"
     }
   ]
 }
