@@ -14,6 +14,20 @@
         "patch"
       ],
       "rewrite": "/index.html"
+    },
+    {
+      "route": "/*",
+      "methods": [
+        "get",
+        "head",
+        "post",
+        "put",
+        "delete",
+        "connect",
+        "options",
+        "trace",
+        "patch"
+      ]
     }
   ]
 }
