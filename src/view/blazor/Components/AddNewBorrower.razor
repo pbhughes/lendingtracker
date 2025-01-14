@@ -177,7 +177,10 @@
         var dialog = await DialogService.ShowAsync <OverrideDuplicateEmail>("", parameters, options);
         var result = await dialog.Result;
         if (!result.Canceled)
+        {
             _allowDuplicates = true;
+            var response = await Http.PostAsJsonAsync<Borrower>($"/borrowers?duplicate={_allowDuplicates}", model);
+        }
     }
    
 }
