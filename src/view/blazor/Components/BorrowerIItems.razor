@@ -13,12 +13,19 @@
 
 <MudCard>
     <MudCardHeader>
-        <MudDataGrid Items="@Elements.Take(4)">
-            <Columns>
+        @if (Elements.Count() == 0)
+        {
+            <p>No Items</p>
+        }
+        else
+        {
+            <MudDataGrid Items="@Elements">
+                <Columns>
                 <PropertyColumn Property="x => x.ItemName" Title="Item Name" />
                 <PropertyColumn Property="x => x.BorrowedAt" Title="Borrowed At" />
             </Columns>
         </MudDataGrid>
+        }
     </MudCardHeader>
 </MudCard>
 @code {
