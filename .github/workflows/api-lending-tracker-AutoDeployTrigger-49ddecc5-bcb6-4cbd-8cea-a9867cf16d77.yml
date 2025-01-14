@@ -34,7 +34,7 @@ jobs:
       - name: Build and push container image to registry
         uses: azure/container-apps-deploy-action@v2
         with:
-          appSourcePath: ${{ github.workspace }}/src/api/lendingtrackerapi/DockerFile
+          appSourcePath: ${{ github.workspace }}/src/api/lendingtrackerapi/Dockerfile
           _dockerfilePathKey_: _dockerfilePath_
           registryUrl: lendingviewacr.azurecr.io
           registryUsername: ${{ secrets.APILENDINGTRACKER_REGISTRY_USERNAME }}
