@@ -248,7 +248,11 @@ app.MapGet("/borrowers/confirm/{borrowerId}", async ([FromRoute] string borrower
 app.MapGet("/borrowers", async (LendingTrackerContext db, ClaimsPrincipal currentUser ) =>
 {
 
-    var borrowers = await db.Borrowers.Where(b => b.UserId == Guid.Parse(currentUser.GetNameIdentifierId())).ToListAsync();
+
+   var borrowers = await db.Borrowers
+            .Include(b => b.Transactions)
+            .Where(b => b.UserId == Guid.Parse(currentUser.GetNameIdentifierId())).ToListAsync();
+
     return borrowers is null ? Results.NotFound() : Results.Ok(borrowers.ToList());
 
 }).WithTags("Borrowers").RequireAuthorization("authorized_user");
@@ -264,7 +268,8 @@ app.MapGet("/borrowers/transactions/{borrowerId}", async (string borrowerId,Lend
 
     var transactions = db.Transactions
      .Include(b => b.Borrower)
-     .Join(db.Items, tran => tran.ItemId, item => item.ItemId, (trans, item) => new { BorrowedAt = trans.BorrowedAt, ItemName = item.ItemName, BorrorwerId = trans.BorrowerId, LenderId = trans.LenderId, BorrowerId = trans.BorrowerId })
+     .Join(db.Items, tran => tran.ItemId, item => item.ItemId, (trans, item) => 
+        new { BorrowedAt = trans.BorrowedAt, ItemName = item.ItemName, BorrorwerId = trans.BorrowerId, LenderId = trans.LenderId, BorrowerId = trans.BorrowerId , ReturnDate = trans.ReturnDate})
      .Where(t => t.BorrowerId == Guid.Parse(borrowerId) && t.LenderId == Guid.Parse(id));
    
     return transactions is null ? Results.NotFound() : Results.Ok(transactions.ToList());

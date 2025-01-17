@@ -23,6 +23,7 @@
                 <Columns>
                 <PropertyColumn Property="x => x.ItemName" Title="Item Name" />
                 <PropertyColumn Property="x => x.BorrowedAt" Title="Borrowed At" />
+                <PropertyColumn Property="x => x.ReturnDate.ToShortDateString()" Title="Return Date" />
             </Columns>
         </MudDataGrid>
         }

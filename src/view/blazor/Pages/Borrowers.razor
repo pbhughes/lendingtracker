@@ -34,7 +34,15 @@ else
 
             <PropertyColumn Class="d-none" Property="x => x.BorrowerId" Title="ID" Editable="false" Hidden="true" />
 
-            <PropertyColumn Property="x => x.Name" Title="Name" />
+            <PropertyColumn Property="x => x.Name" Title="Name">
+                <CellTemplate>
+                    @context.Item.Name
+                    @if (context.Item.Transactions.Count() > 0)
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.NewLabel" Color="@Color.Secondary" Title="Checkout"></MudIcon>
+                    }
+                </CellTemplate>
+            </PropertyColumn>
             <PropertyColumn Property="x => x.BorrowerEmail" Title="Email" />
             <PropertyColumn Property="x => x.CountryCode" Title="Country" />
             <PropertyColumn Property="x => x.BorrowerSms" Title="Phone" />

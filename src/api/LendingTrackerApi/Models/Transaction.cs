@@ -22,6 +22,7 @@ public partial class Transaction
 
     public string? Status { get; set; }
 
+    [JsonIgnore]
     public virtual Borrower Borrower { get; set; } = null!;
 
     [JsonIgnore]

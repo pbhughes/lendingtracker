@@ -8,6 +8,8 @@ namespace LendingView.Models
         public DateTime BorrowedAt { get; set; }
         public string ItemName { get; set; }
         public Guid LenderId { get; set; }
-        
+
+        public DateTime ReturnDate { get; set; }
+
     }
 }

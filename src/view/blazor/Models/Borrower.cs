@@ -1,5 +1,6 @@
 ﻿using LendingView.Extensions;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace LendingView.Models
@@ -48,5 +49,7 @@ namespace LendingView.Models
         [RegularExpression(@"^\+\d{1,3}$")]
         [MaxLength(4)]
         public string? CountryCode { get; set; }
+
+        public virtual List<Transaction> Transactions { get; set; } = new List<Transaction>();
     }
 }

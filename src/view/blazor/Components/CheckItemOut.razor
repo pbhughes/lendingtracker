@@ -28,7 +28,7 @@ else{
                     <MudSelectItem Value="@borrower">@borrower.Name - @borrower.BorrowerEmail</MudSelectItem>
                 }
             </MudSelect>
-
+            <MudDatePicker Label="Basic example" @bind-Date="_returnDate" />
         </MudCardContent>
         <MudCardActions>
             <MudButton OnClick="Close" Variant="@Variant.Outlined" Color="@Color.Secondary">Close</MudButton>
@@ -57,6 +57,7 @@ else{
     private string _error;
     private bool _loading = true;
     private bool _checkedOut = false;
+    private DateTime? _returnDate = DateTime.Now.AddDays(7);
 
 
 
@@ -135,7 +136,8 @@ else{
                 LenderId = Guid.Parse(userId),
                 BorrowerId = _selectedBorrower.BorrowerId,
                 BorrowedAt = DateTime.Now,
-                ItemId = ItemId
+                ItemId = ItemId,
+                ReturnDate = _returnDate
             };
 
         HttpResponseMessage response = await Http.PostAsJsonAsync<Transaction>("/transactions", transaction);

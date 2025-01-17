@@ -34,5 +34,7 @@ namespace LendingView.Models
 
         public virtual User Lender { get; set; } = null!;
         public virtual ICollection<Message> Messages { get; set; } = new List<Message>();
+
+        public DateTime? ReturnDate { get; set; }
     }
 }
