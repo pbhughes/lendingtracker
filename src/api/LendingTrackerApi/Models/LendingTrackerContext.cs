@@ -117,8 +117,7 @@ public partial class LendingTrackerContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__Transacti__Borro__47DBAE45");
 
-            entity.HasOne(d => d.Item).WithMany(p => p.Transactions)
-                .HasForeignKey(d => d.ItemId)
+            entity.HasOne(d => d.Item).WithOne(p => p.Transaction)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__Transacti__ItemI__48CFD27E");
 

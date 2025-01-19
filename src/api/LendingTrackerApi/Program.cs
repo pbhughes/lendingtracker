@@ -367,9 +367,9 @@ app.MapGet("/items", async (LendingTrackerContext db, IHttpContextAccessor httpC
 
 
     var items = db.Items
-            .Include(trans => trans.Transactions)
+            .Include(trans => trans.Transaction)
             .ThenInclude(trans => trans.Borrower)
-            .Include(trans => trans.Transactions)
+            .Include(trans => trans.Transaction)
             .ThenInclude(trans => trans.Messages)
             
             

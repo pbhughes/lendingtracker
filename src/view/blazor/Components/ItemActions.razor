@@ -39,7 +39,7 @@
     protected async override Task OnInitializedAsync()
     {
 
-        if (item.Transactions.Count() > 0)
+        if (item.Transaction != null)
         {
             //item is out
             _showCheckInButton = true;
