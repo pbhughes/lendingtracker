@@ -22,12 +22,10 @@ else{
             Item: @ItemId
         </MudCardHeader>
         <MudCardContent Style="max-height: 400px; overflow-y: auto;">
-            <MudSelect T="Borrower" Label="choose borrower" @bind-Value="_selectedBorrower" >
-                @foreach (var borrower in _borrowers)
-                {
-                    <MudSelectItem Value="@borrower">@borrower.Name - @borrower.BorrowerEmail</MudSelectItem>
-                }
-            </MudSelect>
+           
+            <MudAutocomplete @bind-Value="_selectedBorrower" SearchFunc="Search" 
+                Placeholder="Enter Name to Search"
+                             ToStringFunc="@(e=> e==null?null : $"{e.Name} ({e.BorrowerEmail})")"></MudAutocomplete>
             <MudDatePicker Label="Basic example" @bind-Date="_returnDate" />
         </MudCardContent>
         <MudCardActions>
@@ -135,6 +133,7 @@ else{
                 TransactionId = Guid.NewGuid(),
                 LenderId = Guid.Parse(userId),
                 BorrowerId = _selectedBorrower.BorrowerId,
+                Borrower = _selectedBorrower,
                 BorrowedAt = DateTime.Now,
                 ItemId = ItemId,
                 ReturnDate = _returnDate
@@ -148,6 +147,18 @@ else{
         await Close.InvokeAsync();
 
      }
+
+    private async Task<IEnumerable<Borrower>> Search(string value, CancellationToken token)
+    {
+        // In real life use an asynchronous function for fetching data from an api.
+        await Task.Delay(5, token);
+
+        // if text is null or empty, show complete list
+        if (string.IsNullOrEmpty(value))
+            return _borrowers;
+
+        return _borrowers.Where(x => x.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+    }
 
 
 

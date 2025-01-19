@@ -47,7 +47,7 @@ namespace LendingView
                 // Assign the default HttpClientHandler as the inner handler
                 interceptor.InnerHandler = new HttpClientHandler();
 
-                double leadTime = 6;
+                double leadTime = 60;
                 if(builder.HostEnvironment.Environment.ToLower() == "production")
                 {
                     leadTime = 30;

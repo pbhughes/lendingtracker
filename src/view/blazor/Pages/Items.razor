@@ -38,21 +38,22 @@ else{
             <HierarchyColumn T="Item" />
             <TemplateColumn>
                 <CellTemplate>
-
-
                 </CellTemplate>
-
             </TemplateColumn>
-            <PropertyColumn Property="x => x.ItemId" Title="Item" Editable="false">
+            <PropertyColumn Property="x => x.ItemId" Title="Item" Editable="false" Hidden="true">
                 <CellTemplate>
                     @context.Item.ItemId
-                    @if (context.Item.Transactions.Count() > 0)
+                </CellTemplate>
+            </PropertyColumn>
+            <PropertyColumn Property="x => x.ItemName" Title="Name">
+                <CellTemplate>
+                    @context.Item.ItemName
+                    @if (context.Item.Transaction != null)
                     {
                         <MudIcon Icon="@Icons.Material.Filled.NewLabel" Color="@Color.Secondary" Title="Checkout"></MudIcon>
                     }
                 </CellTemplate>
             </PropertyColumn>
-            <PropertyColumn Property="x => x.ItemName" Title="Name" />
             <PropertyColumn Property="x => x.Description" />
             <PropertyColumn Property="x => x.IsAvailable">
                 <EditTemplate>
@@ -96,63 +97,24 @@ else{
                         </MudCardContent>
                     </MudCard>
                 </MudItem>
-                <MudItem xs="6">
-                    @if (context.Item.Transactions.Count() > 0)
-                    {
+                @if (context.Item.Transaction != null)
+                {
+                    <MudItem xs="6">
+                        @*   Add message support *@
+                        <p>@context.Item.Transaction.Borrower.Name</p>
+                    </MudItem>
+
+                    <MudItem xs="12">
                         <MudCard Outlined="true" Class="border-solid border-2 mud-border-primary pa-4">
                             <MudCardHeader>
-                                <h3>Borrower</h3>
+                                <h3>Messages</h3>
                             </MudCardHeader>
-                            <MudCardContent>
-                                <MudTable Items="@context.Item.Transactions">
-                                    <HeaderContent>
-                                        <MudTh>Name</MudTh>
-                                        <MudTh>Email</MudTh>
-                                        <MudTh>Phone</MudTh>
-                                    </HeaderContent>
-                                    <RowTemplate Context="transactions">
-                                        <MudTd>@transactions.Borrower.Name</MudTd>
-                                        <MudTd>
-                                            @if (transactions.Borrower.BorrowerEmail != null)
-                                            {
-                                                string method = "email";
-                                                <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="() => SendSmsMessage(context.Item, context.Item.Transactions.ToArray()[0], method)">
-                                                    @transactions.Borrower.BorrowerEmail
-                                                </MudButton>
-                                            }
-                                        </MudTd>
-                                        <MudTd>
-                                            @code {
-                                                string method = "sms";
-                                                }
-                                            <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="() => SendSmsMessage(context.Item, context.Item.Transactions.ToArray()[0], method)">
-                                                       @transactions.Borrower.BorrowerSms
-                                            </MudButton>
-                                        </MudTd>
-                                    </RowTemplate>
-                                </MudTable>
-                        </MudCardContent>
-                        <MudCardActions>
-                        <MudButton Variant="Variant.Text" Color="Color.Primary">Messge Borrower</MudButton>
-                        </MudCardActions>
-                    </MudCard>
-                    }
-                </MudItem>
-                <MudItem xs="12">
-                    @if(context.Item.Transactions.Count() > 0){
-                        @if (context.Item.Transactions.ToArray()[0].Messages.Count() > 0)
-                        {
-                            <MudCard Outlined="true" Class="border-solid border-2 mud-border-primary pa-4">
-                                <MudCardHeader>
-                                    <h3>Messages</h3>
-                                </MudCardHeader>
-                                <MudCardContent Style="max-height: 400px; overflow-y: auto;">
-                                    <RealtimeMessages transactionId="@context.Item.Transactions.ToArray()[0].TransactionId"></RealtimeMessages>
-                                </MudCardContent>
-                            </MudCard>
-                        }
-                    }
-                </MudItem>
+                            <MudCardContent Style="max-height: 400px; overflow-y: auto;">
+                                <RealtimeMessages transactionId="@context.Item.Transaction.TransactionId"></RealtimeMessages>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+                }
             </MudGrid>
 
         </ChildRowContent>
@@ -276,7 +238,7 @@ else{
 
         IEnumerable<Item> data = await Http.GetFromJsonAsync<List<Item>>("/items");
 
-        await Task.Delay(300);
+        await Task.Delay(100);
         data = data.Where(element =>
         {
             if (string.IsNullOrWhiteSpace(searchString))
@@ -398,7 +360,7 @@ else{
         var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
         Http.DefaultRequestHeaders.Authorization = value;
 
-        await Http.DeleteAsync($"/transactions/{item.Transactions.ToArray()[0].TransactionId}");
+        await Http.DeleteAsync($"/transactions/{item.Transaction.TransactionId}");
 
         await Elements.ReloadServerData();
     }

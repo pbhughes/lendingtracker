@@ -21,5 +21,5 @@ public partial class Item
 
     public virtual User Owner { get; set; } = null!;
 
-    public virtual ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
+    public virtual Transaction Transaction { get; set; }
 }
