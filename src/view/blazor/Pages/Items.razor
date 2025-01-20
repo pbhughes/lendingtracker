@@ -101,7 +101,8 @@ else{
                 {
                     <MudItem xs="6">
                         @*   Add message support *@
-                        <p>@context.Item.Transaction.Borrower.Name</p>
+                        
+                        <BorrowerDisplay BorrowerId="@context.Item.Transaction.BorrowerId"></BorrowerDisplay>
                     </MudItem>
 
                     <MudItem xs="12">

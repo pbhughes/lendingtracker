@@ -1,0 +1,70 @@
+﻿@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using LendingView.Models
+@using MudBlazor
+@using LendingView.Components
+@using System.Net
+@using Microsoft.Extensions.Logging
+@using Microsoft.AspNetCore.SignalR.Client
+
+@inject HttpClient Http
+@inject IAccessTokenProvider TokenProvider
+@inject AuthenticationStateProvider authStateProvider
+@inject NavigationManager Navigation
+
+<p>@_selectedBorrower.Name</p>
+<MudDivider />
+<MudButton Color="Color.Primary" Href="@mailTo">@_selectedBorrower.BorrowerEmail</MudButton>
+<MudButton Color="Color.Primary" Href="@telLink">@_selectedBorrower.BorrowerSms</MudButton>
+
+@code {
+    [Parameter] public Guid BorrowerId { get; set; }
+    private Borrower _selectedBorrower = new Borrower();
+    private string telLink = string.Empty;
+    private string mailTo = string.Empty;
+    private string accessToken;
+    private string error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetAccessToken();
+        var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+        Http.DefaultRequestHeaders.Authorization = value;
+
+        _selectedBorrower = await Http.GetFromJsonAsync<Borrower>($"/borrowers/{BorrowerId}");
+
+        telLink = $"tel:{_selectedBorrower.CountryCode}{_selectedBorrower.BorrowerSms}";
+        mailTo = $"mailto:{_selectedBorrower.BorrowerEmail}";
+
+        await base.OnInitializedAsync();
+    }
+
+   
+
+
+    private async Task GetAccessToken()
+    {
+        var tokenResult = await TokenProvider.RequestAccessToken(new AccessTokenRequestOptions
+            {
+                Scopes = new[] { "https://needthatback.onmicrosoft.com/lender/lender" }
+            });
+
+        if (tokenResult.TryGetToken(out var token))
+        {
+            accessToken = token.Value;
+        }
+        else
+        {
+            error = tokenResult.Status switch
+            {
+                AccessTokenResultStatus.RequiresRedirect => "Redirect required. Navigating...",
+                AccessTokenResultStatus.Success => null,
+                _ => "An unknown error occurred."
+            };
+
+            if (tokenResult.Status == AccessTokenResultStatus.RequiresRedirect)
+            {
+                Navigation.NavigateTo(tokenResult.InteractiveRequestUrl!);
+            }
+        }
+    }
+}
