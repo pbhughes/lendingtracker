@@ -78,7 +78,6 @@ else{
                     else{
                         <MudPaper>Out of Commission</MudPaper>
                     }
-
                 </CellTemplate>
             </TemplateColumn>
         </Columns>
@@ -102,7 +101,7 @@ else{
                     <MudItem xs="6">
                         @*   Add message support *@
                         
-                        <BorrowerDisplay BorrowerId="@context.Item.Transaction.BorrowerId"></BorrowerDisplay>
+                        <BorrowerDisplay BorrowerId="@context.Item.Transaction.BorrowerId" ItemName="@context.Item.ItemName"></BorrowerDisplay>
                     </MudItem>
 
                     <MudItem xs="12">

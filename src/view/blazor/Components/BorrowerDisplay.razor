@@ -3,6 +3,7 @@
 @using MudBlazor
 @using LendingView.Components
 @using System.Net
+@using System.Web
 @using Microsoft.Extensions.Logging
 @using Microsoft.AspNetCore.SignalR.Client
 
@@ -13,11 +14,16 @@
 
 <p>@_selectedBorrower.Name</p>
 <MudDivider />
-<MudButton Color="Color.Primary" Href="@mailTo">@_selectedBorrower.BorrowerEmail</MudButton>
-<MudButton Color="Color.Primary" Href="@telLink">@_selectedBorrower.BorrowerSms</MudButton>
+<MudButton Color="Color.Primary" Href="@mailTo" Target="_blank">@_selectedBorrower.BorrowerEmail</MudButton>
+<MudButton Color="Color.Primary" Href="@telLink" Target="_blank">@_selectedBorrower.BorrowerSms</MudButton>
 
 @code {
-    [Parameter] public Guid BorrowerId { get; set; }
+    [Parameter] 
+    public Guid BorrowerId { get; set; }
+
+    [Parameter] 
+    public string ItemName { get; set; }
+
     private Borrower _selectedBorrower = new Borrower();
     private string telLink = string.Empty;
     private string mailTo = string.Empty;
@@ -33,7 +39,8 @@
         _selectedBorrower = await Http.GetFromJsonAsync<Borrower>($"/borrowers/{BorrowerId}");
 
         telLink = $"tel:{_selectedBorrower.CountryCode}{_selectedBorrower.BorrowerSms}";
-        mailTo = $"mailto:{_selectedBorrower.BorrowerEmail}";
+        string encodedItemName = HttpUtility.UrlEncode(ItemName);
+        mailTo = $"mailto:{_selectedBorrower.BorrowerEmail}?subject={encodedItemName}";
 
         await base.OnInitializedAsync();
     }
