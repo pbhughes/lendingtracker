@@ -278,12 +278,8 @@ app.MapGet("/borrowers/transactions/{borrowerId}", async (string borrowerId,Lend
 
 
 
-app.MapGet("/borrowers/{id}", async (int id, LendingTrackerContext db) =>
+app.MapGet("/borrowers/{id}", async (Guid id, LendingTrackerContext db) =>
     await db.Borrowers.FindAsync(id) is Borrower borrower ? Results.Ok(borrower) : Results.NotFound()).WithTags("Borrowers")
-    .RequireAuthorization("authorized_user");
-
-app.MapGet("/borrowers/{email}", async ([FromQuery] string email, LendingTrackerContext db) =>
-    db.Borrowers.Where(b => b.BorrowerEmail == email) is Borrower borrower ? Results.Conflict( $"Borrower with email {email} aleady exists") : Results.Ok()).WithTags("Borrowers")
     .RequireAuthorization("authorized_user");
 
 
