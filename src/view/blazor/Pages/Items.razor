@@ -35,11 +35,7 @@ else{
             AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
         </ToolBarContent>
         <Columns>
-            <HierarchyColumn T="Item" />
-            <TemplateColumn>
-                <CellTemplate>
-                </CellTemplate>
-            </TemplateColumn>
+            <HierarchyColumn T="Item">Actions</HierarchyColumn>
             <PropertyColumn Property="x => x.ItemId" Title="Item" Editable="false" Hidden="true">
                 <CellTemplate>
                     @context.Item.ItemId
