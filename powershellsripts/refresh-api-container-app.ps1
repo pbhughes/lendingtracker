@@ -1,4 +1,4 @@
 ﻿az containerapp update `
   --name api-lending-tracker `
   --resource-group needthatback `
-  --image lendingviewacr.azurecr.io/lendingtrackerapi:new-2
+  --image lendingviewacr.azurecr.io/lendingtrackerapi:new-3
