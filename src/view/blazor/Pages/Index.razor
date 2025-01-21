@@ -7,12 +7,14 @@
 @using System.Net.Http
 @using System.Text.RegularExpressions
 @using System.IdentityModel.Tokens.Jwt
+@using LendingView.Servcies
 
 
 @inject HttpClient Http
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider ast
 @inject IAccessTokenProvider TokenProvider
+@inject IUserService _userService
 
 
 <AuthorizeView>
@@ -78,7 +80,10 @@
         var authState = await ast.GetAuthenticationStateAsync();
 
 
+
         if(authState.User.Identity.IsAuthenticated){
+
+
             await GetAccessToken();
             string userId = await GetClaimAsync("UserId");
 
@@ -90,14 +95,14 @@
             User theUser = null;
             try
             {
-                 theUser = await GetUserPhone(userId);
+                theUser = await GetUserPhone(userId);
             }
             catch (Exception)
             {
                 //eat this exception  we have never seen this user
                 //TODO: come back and log
             }
-          
+
 
             if(theUser != null && !string.IsNullOrEmpty(theUser.PhoneNumber))
             {
@@ -106,6 +111,8 @@
             else{
                 _collectPhone = true;
             }
+
+            await _userService.TriggerLoginNotification();
         }
     }
 
