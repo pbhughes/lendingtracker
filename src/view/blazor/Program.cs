@@ -2,6 +2,7 @@ using System;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Blazored.LocalStorage;
+using LendingView.Servcies;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -39,6 +40,8 @@ namespace LendingView
 
 
             builder.Services.AddScoped<HttpClientInterceptor>();
+            builder.Services.AddScoped<IUserService, UserService>();
+
             // Configure HttpClient with the interceptor
             builder.Services.AddScoped(sp =>
             {
