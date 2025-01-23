@@ -4,6 +4,7 @@ using LendingTrackerApi.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LendingTrackerApi.Migrations
 {
     [DbContext(typeof(LendingTrackerContext))]
-    partial class LendingTrackerContextModelSnapshot : ModelSnapshot
+    [Migration("20250121121417_addStoreLinkcolumnToItemsTable")]
+    partial class addStoreLinkcolumnToItemsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -100,7 +103,8 @@ namespace LendingTrackerApi.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("StoreLink")
-                     .HasColumnType("nvarchar(max)");
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("ItemId")
                         .HasName("PK__Items__727E838BC5CFABC7");

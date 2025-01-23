@@ -89,6 +89,9 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("authorized_user", policy =>
         policy.RequireClaim("http://schemas.microsoft.com/identity/claims/scope", "lender"));
 
+    options.AddPolicy("admin", policy => 
+        policy.RequireClaim("extension_userRole", "admin"));
+
 });
 
 //add SMS config support
@@ -387,9 +390,11 @@ app.MapPost("/items", async (Item item, LendingTrackerContext db) =>
 
 app.MapPut("/items/{id}", async (int id, Item updatedItem, LendingTrackerContext db, ClaimsPrincipal currentUser) =>
 {
-Guid sub = Guid.Parse(currentUser.GetNameIdentifierId());
+    var claims = currentUser.Claims.Where(c => c.Type == "extention_userRole");
+    Guid sub = Guid.Parse(currentUser.GetNameIdentifierId());
 
-    if(updatedItem.OwnerId != sub){
+    if(updatedItem.OwnerId != sub && claims.Count() == 0)
+    {
         return Results.Unauthorized();
     }
 
@@ -399,6 +404,7 @@ Guid sub = Guid.Parse(currentUser.GetNameIdentifierId());
     item.ItemName = updatedItem.ItemName;
     item.Description = updatedItem.Description;
     item.IsAvailable = updatedItem.IsAvailable;
+    item.StoreLink = updatedItem.StoreLink;
 
     await db.SaveChangesAsync();
     return Results.NoContent();
@@ -430,15 +436,16 @@ app.MapGet("/transactions/{id}", async (int id, LendingTrackerContext db) =>
     await db.Transactions.FindAsync(id) is Transaction transaction ? Results.Ok(transaction) : Results.NotFound())
     .WithTags("Transactions").RequireAuthorization("authorized_user");
 
-app.MapPost("/transactions", async (Transaction transaction, LendingTrackerContext db,  ClaimsPrincipal user, IMessageMailer mailer) =>
+app.MapPost("/transactions", async (Transaction transaction, LendingTrackerContext db,  ClaimsPrincipal user, IMessageMailer mailer, IConfiguration config) =>
 {
     string sub = user.GetNameIdentifierId();
 
     if (Guid.Parse(sub) != transaction.LenderId)
         return Results.Unauthorized();
     //notify the user the item was checked out
-    Borrower b = db.Borrowers.Find(transaction.BorrowerId);
-    Item i = db.Items.Find(transaction.ItemId);
+    Borrower b = await db.Borrowers.FindAsync(transaction.BorrowerId);
+    Item i = await db.Items.FindAsync(transaction.ItemId);
+    User lender = await db.Users.FindAsync (transaction.LenderId);
 
     Message msg = new Message()
     {
@@ -456,7 +463,7 @@ app.MapPost("/transactions", async (Transaction transaction, LendingTrackerConte
     db.Transactions.Add(transaction);
     await db.SaveChangesAsync();
 
-    await SendMessageToPorrower(transaction, $"You have {i.ItemName} chcked out", db, mailer);
+    await SendMessageToPorrowerWithLink(transaction, $"You have {i.ItemName} checked out from {lender.FullName}", i.StoreLink, lender.FullName, i.ItemName, db, mailer,config);
     return Results.Created($"/transactions/{transaction.TransactionId}", transaction);
 
 }).WithTags("Transactions").RequireAuthorization("authorized_user");
@@ -549,8 +556,41 @@ app.MapGet("/messages/{transactionId}", async ( Guid transactionId, LendingTrack
 
 }).WithTags("Messages").RequireAuthorization("authorized_user");
 
+//ADMIN Endpoints ****************************************************************************************Admin Iteams********************************************************
+app.MapGet("/admin/items", async (LendingTrackerContext db, IHttpContextAccessor httpContext, ClaimsPrincipal currentUser) =>
+{
+    string sub = currentUser.GetNameIdentifierId();
+
+    if (sub is null) return Results.Unauthorized();
+
+    if (!Guid.TryParse(sub, out var parsedGuid))
+        return Results.Unauthorized();
+
+    var items = db.Items;
+
+    return items is null ? Results.NotFound() : Results.Ok(items.ToList());
+
+}).WithTags("Admin").RequireAuthorization("admin");
+
+app.MapPut("/admin/items/{id}", async (int id, Item updatedItem, LendingTrackerContext db, ClaimsPrincipal currentUser) =>
+{
+
+    var item = await db.Items.FindAsync(id);
+    if (item is null) return Results.NotFound();
+
+    item.ItemName = updatedItem.ItemName;
+    item.Description = updatedItem.Description;
+    item.IsAvailable = updatedItem.IsAvailable;
+    item.StoreLink = updatedItem.StoreLink;
+
+    await db.SaveChangesAsync();
+    return Results.NoContent();
+}).WithTags("Admin").RequireAuthorization("admin");
+
 // Run the application
 app.Run();
+
+
 
 //hELPER FUNCTIONS****************************************************************************************HELPER FUNCTIONS****************************************************
 static async Task SendMessageToPorrower(Transaction transaction, string message, LendingTrackerContext db, IMessageMailer emailer)
@@ -561,6 +601,33 @@ static async Task SendMessageToPorrower(Transaction transaction, string message,
         if (b.BorrowerId != null)
         {
             EmailSendOperation sendResult = await emailer.SendEmail(toAddress: b.BorrowerEmail, subject: "Message From Lending Tracker", message: message);
+        }
+    }
+}
+
+static async Task SendMessageToPorrowerWithLink(Transaction transaction, string message, string link, string lenderName,string itemName, LendingTrackerContext db, IMessageMailer emailer, IConfiguration config)
+{
+    Borrower b = await db.Borrowers.FindAsync(transaction.BorrowerId);
+    string logourl = config["Branding:Logo"];
+    var emailContent = new EmailContent($"Message From {config["Branding:Name"]} Lending Tracker");
+    emailContent.Html = "<html>";
+    emailContent.Html += $"<img src='{logourl}' alt='Logo'/>";
+    emailContent.Html += $"<h3>Lending Tracker activity from {config["Branding:Name"]} </h3>";
+    emailContent.Html += "<br/>";
+    emailContent.Html += $"You borrowed a {itemName} from {lenderName} an <strong> {config["Branding:Name"]} </strong> lending tracker user.";
+    emailContent.Html += "<br/>";
+    emailContent.Html += $"<p>If your looking to purchase a {itemName} you can find the item <a href='{link}'>Here</a> at {config["Branding:Name"]}'s online store.</p>";
+    emailContent.Html += $"If you would like to track items you lend out using Lending Tracker signup <a href='{config["LendingTracker:Link"]}' alt='Lending Tracker Signup Link'>Here</a>";
+    emailContent.Html += "</html>";
+    
+
+    var emailMessage = new EmailMessage(config["MessageMailer:SenderAddress"], b.BorrowerEmail, emailContent);
+   
+    if (b != null)
+    {
+        if (b.BorrowerId != null)
+        {
+            EmailSendOperation sendResult = await emailer.SendEmail(emailMessage);
         }
     }
 }

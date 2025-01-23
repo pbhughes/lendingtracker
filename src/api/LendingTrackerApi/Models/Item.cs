@@ -22,4 +22,6 @@ public partial class Item
     public virtual User Owner { get; set; } = null!;
 
     public virtual Transaction Transaction { get; set; }
+
+    public string StoreLink { get; set; } = string.Empty;
 }
