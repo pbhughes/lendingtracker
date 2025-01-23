@@ -306,7 +306,7 @@ else
         //call the put AI and commit the changes
         CommitChanges(item);
 
-        var response = await Http.PutAsJsonAsync<Item>($"/items/{item.ItemId}", item);
+        var response = await Http.PutAsJsonAsync<Item>($"/admin/items/{item.ItemId}", item);
     }
 
     async void DeleteItemAsync(Item item)
