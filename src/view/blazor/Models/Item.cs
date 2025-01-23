@@ -25,5 +25,8 @@ namespace LendingView.Models
         public DateTime? CreatedAt { get; set; }
 
         public virtual Transaction Transaction { get; set; }
+
+        [Url]
+        public string StoreLink { get; set; }
     }
 }

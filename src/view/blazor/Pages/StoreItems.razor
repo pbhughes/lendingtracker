@@ -1,0 +1,372 @@
+﻿@page "/storeitems"
+
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using LendingView.Models
+@using MudBlazor
+@using LendingView.Components
+@using System.Net
+@using Microsoft.Extensions.Logging
+@using Microsoft.AspNetCore.SignalR.Client
+
+@inject HttpClient Http
+@inject IAccessTokenProvider TokenProvider
+@inject AuthenticationStateProvider authStateProvider
+@inject NavigationManager Navigation
+
+
+@if (_isAddNew)
+{
+    <LendingView.Components.AddNewItem AddingNew="@_isAddNew" OnAddNew="HandleAddnew"></LendingView.Components.AddNewItem>
+}
+else
+{
+    <div style="display:flex; justify-content:flex-end">
+        @if (_newMessages)
+        {
+            <MudIcon Icon="@Icons.Material.Filled.NewLabel" Color="Color.Secondary" Style="display:flex;justify-content:flex-end" Title="New Items" />
+        }
+    </div>
+
+    <MudDataGrid T="Item" @ref="Elements" ServerData="ServerReload" Filterable="false" ReadOnly="@_readOnly" EditMode="@(_isCellEditMode ? DataGridEditMode.Cell : DataGridEditMode.Form)"
+                 StartedEditingItem="@StartedEditingItem" CanceledEditingItem="@CanceledEditingItem" CommittedItemChanges="@CommittedItemChanges"
+                 Bordered="true" Dense="true" EditTrigger="@(_editTriggerRowClick ? DataGridEditTrigger.OnRowClick : DataGridEditTrigger.Manual)">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Items</MudText>
+            <MudIconButton Size="@Size.Large" Icon="@Icons.Material.Filled.Add" aria-label="add" OnClick="() => AddNew()" />
+            <MudSpacer />
+            <MudTextField T="string" ValueChanged="@(s => OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+        </ToolBarContent>
+        <Columns>
+            <HierarchyColumn T="Item">Actions</HierarchyColumn>
+            <PropertyColumn Property="x => x.ItemId" Title="Item" Editable="false" Hidden="true">
+                <CellTemplate>
+                    @context.Item.ItemId
+                </CellTemplate>
+            </PropertyColumn>
+            <PropertyColumn Property="x => x.ItemName" Title="Name">
+                <CellTemplate>
+                    @context.Item.ItemName
+                    @if (context.Item.Transaction != null)
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.NewLabel" Color="@Color.Secondary" Title="Checkout"></MudIcon>
+                    }
+                </CellTemplate>
+            </PropertyColumn>
+            <PropertyColumn Property="x => x.Description" />
+            <PropertyColumn Property="x => x.IsAvailable">
+                <EditTemplate>
+                    <MudSwitch @bind-Value="context.Item.IsAvailable" Label="Is Avialable" />
+                </EditTemplate>
+            </PropertyColumn>
+            <PropertyColumn Property="x => x.StoreLink" />
+            <TemplateColumn Hidden="@(_isCellEditMode || _readOnly || _editTriggerRowClick)">
+                <CellTemplate>
+                    <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" OnClick="@context.Actions.StartEditingItemAsync" />
+                </CellTemplate>
+            </TemplateColumn>
+            <TemplateColumn>
+                <CellTemplate>
+                    <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Filled.Delete" aria-label="delete" OnClick="() => DeleteItemAsync(context.Item)" />
+                </CellTemplate>
+            </TemplateColumn>
+        </Columns>
+        <ChildRowContent>
+            <MudGrid>
+                <MudItem xs="3">
+                    <MudCard Outlined="true" Class="border-solid border-2 mud-border-primary pa-4">
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.h6">@context.Item.ItemId</MudText>
+                            </CardHeaderContent>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            <MudText>@context.Item.ItemName</MudText>
+                            <MudText> @context.Item.Description</MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+                @if (context.Item.Transaction != null)
+                {
+                    <MudItem xs="6">
+                        @*   Add message support *@
+
+                        <BorrowerDisplay BorrowerId="@context.Item.Transaction.BorrowerId" ItemName="@context.Item.ItemName"></BorrowerDisplay>
+                    </MudItem>
+
+                    <MudItem xs="12">
+                        <MudCard Outlined="true" Class="border-solid border-2 mud-border-primary pa-4">
+                            <MudCardHeader>
+                                <h3>Messages</h3>
+                            </MudCardHeader>
+                            <MudCardContent Style="max-height: 400px; overflow-y: auto;">
+                                <RealtimeMessages transactionId="@context.Item.Transaction.TransactionId"></RealtimeMessages>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+                }
+            </MudGrid>
+
+        </ChildRowContent>
+        <PagerContent>
+            <MudDataGridPager T="Item" />
+        </PagerContent>
+    </MudDataGrid>
+}
+
+
+
+@code {
+    private MudDataGrid<Item> Elements;
+
+    private bool _isReadOnly = true;
+    private bool _readOnly;
+    private bool _isCellEditMode;
+    private List<string> _events = new();
+    private bool _editTriggerRowClick;
+    string searchString = null;
+    public bool _isAddNew = false;
+    private string? accessToken;
+    private string? error;
+    private bool _newMessages = false;
+    private bool _showCheckOutForm = false;
+    private bool _afterCheckout = false;
+
+    //signalr support
+    private HubConnection hubConnection;
+    private List<string> messages = new List<string>();
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        bool isAuthenticated = authState.User.Identity?.IsAuthenticated ?? false;
+
+        if (!isAuthenticated)
+        {
+            Navigation.NavigateTo("authentication/login");
+        }
+        else
+        {
+
+            await GetAccessToken();
+            hubConnection = new HubConnectionBuilder()
+                .WithUrl($"{Http.BaseAddress}messagehub")
+                .WithAutomaticReconnect()
+                .ConfigureLogging(logging =>
+                {
+                    logging.SetMinimumLevel(LogLevel.Debug);
+
+                })
+                .Build();
+
+
+            hubConnection.On<string, string>("ReceiveMessage", (user, message) =>
+            {
+                var encodedMsg = $"{user}: {message}";
+                messages.Add(encodedMsg);
+                InvokeAsync(StateHasChanged);
+                _newMessages = true;
+            });
+
+            await hubConnection.StartAsync();
+            Console.WriteLine("Connection to message hub started");
+        }
+
+    }
+
+    private async Task Send()
+    {
+        await GetAccessToken();
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        string userId = Guid.Parse(authState.User.Claims.First(nameof => nameof.Type == "sub").Value).ToString();
+        await hubConnection.SendAsync("SendMessage", userId, "signal");
+    }
+
+    private Task OnSearch(string text)
+    {
+        searchString = text;
+        return Elements.ReloadServerData();
+    }
+
+
+
+
+    private async Task GetAccessToken()
+    {
+        var tokenResult = await TokenProvider.RequestAccessToken(new AccessTokenRequestOptions
+            {
+                Scopes = new[] { "https://needthatback.onmicrosoft.com/lender/lender" }
+            });
+
+        if (tokenResult.TryGetToken(out var token))
+        {
+            accessToken = token.Value;
+        }
+        else
+        {
+            error = tokenResult.Status switch
+            {
+                AccessTokenResultStatus.RequiresRedirect => "Redirect required. Navigating...",
+                AccessTokenResultStatus.Success => null,
+                _ => "An unknown error occurred."
+            };
+
+            if (tokenResult.Status == AccessTokenResultStatus.RequiresRedirect)
+            {
+                Navigation.NavigateTo(tokenResult.InteractiveRequestUrl!);
+            }
+        }
+    }
+
+    private async Task<GridData<Item>> ServerReload(GridState<Item> state)
+    {
+
+        await GetAccessToken();
+        var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+        Http.DefaultRequestHeaders.Authorization = value;
+
+        IEnumerable<Item> data = await Http.GetFromJsonAsync<List<Item>>("/admin/items");
+
+        await Task.Delay(100);
+        data = data.Where(element =>
+        {
+            if (string.IsNullOrWhiteSpace(searchString))
+                return true;
+            if (element.ItemName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+            if (element.Description.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+            return false;
+        }).ToArray();
+        var totalItems = data.Count();
+
+        var sortDefinition = state.SortDefinitions.FirstOrDefault();
+        if (sortDefinition != null)
+        {
+            switch (sortDefinition.SortBy)
+            {
+                case nameof(Item.ItemName):
+                    data = data.OrderByDirection(
+                        sortDefinition.Descending ? SortDirection.Descending : SortDirection.Ascending,
+                        o => o.ItemName
+                    );
+                    break;
+                case nameof(Item.Description):
+                    data = data.OrderByDirection(
+                        sortDefinition.Descending ? SortDirection.Descending : SortDirection.Ascending,
+                        o => o.Description
+                    );
+                    break;
+                case nameof(Item.IsAvailable):
+                    data = data.OrderByDirection(
+                        sortDefinition.Descending ? SortDirection.Descending : SortDirection.Ascending,
+                        o => o.IsAvailable
+                    );
+                    break;
+            }
+        }
+
+        var pagedData = data.Skip(state.Page * state.PageSize).Take(state.PageSize).ToArray();
+        return new GridData<Item>
+            {
+                TotalItems = totalItems,
+                Items = pagedData
+            };
+
+        _newMessages = false;
+    }
+
+    private async void SendSmsMessage(Item item, Transaction transaction, string method)
+    {
+        string direction = "out";
+        await GetAccessToken();
+        var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+        Http.DefaultRequestHeaders.Authorization = value;
+
+
+    }
+
+    // events
+    void StartedEditingItem(Item item)
+    {
+        _events.Insert(0, $"Event = StartedEditingItem, Data = {System.Text.Json.JsonSerializer.Serialize(item)}");
+    }
+
+    void CanceledEditingItem(Item item)
+    {
+        _events.Insert(0, $"Event = CanceledEditingItem, Data = {System.Text.Json.JsonSerializer.Serialize(item)}");
+    }
+
+
+    async void CommittedItemChanges(Item item)
+    {
+        _events.Insert(0, $"Event = CommittedItemChanges, Data = {System.Text.Json.JsonSerializer.Serialize(item)}");
+
+        //call the put AI and commit the changes
+        CommitChanges(item);
+
+        var response = await Http.PutAsJsonAsync<Item>($"/items/{item.ItemId}", item);
+    }
+
+    async void DeleteItemAsync(Item item)
+    {
+        _events.Insert(0, $"Event = Item deleted, Data = {System.Text.Json.JsonSerializer.Serialize(item)}");
+
+        //call the put AI and commit the changes
+        await GetAccessToken();
+        var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+        Http.DefaultRequestHeaders.Authorization = value;
+
+        var response = await Http.DeleteAsync($"/items/{item.ItemId}");
+
+        Elements.ReloadServerData();
+    }
+
+    async void CommitChanges(Item item)
+    {
+        //call the put AI and commit the changes
+        await GetAccessToken();
+        var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+        Http.DefaultRequestHeaders.Authorization = value;
+
+        var response = await Http.PutAsJsonAsync<Item>($"/admin/items/{item.ItemId}", item);
+        Elements.ReloadServerData();
+    }
+
+    async void AddNew()
+    {
+        _isAddNew = true;
+    }
+
+    private void HandleAddnew(string msg)
+    {
+        _isAddNew = false;
+    }
+
+    //*******************Item Actions***********************************/
+    async void CheckInHandler(Item item)
+    {
+
+        await GetAccessToken();
+        var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+        Http.DefaultRequestHeaders.Authorization = value;
+
+        await Http.DeleteAsync($"/transactions/{item.Transaction.TransactionId}");
+
+        await Elements.ReloadServerData();
+    }
+
+    async void CheckOutHandler(Item item)
+    {
+        _showCheckOutForm = false;
+
+        await Elements.ReloadServerData();
+        _afterCheckout = true;   //this has to stay after the reload
+    }
+
+    bool InitiallyExpanded(Item item)
+    {
+        return true;
+    }
+}

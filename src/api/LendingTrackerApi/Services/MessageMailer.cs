@@ -74,7 +74,10 @@ namespace LendingTrackerApi.Services
             return emailSendOperation;
         }
 
-       
+        public async Task<EmailSendOperation> SendEmail(EmailMessage message)
+        {
+            return await _emailClient.SendAsync(WaitUntil.Started,message);
+        }
     }
 }
 
