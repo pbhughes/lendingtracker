@@ -81,7 +81,7 @@ namespace LendingView
             builder.RootComponents.Add<HeadOutlet>("head::after");
 
             // Register HttpClient with the base address pointing to your external API
-            builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:50369/") });
+            builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri($"{config["HostAPI:BaseUrl"]}/") });
 
             await builder.Build().RunAsync();
         }
