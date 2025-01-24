@@ -11,6 +11,8 @@
 
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0078d7">
 </head>
 
 <body>
@@ -26,5 +28,15 @@
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
     <script src="js/clientFunctions.js"></script>
 </body>
-
+<script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/service-worker.js')
+            .then(registration => {
+                console.log('Service Worker registered with scope:', registration.scope);
+            })
+            .catch(error => {
+                console.error('Service Worker registration failed:', error);
+            });
+    }
+</script>
 </html>

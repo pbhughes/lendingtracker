@@ -3,6 +3,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Blazored.LocalStorage;
 using LendingView.Servcies;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -75,8 +76,13 @@ namespace LendingView
 
 
             builder.Services.AddMudServices();
+
            
-           
+            builder.RootComponents.Add<HeadOutlet>("head::after");
+
+            // Register HttpClient with the base address pointing to your external API
+            builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:50369/") });
+
             await builder.Build().RunAsync();
         }
     }
