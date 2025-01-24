@@ -71,6 +71,7 @@ namespace LendingView
                 options.ProviderOptions.AdditionalScopesToConsent.Add("profile"); 
                 options.ProviderOptions.AdditionalScopesToConsent.Add("openid");
                 options.ProviderOptions.DefaultAccessTokenScopes.Add("https://needthatback.onmicrosoft.com/lender/lender");
+                options.ProviderOptions.LoginMode = "redirect";
             });
 
 
