@@ -3,16 +3,16 @@
 
 
 <div class="top-row pl-4 navbar navbar-dark">
-
-    <img src="https://needthatbackstorage.blob.core.windows.net/media/logos/lendingtracker/logo_transparent_background.png?sp=r&st=2025-01-23T11:44:30Z&se=2052-01-23T19:44:30Z&spr=https&sv=2022-11-02&sr=b&sig=5PYCg%2Baiqq9YDmY2OMtHv3CQe35FiHVpPdBCjoMSMFQ%3D"
-             alt="Logo" style="width: 200px; height: auto; padding: 10px;"  />
-    
-    <button class="navbar-toggler" @onclick="ToggleNavMenu">
-        <span class="navbar-toggler-icon"></span>
-    </button>
+    <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Secondary" Edge="Edge.Start" OnClick="@ToggleNavMenu" />
+    <MudElement HtmlTag="a"
+                Class="ms-1"
+                Style="color:turquoise;font-weight:bold;"
+                rel="noopener noreferrer">
+        Lending Tracker
+    </MudElement>
 </div>
 
-<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
+<div class="sidebar @NavMenuCssClass" @onclick="ToggleNavMenu">
     <ul class="nav flex-column">
         <li class="nav-item px-3">
             <NavLink class="nav-link" href="items">
@@ -35,7 +35,7 @@
 </div>
 
 @code {
-    private bool collapseNavMenu = true;
+    private bool collapseNavMenu;
     private bool _isAdmin = false;
     private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
@@ -48,7 +48,7 @@
     private async void HandleUserLoggedIn(){
         _isAdmin = await _userService.IsAdmin();
         StateHasChanged();
-      
+
     }
 
     private void Dispose(){
@@ -60,7 +60,7 @@
         _isAdmin = await  _userService.IsAdmin();
         await base.OnInitializedAsync();
     }
-    
+
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
