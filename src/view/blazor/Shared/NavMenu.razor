@@ -35,9 +35,9 @@
 </div>
 
 @code {
-    private bool collapseNavMenu;
+    private bool collapseNavMenu = false;
     private bool _isAdmin = false;
-    private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+    private string NavMenuCssClass => collapseNavMenu ? "d-none" : "d-block";
 
     protected override void OnInitialized()
     {
