@@ -188,6 +188,6 @@ video {
     .sidebar .collapse {
         /* Never collapse the sidebar for wide screens */
         display: block;
-        overflow:hidden;
+
     }
 }
