@@ -1,13 +1,15 @@
 ﻿@using LendingView.Servcies
 @inject IUserService _userService
+@inject IBrowserViewportService ViewportService
+
 
 
 <div class="top-row pl-4 navbar navbar-dark">
     <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Secondary" Edge="Edge.Start" OnClick="@ToggleNavMenu" />
     <MudElement HtmlTag="a"
-                Class="ms-1"
-                Style="color:turquoise;font-weight:bold;"
-                rel="noopener noreferrer">
+    Class="ms-1"
+    Style="color:turquoise;font-weight:bold;"
+    rel="noopener noreferrer">
         Lending Tracker
     </MudElement>
 </div>
@@ -39,8 +41,20 @@
     private bool _isAdmin = false;
     private string NavMenuCssClass => collapseNavMenu ? "d-none" : "d-block";
 
-    protected override void OnInitialized()
+    private int ViewportWidth;
+    private int ViewportHeight;
+    private Breakpoint Breakpoint;
+
+
+
+    protected override async void OnInitialized()
     {
+        bool islargescreen = await ViewportService.IsBreakpointWithinWindowSizeAsync(Breakpoint.MdAndUp);
+        if (islargescreen)
+            collapseNavMenu = false;
+        else
+            collapseNavMenu = true;
+
         _userService.AuthenticationStateChanged += HandleUserLoggedIn;
         base.OnInitialized();
     }
@@ -61,8 +75,22 @@
         await base.OnInitializedAsync();
     }
 
-    private void ToggleNavMenu()
+    private async void ToggleNavMenu()
     {
-        collapseNavMenu = !collapseNavMenu;
+        bool largeScreen = await ViewportService.IsBreakpointWithinWindowSizeAsync(Breakpoint.MdAndUp);
+        bool allowToggle = false;
+        if ( largeScreen )
+        {
+            allowToggle = false;
+
+        }
+        else{
+            allowToggle = true;
+        }
+
+        collapseNavMenu = allowToggle &   !collapseNavMenu;
     }
+
+  
 }
+
