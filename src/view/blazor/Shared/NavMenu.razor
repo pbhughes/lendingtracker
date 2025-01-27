@@ -49,12 +49,6 @@
 
     protected override async void OnInitialized()
     {
-        bool islargescreen = await ViewportService.IsBreakpointWithinWindowSizeAsync(Breakpoint.MdAndUp);
-        if (islargescreen)
-            collapseNavMenu = false;
-        else
-            collapseNavMenu = true;
-
         _userService.AuthenticationStateChanged += HandleUserLoggedIn;
         base.OnInitialized();
     }
@@ -77,18 +71,14 @@
 
     private async void ToggleNavMenu()
     {
-        bool largeScreen = await ViewportService.IsBreakpointWithinWindowSizeAsync(Breakpoint.MdAndUp);
-        bool allowToggle = false;
-        if ( largeScreen )
-        {
-            allowToggle = false;
+        var breakPoint = await ViewportService.GetCurrentBreakpointAsync();
+        if (breakPoint > Breakpoint.MdAndUp)
+            {
+                collapseNavMenu = false;
+                return;
+            }
 
-        }
-        else{
-            allowToggle = true;
-        }
-
-        collapseNavMenu = allowToggle &   !collapseNavMenu;
+        collapseNavMenu =  !collapseNavMenu;
     }
 
   
