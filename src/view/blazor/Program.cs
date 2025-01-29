@@ -10,11 +10,6 @@ using Microsoft.Extensions.DependencyInjection;
 using MudBlazor.Services;
 
 
-
-
-
-
-
 namespace LendingView
 {
     public class Program
@@ -42,6 +37,7 @@ namespace LendingView
 
             builder.Services.AddScoped<HttpClientInterceptor>();
             builder.Services.AddScoped<IUserService, UserService>();
+
 
             // Configure HttpClient with the interceptor
             builder.Services.AddScoped(sp =>
