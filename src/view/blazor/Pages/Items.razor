@@ -2,6 +2,7 @@
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 @using LendingView.Models
 @using MudBlazor
+@using MudBlazor.Services
 @using LendingView.Components
 @using System.Net
 @using Microsoft.Extensions.Logging
@@ -11,6 +12,8 @@
 @inject IAccessTokenProvider TokenProvider
 @inject AuthenticationStateProvider authStateProvider
 @inject NavigationManager Navigation
+@inject IBrowserViewportService _viewportService
+
 
 
 @if(_isAddNew)
@@ -35,7 +38,8 @@ else{
             AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
         </ToolBarContent>
         <Columns>
-            <HierarchyColumn T="Item">Actions</HierarchyColumn>
+            @* This is the arrow that expands wish I could add a coloumn name with it might use a row template *@
+            <HierarchyColumn  T="Item" IconSize="@Size.Large" Class="object-left">Actions</HierarchyColumn>
             <PropertyColumn Property="x => x.ItemId" Title="Item" Editable="false" Hidden="true">
                 <CellTemplate>
                     @context.Item.ItemId
@@ -55,14 +59,14 @@ else{
                     <MudSwitch @bind-Value="context.Item.IsAvailable" Label="Is Avialable" />
                 </EditTemplate>
             </PropertyColumn>
-            <TemplateColumn Hidden="@(_isCellEditMode || _readOnly || _editTriggerRowClick)" >
+            <TemplateColumn Title="Edit" Hidden="@(_isCellEditMode || _readOnly || _editTriggerRowClick)" >
                 <CellTemplate>
-                    <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" OnClick="@context.Actions.StartEditingItemAsync" />
+                    <MudIconButton Size="@Size.Medium" Icon="@Icons.Material.Outlined.Edit" OnClick="@context.Actions.StartEditingItemAsync" />
                 </CellTemplate>
             </TemplateColumn>
-            <TemplateColumn>
+            <TemplateColumn Title="Delete">
                 <CellTemplate>
-                    <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Filled.Delete" aria-label="delete" OnClick="() => DeleteItemAsync(context.Item)" />
+                     <MudIconButton Size="@Size.Medium" Icon="@Icons.Material.Filled.Delete" aria-label="delete" OnClick="() => DeleteItemAsync(context.Item)" />
                 </CellTemplate>
             </TemplateColumn>
             <TemplateColumn>
@@ -75,6 +79,7 @@ else{
                     }
                 </CellTemplate>
             </TemplateColumn>
+            
         </Columns>
         <ChildRowContent>
             <MudGrid>
@@ -134,6 +139,7 @@ else{
     private bool _newMessages = false;
     private bool _showCheckOutForm = false;
     private bool _afterCheckout = false;
+    private Breakpoint _breakPoint;
 
     //signalr support
     private HubConnection hubConnection;
@@ -144,6 +150,7 @@ else{
 
         var authState = await authStateProvider.GetAuthenticationStateAsync();
         bool isAuthenticated = authState.User.Identity?.IsAuthenticated ?? false;
+        _breakPoint = await _viewportService.GetCurrentBreakpointAsync();
 
         if (!isAuthenticated)
         {

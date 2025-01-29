@@ -13,7 +13,9 @@
     <Optimize>True</Optimize>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Development|AnyCPU'">
-    <Optimize>True</Optimize>
+    <Optimize>False</Optimize>
+	<DebugType>embedded</DebugType>
+	<DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1' ">
@@ -42,17 +44,17 @@
 
   <ItemGroup>
     <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
-    <PackageReference Include="libphonenumber-csharp" Version="8.13.52" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="9.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="9.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="9.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="9.0.0" />
-    <PackageReference Include="Microsoft.Authentication.WebAssembly.Msal" Version="9.0.0" />
-    <PackageReference Include="MudBlazor" Version="7.15.0" />
+    <PackageReference Include="libphonenumber-csharp" Version="8.13.53" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="9.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="9.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="9.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="9.0.1" />
+    <PackageReference Include="Microsoft.Authentication.WebAssembly.Msal" Version="9.0.1" />
+    <PackageReference Include="MudBlazor" Version="8.1.0" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.3.1" />
-    <PackageReference Include="System.Text.Json" Version="9.0.0" />
+    <PackageReference Include="System.Text.Json" Version="9.0.1" />
   </ItemGroup>
 
   <ItemGroup>
