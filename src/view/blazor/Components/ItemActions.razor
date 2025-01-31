@@ -22,14 +22,15 @@
 
 @code {
     [Parameter]
-    public Item item { get; set; } = null;
+    public Item item { get; set; } = new Item();
 
     [Parameter] public EventCallback<Item> CheckIn { get; set; }
     [Parameter] public EventCallback<Item> CheckOut { get; set; }
 
 
-    private bool _showCheckInButton = false;
-    private bool _showCheckoutButton = false;
+    [Parameter] public bool _showCheckInButton { get; set; }
+    [Parameter] public bool _showCheckoutButton { get; set; }
+
     private bool _open = false;
     private string _accessToken;
     private string _error;
@@ -38,15 +39,6 @@
 
     protected async override Task OnInitializedAsync()
     {
-
-        if (item.Transaction != null)
-        {
-            //item is out
-            _showCheckInButton = true;
-        }
-
-
-
         await base.OnInitializedAsync();
 
     }

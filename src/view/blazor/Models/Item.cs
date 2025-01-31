@@ -28,5 +28,8 @@ namespace LendingView.Models
 
         [Url]
         public string StoreLink { get; set; }
+
+        [Url]
+        public string ImageLink { get; set; }   
     }
 }

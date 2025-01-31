@@ -39,7 +39,7 @@ else
                     @context.Item.Name
                     @if (context.Item.Transactions.Count() > 0)
                     {
-                        <MudIcon Icon="@Icons.Material.Filled.NewLabel" Color="@Color.Secondary" Title="Checkout"></MudIcon>
+                        <MudIcon Icon="@Icons.Material.Filled.NewLabel" Color="@Color.Secondary" Title="Has Items"></MudIcon>
                     }
                 </CellTemplate>
             </PropertyColumn>
@@ -59,7 +59,7 @@ else
         </Columns>
         <ChildRowContent>
             <MudGrid>
-                <MudItem xs="6">
+                <MudItem xs="12">
                     <BorrowerIItems Borrower="@context.Item"></BorrowerIItems>
                 </MudItem>
             </MudGrid>
@@ -87,10 +87,11 @@ else
     private string? error;
     private string _returnUrl = string.Empty;
 
-    protected override async Task OnInitializedAsync()
+    protected override Task OnInitializedAsync()
     {
         _returnUrl = Navigation.Uri;
-        await LocalStorage.SetItemAsStringAsync(key: "redirectUrl", data: _returnUrl);
+         LocalStorage.SetItemAsStringAsync(key: "redirectUrl", data: _returnUrl);
+        return base.OnInitializedAsync();
     }
 
     private async Task GetAccessToken()
