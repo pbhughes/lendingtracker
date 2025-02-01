@@ -1,4 +1,4 @@
-using LendingTrackerApi.Extensions;
+﻿using LendingTrackerApi.Extensions;
 using LendingTrackerApi.Models;
 using LendingTrackerApi.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -21,6 +21,9 @@ using Azure.Communication.Email;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.Net.Http;
+using System.Web;
+using System.Text;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 
 
@@ -106,6 +109,7 @@ builder.Services.AddScoped(typeof(IHmacSigner), typeof(HmacSigner));
 builder.Services.AddScoped(typeof(IMessageMailer), typeof(MessageMailer));
 builder.Services.AddScoped<MessageSignalr>();
 builder.Services.AddScoped(typeof(IValidationServices), typeof(ValidatorService));
+builder.Services.AddScoped(typeof(IBlobStorageService), typeof(BlobStorageService));
 
 
 var app = builder.Build();
@@ -115,6 +119,12 @@ app.UseCors(MyAllowSpecificOrigins);
 
 //use routing for signlR
 app.UseRouting();
+// ✅ Ignore Anti-Forgery for Minimal API Endpoints
+app.Use((context, next) =>
+{
+    context.Request.Headers.Remove("RequestVerificationToken");
+    return next();
+});
 app.MapHub<MessagesHub>("/messagehub");
 
 //use authorization
@@ -135,7 +145,12 @@ app.UseReDoc(c =>
     c.InjectStylesheet("/styles/redoc.css");
 });
 
-
+//disable antirequest forgery token requirement
+app.Use((context, next) =>
+{
+    context.Request.Headers.Remove("RequestVerificationToken");
+    return next();
+});
 
 // Configure the HTTP request pipeline.
 app.UseHttpsRedirection();
@@ -145,9 +160,23 @@ app.MapGet("/error", (HttpContext context) =>
 {
     var exception = context.Features.Get<IExceptionHandlerFeature>()?.Error;
     return exception is DbUpdateException
-        ? Results.Problem("A database error occurred.", statusCode: 500)
-        : Results.Problem("An unexpected error occurred.", statusCode: 500);
+        ? Results.Problem("A database error occurred.", statusCode: 500) : Results.Problem("An unexpected error occurred.", statusCode: 500);
 });
+//********************************************************************************Images*********************************
+app.MapPost("/images", async (HttpRequest request, IConfiguration config, IBlobStorageService blobService) =>
+{
+    var file = request.Form.Files["file"];
+
+    if (file == null || file.Length == 0)
+        return Results.BadRequest();
+
+    using var stream = file.OpenReadStream();
+    string sasUrl = await blobService.UploadImageAndGetSasAsync(stream, Guid.NewGuid().ToString() + file.FileName, file.ContentType, TimeSpan.FromDays(365 * int.Parse(config["BlobStorage:TokenDuration"])));
+
+   
+    return Results.Ok(new { url = HttpUtility.UrlDecode( sasUrl) });
+
+}).WithTags("Images").RequireAuthorization("authorized_user");
 
 // Define CRUD endpoints for User*************************************************User***********************************
 app.MapGet("/users", async (LendingTrackerContext db, IHttpContextAccessor httpContext) => {
@@ -271,7 +300,7 @@ app.MapGet("/borrowers/transactions/{borrowerId}", async (string borrowerId,Lend
     var transactions = db.Transactions
      .Include(b => b.Borrower)
      .Join(db.Items, tran => tran.ItemId, item => item.ItemId, (trans, item) => 
-        new { BorrowedAt = trans.BorrowedAt, ItemName = item.ItemName, BorrorwerId = trans.BorrowerId, LenderId = trans.LenderId, BorrowerId = trans.BorrowerId , ReturnDate = trans.ReturnDate})
+        new { BorrowedAt = trans.BorrowedAt, ItemName = item.ItemName, BorrorwerId = trans.BorrowerId, LenderId = trans.LenderId, BorrowerId = trans.BorrowerId , ReturnDate = trans.ReturnDate, TransactionId = trans.TransactionId})
      .Where(t => t.BorrowerId == Guid.Parse(borrowerId) && t.LenderId == Guid.Parse(id));
    
     return transactions is null ? Results.NotFound() : Results.Ok(transactions.ToList());
@@ -405,6 +434,7 @@ app.MapPut("/items/{id}", async (int id, Item updatedItem, LendingTrackerContext
     item.Description = updatedItem.Description;
     item.IsAvailable = updatedItem.IsAvailable;
     item.StoreLink = updatedItem.StoreLink;
+    item.ImageLink = updatedItem.ImageLink;
 
     await db.SaveChangesAsync();
     return Results.NoContent();

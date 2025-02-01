@@ -11,46 +11,64 @@
 @inject AuthenticationStateProvider authStateProvider
 @inject NavigationManager Navigation
 
-<MudCard>
-    <MudCardHeader>
-        @if (Elements.Count() == 0)
-        {
-            <p>No Items</p>
-        }
-        else
-        {
-            <MudDataGrid Items="@Elements">
+@if (Visible)
+{
+
+
+    <MudCard Outlined="true" Class="border-solid border-2 mud-border-primary p-4">
+        <MudCardHeader>
+           <p>Items</p>
+
+        </MudCardHeader>
+        <MudCardContent>
+            <MudDataGrid T="BorrowerItem"  @ref="Elements" SelectedItem="_currentItem" ServerData="ServerReload" RowClick="OnRowClicked">
                 <Columns>
-                <PropertyColumn Property="x => x.ItemName" Title="Item Name" />
-                <PropertyColumn Property="x => x.BorrowedAt" Title="Borrowed At" />
-                <PropertyColumn Property="x => x.ReturnDate.ToShortDateString()" Title="Return Date" />
-            </Columns>
-        </MudDataGrid>
-        }
-    </MudCardHeader>
-</MudCard>
+                    <PropertyColumn Property="x => x.ItemName" Title="Item Name" />
+                    <PropertyColumn Property="x => x.BorrowedAt" Title="Borrowed At" />
+                    <PropertyColumn Property="x => x.ReturnDate.ToShortDateString()" Title="Return Date" />
+                    <TemplateColumn Context="Item">
+                        <CellTemplate>
+                            <MudButtonGroup Color="Color.Primary" Variant="Variant.Text">
+                                <MudLink Icon="@Icons.Material.Filled.Inbox" Color="@Color.Success" Variant="Variant.Filled" OnClick="() => CheckInHandler(_currentItem)">Check In</MudLink>
+                            </MudButtonGroup>
+                        </CellTemplate>
+                    </TemplateColumn>
+                </Columns>
+            </MudDataGrid>
+        </MudCardContent>
+    </MudCard>
+}
+
 @code {
 
     [Parameter] public Borrower Borrower { get; set; }
-    private IEnumerable<BorrowerItems> Elements = new List<BorrowerItems>();
+    [Parameter] public bool Visible { get; set; }
+    private MudDataGrid<BorrowerItem> Elements = new MudDataGrid<BorrowerItem>();
     private string? accessToken;
     private string? error;
     List<AlignItems> _items;
+    private BorrowerItem _currentItem;
 
     protected override Task OnInitializedAsync()
     {
         return base.OnInitializedAsync();
     }
 
-    protected override async Task  OnParametersSetAsync()
+    private async Task<GridData<BorrowerItem>> ServerReload(GridState<BorrowerItem> state)
     {
         await GetAccessToken();
         var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
         Http.DefaultRequestHeaders.Authorization = value;
 
-        Elements = await Http.GetFromJsonAsync<List<BorrowerItems>>($"/borrowers/transactions/{Borrower.BorrowerId}");
-      
+        var data = await Http.GetFromJsonAsync<List<BorrowerItem>>($"/borrowers/transactions/{Borrower.BorrowerId}");
+
+        return new GridData<BorrowerItem>
+            {
+                Items = data
+            };
     }
+
+
 
     private async Task GetAccessToken()
     {
@@ -79,4 +97,22 @@
         }
     }
 
+    async void CheckInHandler( BorrowerItem borrowerItem )
+    {
+
+        await GetAccessToken();
+        var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+        Http.DefaultRequestHeaders.Authorization = value;
+
+        await Http.DeleteAsync($"/transactions/{_currentItem.TransactionId}");
+
+        await Elements.ReloadServerData();
+    }
+
+    private void OnRowClicked(DataGridRowClickEventArgs<BorrowerItem> args)
+    {
+        _currentItem = args.Item;
+    }
+
+  
 }

@@ -1,0 +1,124 @@
+﻿@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using LendingView.Models
+
+@inject HttpClient Http
+@inject IAccessTokenProvider TokenProvider
+@inject AuthenticationStateProvider authStateProvider
+@inject NavigationManager Navigation
+
+<MudGrid>
+    <MudItem xs="6">
+        <MudFileUpload T="IBrowserFile" FilesChanged="UploadFiles">
+            <ActivatorContent>
+                <MudFab Color="Color.Secondary"
+                        StartIcon="@Icons.Material.Filled.Image"
+                        Label="Load picture" />
+            </ActivatorContent>
+
+        </MudFileUpload>
+
+        @if (_files != null)
+        {
+            <MudText Typo="@Typo.h6">@_files.Count() File@(_files.Count() == 1 ? "" : "s"):</MudText>
+            <MudList T="string">
+                @foreach (var file in _files)
+                {
+                    <MudListItem Icon="@Icons.Material.Filled.AttachFile" @key="@file">
+                        @file.Name <code>@file.Size bytes</code>
+                    </MudListItem>
+                }
+            </MudList>
+
+        }
+
+        @if (!string.IsNullOrEmpty(error))
+        {
+            <MudText>@error</MudText>
+        }
+
+        @if (!_uplodateComplete)
+        {
+            <MudText>@messageText</MudText>
+        }
+    </MudItem>
+    <MudItem xs="2">
+        @if( ! string.IsNullOrEmpty(ImageLink) ){
+            <MudImage Src="@ImageLink" Alt="Item Image" Elevation="25" Class="rounded-lg" Width="100" Height="100" />
+        }
+    </MudItem>
+</MudGrid>
+
+@code {
+
+    IList<IBrowserFile> _files = new List<IBrowserFile>();
+    [Parameter] public int ItemId { get; set; }
+    [Parameter] public string ItemName { get; set; }
+    [Parameter] public string ImageLink { get; set; }
+    [Parameter] public EventCallback<string> OnUrlSet { get; set; }
+    private string? accessToken;
+    private string? error;
+    private string imageUrl;
+    private bool _uplodateComplete = false;
+    private string messageText = "Waiting to upload...";
+
+
+
+    private async void UploadFiles(IBrowserFile file)
+    {
+        error = string.Empty;
+        _files.Add(file);
+        //TODO upload the files to the server
+        await GetAccessToken();
+        var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+        Http.DefaultRequestHeaders.Authorization = value;
+        using var content = new MultipartFormDataContent();
+        var fileStream = file.OpenReadStream(maxAllowedSize: 1_000_000); // 1MB limit
+        var streamContent = new StreamContent(fileStream);
+        streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
+
+        content.Add(streamContent, "file", file.Name);
+        var response  = await Http.PostAsync("/images", content);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var fileResponse = await response.Content.ReadFromJsonAsync<FileUploadResponse>();
+            _files.Clear();
+            await OnUrlSet.InvokeAsync(fileResponse.Url);
+            messageText =  "Upload complete";
+            StateHasChanged();
+        }
+        else{
+            error = $"Error occured {response.ReasonPhrase} please try again.";
+            _files.Clear();
+            StateHasChanged();
+        }
+    }
+
+    private async Task GetAccessToken()
+    {
+        var tokenResult = await TokenProvider.RequestAccessToken(new AccessTokenRequestOptions
+            {
+                Scopes = new[] { "https://needthatback.onmicrosoft.com/lender/lender" }
+            });
+
+        if (tokenResult.TryGetToken(out var token))
+        {
+            accessToken = token.Value;
+        }
+        else
+        {
+            error = tokenResult.Status switch
+            {
+                AccessTokenResultStatus.RequiresRedirect => "Redirect required. Navigating...",
+                AccessTokenResultStatus.Success => null,
+                _ => "An unknown error occurred."
+            };
+
+            if (tokenResult.Status == AccessTokenResultStatus.RequiresRedirect)
+            {
+                Navigation.NavigateTo(tokenResult.InteractiveRequestUrl!);
+            }
+        }
+    }
+
+}

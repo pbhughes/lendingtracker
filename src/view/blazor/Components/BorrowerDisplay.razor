@@ -11,6 +11,8 @@
 @inject IAccessTokenProvider TokenProvider
 @inject AuthenticationStateProvider authStateProvider
 @inject NavigationManager Navigation
+
+
 <MudCard Outlined="true" Class="border-solid border-2 mud-border-primary p-4">
     <MudCardHeader>
         <h3>Checked Out To: @_selectedBorrower.Name</h3>
@@ -24,11 +26,9 @@
 
 
 @code {
-    [Parameter] 
-    public Guid BorrowerId { get; set; }
-
-    [Parameter] 
-    public string ItemName { get; set; }
+    [Parameter] public Guid BorrowerId { get; set; }
+    [Parameter] public string ItemName { get; set; }
+    
 
     private Borrower _selectedBorrower = new Borrower();
     private string telLink = string.Empty;
