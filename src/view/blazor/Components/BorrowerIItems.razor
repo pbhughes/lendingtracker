@@ -11,32 +11,38 @@
 @inject AuthenticationStateProvider authStateProvider
 @inject NavigationManager Navigation
 
+@if (Visible)
+{
 
-<MudCard Outlined="true" Class="border-solid border-2 mud-border-primary p-4">
-    <MudCardHeader>
-        <p>Items</p>
-    </MudCardHeader>
-    <MudCardContent>
-        <MudDataGrid T="BorrowerItem"  @ref="Elements" SelectedItem="_currentItem" ServerData="ServerReload" RowClick="OnRowClicked">
-            <Columns>
-                <PropertyColumn Property="x => x.ItemName" Title="Item Name" />
-                <PropertyColumn Property="x => x.BorrowedAt" Title="Borrowed At" />
-                <PropertyColumn Property="x => x.ReturnDate.ToShortDateString()" Title="Return Date" />
-                <TemplateColumn Context="Item">
-                    <CellTemplate>
-                        <MudButtonGroup Color="Color.Primary" Variant="Variant.Text">
-                            <MudLink Icon="@Icons.Material.Filled.Inbox" Color="@Color.Success" Variant="Variant.Filled" OnClick="() => CheckInHandler(_currentItem)">Check In</MudLink>
-                        </MudButtonGroup>
-                    </CellTemplate>
-                </TemplateColumn>
-            </Columns>
-        </MudDataGrid>
-    </MudCardContent>
-</MudCard>
+
+    <MudCard Outlined="true" Class="border-solid border-2 mud-border-primary p-4">
+        <MudCardHeader>
+           <p>Items</p>
+
+        </MudCardHeader>
+        <MudCardContent>
+            <MudDataGrid T="BorrowerItem"  @ref="Elements" SelectedItem="_currentItem" ServerData="ServerReload" RowClick="OnRowClicked">
+                <Columns>
+                    <PropertyColumn Property="x => x.ItemName" Title="Item Name" />
+                    <PropertyColumn Property="x => x.BorrowedAt" Title="Borrowed At" />
+                    <PropertyColumn Property="x => x.ReturnDate.ToShortDateString()" Title="Return Date" />
+                    <TemplateColumn Context="Item">
+                        <CellTemplate>
+                            <MudButtonGroup Color="Color.Primary" Variant="Variant.Text">
+                                <MudLink Icon="@Icons.Material.Filled.Inbox" Color="@Color.Success" Variant="Variant.Filled" OnClick="() => CheckInHandler(_currentItem)">Check In</MudLink>
+                            </MudButtonGroup>
+                        </CellTemplate>
+                    </TemplateColumn>
+                </Columns>
+            </MudDataGrid>
+        </MudCardContent>
+    </MudCard>
+}
 
 @code {
 
     [Parameter] public Borrower Borrower { get; set; }
+    [Parameter] public bool Visible { get; set; }
     private MudDataGrid<BorrowerItem> Elements = new MudDataGrid<BorrowerItem>();
     private string? accessToken;
     private string? error;

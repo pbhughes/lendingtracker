@@ -60,7 +60,7 @@ else
         <ChildRowContent>
             <MudGrid>
                 <MudItem xs="12">
-                    <BorrowerIItems Borrower="@context.Item"></BorrowerIItems>
+                    <BorrowerIItems Visible="context.Item.Transactions != null && context.Item.Transactions.Count() > 0" Borrower="@context.Item"></BorrowerIItems>
                 </MudItem>
             </MudGrid>
         </ChildRowContent>
@@ -85,12 +85,12 @@ else
     public bool _isAddNew = false;
     private string? accessToken;
     private string? error;
-    private string _returnUrl = string.Empty;
+    
 
     protected override Task OnInitializedAsync()
     {
-        _returnUrl = Navigation.Uri;
-         LocalStorage.SetItemAsStringAsync(key: "redirectUrl", data: _returnUrl);
+        var returnUrl = Navigation.Uri;
+        LocalStorage.SetItemAsStringAsync(key: "returnUrl", data: returnUrl);
         return base.OnInitializedAsync();
     }
 
@@ -124,21 +124,14 @@ else
 
     private async Task<GridData<Borrower>> ServerReload(GridState<Borrower> state)
     {
+        await GetAccessToken();
         var authState = await authStateProvider.GetAuthenticationStateAsync();
         bool isAuthenticated = authState.User.Identity?.IsAuthenticated ?? false;
         IEnumerable<Borrower> data = new List<Borrower>();
         int totalItems = 0;
 
-        if (!isAuthenticated)
-        {
-            //store the return to url in session state
-            string loginReturnUrl = $"authentication/login?state={Uri.EscapeDataString(_returnUrl)}";
-            Navigation.NavigateTo(loginReturnUrl);
-        }
-        else
-        {
 
-            await GetAccessToken();
+          
 
             var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
             Http.DefaultRequestHeaders.Authorization = value;
@@ -184,7 +177,7 @@ else
                         break;
                 }
             }
-        }
+        
 
         var pagedData = data.Skip(state.Page * state.PageSize).Take(state.PageSize).ToArray();
         return new GridData<Borrower>

@@ -21,6 +21,9 @@ using Azure.Communication.Email;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.Net.Http;
+using System.Web;
+using System.Text;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 
 
@@ -170,7 +173,8 @@ app.MapPost("/images", async (HttpRequest request, IConfiguration config, IBlobS
     using var stream = file.OpenReadStream();
     string sasUrl = await blobService.UploadImageAndGetSasAsync(stream, Guid.NewGuid().ToString() + file.FileName, file.ContentType, TimeSpan.FromDays(365 * int.Parse(config["BlobStorage:TokenDuration"])));
 
-    return Results.Ok(new { url = sasUrl });
+   
+    return Results.Ok(new { url = HttpUtility.UrlDecode( sasUrl) });
 
 }).WithTags("Images").RequireAuthorization("authorized_user");
 

@@ -15,6 +15,7 @@
 @inject AuthenticationStateProvider ast
 @inject IAccessTokenProvider TokenProvider
 @inject IUserService _userService
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 
 
 <AuthorizeView>
@@ -106,7 +107,18 @@
 
             if(theUser != null && !string.IsNullOrEmpty(theUser.PhoneNumber))
             {
-                Navigation.NavigateTo("/items");
+                //NOTES - after login if the user is new they get sent to a registration page
+                //once the registration pages is done, they need to navigate to the original authorized 
+                //url that initiated the login request
+                var returnUrl = await LocalStorage.GetItemAsStringAsync(key: "returnUrl");
+                if (!string.IsNullOrEmpty(returnUrl))
+                {
+                    Navigation.NavigateTo(returnUrl);
+                }
+                else{
+                    Navigation.NavigateTo("/items");
+                }
+              
             }
             else{
                 _collectPhone = true;

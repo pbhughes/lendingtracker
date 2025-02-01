@@ -13,6 +13,7 @@
 @inject AuthenticationStateProvider authStateProvider
 @inject NavigationManager Navigation
 @inject IBrowserViewportService _viewportService
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 
 
 
@@ -165,6 +166,9 @@ else{
 
     protected override async Task OnInitializedAsync()
     {
+        //support post login call back redirect to the clicked link
+        var returnUrl = Navigation.Uri;
+        await LocalStorage.SetItemAsStringAsync(key: "returnUrl", data: returnUrl);
 
         var authState = await authStateProvider.GetAuthenticationStateAsync();
         bool isAuthenticated = authState.User.Identity?.IsAuthenticated ?? false;
