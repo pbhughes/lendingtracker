@@ -145,12 +145,7 @@ app.UseReDoc(c =>
     c.InjectStylesheet("/styles/redoc.css");
 });
 
-//disable antirequest forgery token requirement
-app.Use((context, next) =>
-{
-    context.Request.Headers.Remove("RequestVerificationToken");
-    return next();
-});
+
 
 // Configure the HTTP request pipeline.
 app.UseHttpsRedirection();

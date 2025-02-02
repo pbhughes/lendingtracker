@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Transactions;
+using System.Diagnostics.CodeAnalysis;
 
 namespace LendingView.Models
 {
@@ -27,9 +28,11 @@ namespace LendingView.Models
         public virtual Transaction Transaction { get; set; }
 
         [Url]
+        [AllowNull]
         public string StoreLink { get; set; }
 
         [Url]
+        [AllowNull]
         public string ImageLink { get; set; }   
     }
 }
