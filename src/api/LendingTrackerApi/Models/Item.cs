@@ -23,7 +23,7 @@ public partial class Item
 
     public virtual Transaction Transaction { get; set; }
 
-    public string StoreLink { get; set; } = string.Empty;
+    public string? StoreLink { get; set; } = string.Empty;
 
     public string? ImageLink { get; set; } = string.Empty; 
 }
