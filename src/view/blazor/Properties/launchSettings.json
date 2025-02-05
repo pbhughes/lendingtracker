@@ -3,11 +3,12 @@
     "LendingView - Development": {
       "commandName": "Project",
       "launchBrowser": true,
-      "dotnetRunMessages": true,
-      "hotReloadEnabled": true,
+      "launchUrl": "https://localhost:5001",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
+      "dotnetRunMessages": true,
+      "hotReloadEnabled": true,
       "applicationUrl": "https://localhost:5001",
       "inspectUri": "{wsProtocol}://{url.hostname}:{url.port}/_framework/debug/ws-proxy?browser={browserInspectUri}",
       "sqlDebugging": true
@@ -15,11 +16,11 @@
     "LendingView - Production": {
       "commandName": "Project",
       "launchBrowser": true,
-      "dotnetRunMessages": true,
-      "hotReloadEnabled": true,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Production"
       },
+      "dotnetRunMessages": true,
+      "hotReloadEnabled": true,
       "applicationUrl": "https://localhost:5001",
       "inspectUri": "{wsProtocol}://{url.hostname}:{url.port}/_framework/debug/ws-proxy?browser={browserInspectUri}",
       "sqlDebugging": true
