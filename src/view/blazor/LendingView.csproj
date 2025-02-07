@@ -1,46 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
-    <RuntimeIdentifier>browser-wasm</RuntimeIdentifier>
-    <UseBlazorWebAssembly>true</UseBlazorWebAssembly>
-    <RazorLangVersion>3.0</RazorLangVersion>
-	<BlazorWebAssemblyEnableDebugging>false</BlazorWebAssemblyEnableDebugging>
-	<BlazorWebAssemblyEnableCSSIsolation>true</BlazorWebAssemblyEnableCSSIsolation>
-	 <BlazorWebAssemblyEnableCompression>true</BlazorWebAssemblyEnableCompression>
-	 <Configurations>Debug;Release;Local;Development;Production</Configurations>
+	 <Nullable>enable</Nullable>
+	 <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Production|AnyCPU'">
-    <Optimize>True</Optimize>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Development|AnyCPU'">
-    <Optimize>False</Optimize>
-	<DebugType>embedded</DebugType>
-	<DebugSymbols>true</DebugSymbols>
-  </PropertyGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1' ">
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="9.0.0" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.Authentication.WebAssembly.Msal" Version="9.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.0" />
-    <PackageReference Include="Microsoft.Graph" Version="5.64.0" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.2.1" />
-    <PackageReference Include="System.Net.Http.Json" Version="9.0.0" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)' == 'net5.0' ">
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="5.0.0-*" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="5.0.0-*" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="5.0.0-*" />
-    <PackageReference Include="Microsoft.Authentication.WebAssembly.Msal" Version="5.0.0-*" />
-    <PackageReference Include="System.Net.Http.Json" Version="5.0.0-*" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Remove="Connected Services\**" />
-    <Content Remove="Connected Services\**" />
-    <EmbeddedResource Remove="Connected Services\**" />
-    <None Remove="Connected Services\**" />
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
