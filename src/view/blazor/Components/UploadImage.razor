@@ -1,18 +1,22 @@
 ﻿@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 @using LendingView.Models
+@using LendingView.Servcies
+@using LendingView.Servcies
 
 @inject HttpClient Http
 @inject IAccessTokenProvider TokenProvider
 @inject AuthenticationStateProvider authStateProvider
 @inject NavigationManager Navigation
+@inject LendingTrackerService data
+
 
 <MudGrid>
     <MudItem xs="6">
         <MudFileUpload T="IBrowserFile" FilesChanged="UploadFiles">
             <ActivatorContent>
                 <MudFab Color="Color.Secondary"
-                        StartIcon="@Icons.Material.Filled.Image"
-                        Label="Load picture" />
+                StartIcon="@Icons.Material.Filled.Image"
+                Label="Load picture" />
             </ActivatorContent>
 
         </MudFileUpload>
@@ -42,8 +46,8 @@
         }
     </MudItem>
     <MudItem xs="2">
-        @if( ! string.IsNullOrEmpty(ImageLink) ){
-            <MudImage Src="@ImageLink" Alt="Item Image" Elevation="25" Class="rounded-lg" Width="100" Height="100" />
+        @if( ! string.IsNullOrEmpty(item.ImageLink) ){
+            <MudImage Src="@item.ImageLink" Alt="Item Image" Elevation="25" Class="rounded-lg" Width="100" Height="100" />
         }
     </MudItem>
 </MudGrid>
@@ -51,9 +55,7 @@
 @code {
 
     IList<IBrowserFile> _files = new List<IBrowserFile>();
-    [Parameter] public int ItemId { get; set; }
-    [Parameter] public string ItemName { get; set; }
-    [Parameter] public string ImageLink { get; set; }
+    [Parameter] public Item item { get; set; }
     [Parameter] public EventCallback<string> OnUrlSet { get; set; }
     private string? accessToken;
     private string? error;
@@ -68,9 +70,7 @@
         error = string.Empty;
         _files.Add(file);
         //TODO upload the files to the server
-        await GetAccessToken();
-        var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
-        Http.DefaultRequestHeaders.Authorization = value;
+
         using var content = new MultipartFormDataContent();
         var fileStream = file.OpenReadStream(maxAllowedSize: 1_000_000); // 1MB limit
         var streamContent = new StreamContent(fileStream);
@@ -83,41 +83,21 @@
         {
             var fileResponse = await response.Content.ReadFromJsonAsync<FileUploadResponse>();
             _files.Clear();
-            await OnUrlSet.InvokeAsync(fileResponse.Url);
+            item.ImageLink = fileResponse.Url;
             messageText =  "Upload complete";
             StateHasChanged();
+
+            //upate the item with the new image link   
+            var updateResponse = await data.UpdateItemAsync(item.ItemId, item);
+
+            //notify the parent
+            await OnUrlSet.InvokeAsync(item.ImageLink);
+
         }
         else{
             error = $"Error occured {response.ReasonPhrase} please try again.";
             _files.Clear();
-            StateHasChanged();
-        }
-    }
-
-    private async Task GetAccessToken()
-    {
-        var tokenResult = await TokenProvider.RequestAccessToken(new AccessTokenRequestOptions
-            {
-                Scopes = new[] { "https://needthatback.onmicrosoft.com/lender/lender" }
-            });
-
-        if (tokenResult.TryGetToken(out var token))
-        {
-            accessToken = token.Value;
-        }
-        else
-        {
-            error = tokenResult.Status switch
-            {
-                AccessTokenResultStatus.RequiresRedirect => "Redirect required. Navigating...",
-                AccessTokenResultStatus.Success => null,
-                _ => "An unknown error occurred."
-            };
-
-            if (tokenResult.Status == AccessTokenResultStatus.RequiresRedirect)
-            {
-                Navigation.NavigateTo(tokenResult.InteractiveRequestUrl!);
-            }
+           
         }
     }
 

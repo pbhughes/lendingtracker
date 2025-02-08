@@ -36,7 +36,7 @@ namespace LendingView.Extensions
 
             }
 
-            catch (Exception ex)
+            catch 
 
             {
 
