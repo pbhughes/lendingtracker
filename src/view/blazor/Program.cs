@@ -66,6 +66,9 @@ namespace LendingView
             
             //user service
             builder.Services.AddScoped<IUserService, UserService>();
+
+            //injec the api data service
+            builder.Services.AddScoped<LendingTrackerService>();
                     
             //run the app
            await builder.Build().RunAsync();

@@ -95,8 +95,8 @@ else{
                             </CardHeaderContent>
                         </MudCardHeader>
                         <MudCardContent>
-                                                                 @*    UPLOAD IMAGE COMPONENT *@
-                            <UploadImage ItemId="@context.Item.ItemId" ItemName="@context.Item.ItemName" ImageLink="@context.Item.ImageLink" OnUrlSet="CaptureItemUrl"></UploadImage>
+                            @*    UPLOAD IMAGE COMPONENT *@
+                            <UploadImage Item="@context.Item" OnUrlSet="CaptureItemUrl"></UploadImage>
                         </MudCardContent>
                     </MudCard>
 
@@ -126,7 +126,7 @@ else{
                                 <h3>Messages</h3>
                             </MudCardHeader>
                             <MudCardContent Style="max-height: 400px; overflow-y: auto;">
-                                                           @*    REALTIME MESSAGING COMPONENT *@
+                                @*    REALTIME MESSAGING COMPONENT *@
                                 <RealtimeMessages transactionId="@context.Item.Transaction.TransactionId"></RealtimeMessages>
                             </MudCardContent>
                         </MudCard>
@@ -192,7 +192,7 @@ else{
 
         await hubConnection.StartAsync();
         Console.WriteLine("Connection to message hub started");
-        
+
 
         await base.OnInitializedAsync();
 
@@ -210,12 +210,12 @@ else{
         searchString = text;
         return Elements.ReloadServerData();
     }
-      
+
 
     private async Task<GridData<Item>> ServerReload(GridState<Item> state)
     {
 
-       
+
         IEnumerable<Item> data = await Http.GetFromJsonAsync<List<Item>>("/items");
 
         selectedItem = data.FirstOrDefault();
@@ -359,8 +359,7 @@ else{
 
         if(selectedItem != null)
         {
-            selectedItem.ImageLink = url;
-            CommitChanges(selectedItem);
+            StateHasChanged();
         }
     }
 }
