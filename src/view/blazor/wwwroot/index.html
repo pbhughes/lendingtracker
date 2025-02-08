@@ -1,46 +1,36 @@
 ﻿<!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LendingView</title>
+    <title>blazorwasm</title>
     <base href="/" />
-    <link href="css/app.css" rel="stylesheet" />
-    <link href="debugging.js" />
+    <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="css/app.css" />
+    <link rel="icon" type="image/png" href="favicon.ico" />
+    <link href="blazorwasm.styles.css" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0078d7">
-    <script src="js/clientFunctions.js" />
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/service-worker.js')
-                .then(registration => {
-                    console.log('Service Worker registered with scope:', registration.scope);
-                })
-                .catch(error => {
-                    console.error('Service Worker registration failed:', error);
-                });
-        }
-    </script>
-    <script>
-       
-    </script>
-    <script src="_content/MudBlazor/MudBlazor.min.js"></script>
 </head>
 
 <body>
-    <app>Loading...</app>
+    <div id="app">
+        <svg class="loading-progress">
+            <circle r="40%" cx="50%" cy="50%" />
+            <circle r="40%" cx="50%" cy="50%" />
+        </svg>
+        <div class="loading-progress-text"></div>
+    </div>
 
     <div id="blazor-error-ui">
         An unhandled error has occurred.
-        <a href="" class="reload">Reload</a>
-        <a class="dismiss">🗙</a>
+        <a href="." class="reload">Reload</a>
+        <span class="dismiss">🗙</span>
     </div>
     <script src="_content/Microsoft.Authentication.WebAssembly.Msal/AuthenticationService.js"></script>
     <script src="_framework/blazor.webassembly.js"></script>
-    <script src="js/clientFunctions.js"></script>
+    <script src="_content/MudBlazor/MudBlazor.min.js"></script>
 </body>
 
 </html>
