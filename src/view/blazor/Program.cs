@@ -1,6 +1,3 @@
-using System;
-using System.Net.Http;
-using System.Threading.Tasks;
 using Blazored.LocalStorage;
 using LendingView.Servcies;
 using Microsoft.AspNetCore.Components.Web;
@@ -17,70 +14,61 @@ namespace LendingView
         public static async Task Main(string[] args)
         {
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
-            builder.RootComponents.Add<App>("app");
+            builder.RootComponents.Add<App>("#app");
+            builder.RootComponents.Add<HeadOutlet>("head::after");
 
- 
+
             // Build the configuration
             var config = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true) // Default settings
                 .AddJsonFile($"appsettings.{builder.HostEnvironment.Environment}.json", optional: false, reloadOnChange: true) // Environment-specific
                 .Build();
-
-            var apiHostUrl = config["HostAPI:BaseURL"];
-
             // Add the configuration to the services
             builder.Services.AddSingleton<IConfiguration>(config);
 
-            //add local storage support
-            builder.Services.AddBlazoredLocalStorage();
-
-
-            builder.Services.AddScoped<HttpClientInterceptor>();
-            builder.Services.AddScoped<IUserService, UserService>();
-
-
-            // Configure HttpClient with the interceptor
-            builder.Services.AddScoped(sp =>
-            {
-                var interceptor = sp.GetRequiredService<HttpClientInterceptor>();
-
-                // Assign the default HttpClientHandler as the inner handler
-                interceptor.InnerHandler = new HttpClientHandler();
-
-                double leadTime = 60;
-                if(builder.HostEnvironment.Environment.ToLower() == "production")
-                {
-                    leadTime = 30;
-
-                }
-                return new HttpClient(interceptor)
-                {
-                    BaseAddress = new Uri($"{apiHostUrl}"),
-                    Timeout = TimeSpan.FromSeconds(leadTime)
-                };
-            });
-
-                     
+            //support authentication
             builder.Services.AddMsalAuthentication(options =>
             {
                 builder.Configuration.Bind("AzureAdB2C", options.ProviderOptions.Authentication);
-                options.ProviderOptions.AdditionalScopesToConsent.Add("profile"); 
+                options.ProviderOptions.AdditionalScopesToConsent.Add("profile");
                 options.ProviderOptions.AdditionalScopesToConsent.Add("openid");
                 options.ProviderOptions.DefaultAccessTokenScopes.Add("https://needthatback.onmicrosoft.com/lender/lender");
                 options.ProviderOptions.LoginMode = "redirect";
             });
 
 
+            //support authorization
+            builder.Services.AddAuthorizationCore(options =>
+            {
+                 options.AddPolicy("admin", policy =>
+                    policy.RequireClaim("extension_userRole", "admin")); // Ensure the token has the required scope
+            });
+            // authorization handler
+            builder.Services.AddTransient<ApiAuthorizationMessageHandler>();
 
+
+            //inject services
+            
+            //http service
+            builder.Services.AddHttpClient("API", client =>
+            {
+                client.BaseAddress = new Uri(config["HostAPI:BaseURL"]);
+            }).AddHttpMessageHandler<ApiAuthorizationMessageHandler>();
+
+            // Set the named HttpClient as the default
+            builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("API"));
+
+            //add local storage support
+            builder.Services.AddBlazoredLocalStorage();
+
+            //add ui support mudblazor
             builder.Services.AddMudServices();
-
-           
-            builder.RootComponents.Add<HeadOutlet>("head::after");
-
-            // Register HttpClient with the base address pointing to your external API
-            builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri($"{config["HostAPI:BaseUrl"]}/") });
-
-            await builder.Build().RunAsync();
+            
+            //user service
+            builder.Services.AddScoped<IUserService, UserService>();
+                    
+            //run the app
+           await builder.Build().RunAsync();
         }
     }
 }

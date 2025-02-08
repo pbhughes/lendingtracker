@@ -1,4 +1,7 @@
 ﻿@page "/items"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 @using LendingView.Models
 @using MudBlazor
@@ -166,44 +169,30 @@ else{
 
     protected override async Task OnInitializedAsync()
     {
-        //support post login call back redirect to the clicked link
-        var returnUrl = Navigation.Uri;
-        await LocalStorage.SetItemAsStringAsync(key: "returnUrl", data: returnUrl);
-
-        var authState = await authStateProvider.GetAuthenticationStateAsync();
-        bool isAuthenticated = authState.User.Identity?.IsAuthenticated ?? false;
         _breakPoint = await _viewportService.GetCurrentBreakpointAsync();
 
-        if (!isAuthenticated)
-        {
-            Navigation.NavigateTo("authentication/login");
-        }
-        else
-        {
-
-            await GetAccessToken();
-            hubConnection = new HubConnectionBuilder()
-                .WithUrl($"{Http.BaseAddress}messagehub")
-                .WithAutomaticReconnect()
-                .ConfigureLogging(logging =>
-                {
-                    logging.SetMinimumLevel(LogLevel.Debug);
-
-                })
-                .Build();
-
-
-            hubConnection.On<string, string>("ReceiveMessage", (user, message) =>
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl($"{Http.BaseAddress}messagehub")
+            .WithAutomaticReconnect()
+            .ConfigureLogging(logging =>
             {
-                var encodedMsg = $"{user}: {message}";
-                messages.Add(encodedMsg);
-                InvokeAsync(StateHasChanged);
-                _newMessages = true;
-            });
+                logging.SetMinimumLevel(LogLevel.Debug);
 
-            await hubConnection.StartAsync();
-            Console.WriteLine("Connection to message hub started");
-        }
+            })
+            .Build();
+
+
+        hubConnection.On<string, string>("ReceiveMessage", (user, message) =>
+        {
+            var encodedMsg = $"{user}: {message}";
+            messages.Add(encodedMsg);
+            InvokeAsync(StateHasChanged);
+            _newMessages = true;
+        });
+
+        await hubConnection.StartAsync();
+        Console.WriteLine("Connection to message hub started");
+        
 
         await base.OnInitializedAsync();
 
@@ -211,7 +200,6 @@ else{
 
     private async Task Send()
     {
-        await GetAccessToken();
         var authState = await authStateProvider.GetAuthenticationStateAsync();
         string userId = Guid.Parse(authState.User.Claims.First(nameof => nameof.Type == "sub").Value).ToString();
         await hubConnection.SendAsync("SendMessage", userId, "signal");
@@ -222,44 +210,12 @@ else{
         searchString = text;
         return Elements.ReloadServerData();
     }
-
-
-
-
-    private async Task GetAccessToken()
-    {
-        var tokenResult = await TokenProvider.RequestAccessToken(new AccessTokenRequestOptions
-            {
-                Scopes = new[] { "https://needthatback.onmicrosoft.com/lender/lender" }
-            });
-
-        if (tokenResult.TryGetToken(out var token))
-        {
-            accessToken = token.Value;
-        }
-        else
-        {
-            error = tokenResult.Status switch
-            {
-                AccessTokenResultStatus.RequiresRedirect => "Redirect required. Navigating...",
-                AccessTokenResultStatus.Success => null,
-                _ => "An unknown error occurred."
-            };
-
-            if (tokenResult.Status == AccessTokenResultStatus.RequiresRedirect)
-            {
-                Navigation.NavigateTo(tokenResult.InteractiveRequestUrl!);
-            }
-        }
-    }
+      
 
     private async Task<GridData<Item>> ServerReload(GridState<Item> state)
     {
 
-        await GetAccessToken();
-        var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
-        Http.DefaultRequestHeaders.Authorization = value;
-
+       
         IEnumerable<Item> data = await Http.GetFromJsonAsync<List<Item>>("/items");
 
         selectedItem = data.FirstOrDefault();
@@ -316,7 +272,6 @@ else{
     private async void SendSmsMessage(Item item, Transaction transaction, string method)
     {
         string direction = "out";
-        await GetAccessToken();
         var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
         Http.DefaultRequestHeaders.Authorization = value;
 
@@ -350,10 +305,6 @@ else{
         _events.Insert(0, $"Event = Item deleted, Data = {System.Text.Json.JsonSerializer.Serialize(item)}");
 
         //call the put AI and commit the changes
-        await GetAccessToken();
-        var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
-        Http.DefaultRequestHeaders.Authorization = value;
-
         var response = await Http.DeleteAsync($"/items/{item.ItemId}");
 
         Elements.ReloadServerData();
@@ -361,10 +312,6 @@ else{
 
     async void CommitChanges(Item item){
         //call the put AI and commit the changes
-        await GetAccessToken();
-        var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
-        Http.DefaultRequestHeaders.Authorization = value;
-
         var response = await Http.PutAsJsonAsync<Item>($"/items/{item.ItemId}", item);
         Elements.ReloadServerData();
     }
@@ -381,11 +328,6 @@ else{
     //*******************Item Actions***********************************/
     async  void CheckInHandler(Item item)
     {
-
-        await GetAccessToken();
-        var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
-        Http.DefaultRequestHeaders.Authorization = value;
-
         await Http.DeleteAsync($"/transactions/{item.Transaction.TransactionId}");
 
         _showCheckIn = false;

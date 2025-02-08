@@ -1,27 +1,37 @@
-﻿@inherits LayoutComponentBase
+﻿@using MudBlazor
+@inherits LayoutComponentBase
 
-@* Required *@
+
 <MudThemeProvider />
 <MudPopoverProvider />
-
-@* Needed for dialogs *@
 <MudDialogProvider />
-
-@* Needed for snackbars *@
 <MudSnackbarProvider />
 
+<MudLayout>
+    <MudAppBar>
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+        <MudText>Lending View</MudText>
+        <MudSpacer />
+        <LoginDisplay  />
+    </MudAppBar>
 
-<div>
-    <NavMenu />
-</div>
+    <MudDrawer @bind-Open="_drawerOpen">
+        <MyNavMenue></MyNavMenue>
+    </MudDrawer>
 
-<div class="main">
-    <div class="top-row px-4 auth">
-        <LoginDisplay />
-        <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
-    </div>
+    <MudMainContent>
+        <MudContainer Name="Lending View" Value="@title" MaxWidth="MaxWidth.Medium">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
 
-    <div class="content px-4">
-        @Body
-    </div>
-</div>
+@code{
+    private string title = "Fuck Mudblazor";
+    private bool _drawerOpen = true;
+
+    private void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+}

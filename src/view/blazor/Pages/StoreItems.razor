@@ -1,4 +1,8 @@
 ﻿@page "/storeitems"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(policy: "admin")]
+
+
 
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 @using LendingView.Models
