@@ -1,6 +1,7 @@
 ﻿@using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 @using System.Text.RegularExpressions
+@using MudBlazor
 
 @inject NavigationManager Navigation
 @inject SignOutSessionStateManager SignOutManager
@@ -9,8 +10,17 @@
 
 <AuthorizeView>
     <Authorized>
-        Hello, @GetEmail(context)
-        <MudButton OnClick="BeginLogout" Color="Color.Secondary">Log Out</MudButton>
+        <MudHidden BreakPoint="Breakpoint.MdAndDown">
+             Hello, @GetEmail(context)
+              <MudButton OnClick="BeginLogout" Color="Color.Secondary">Log Out</MudButton>
+        </MudHidden>
+
+        <MudHidden BreakPoint="Breakpoint.LgAndUp">
+           
+            <MudButton OnClick="BeginLogout" Color="Color.Secondary">Log Out</MudButton>
+        </MudHidden>
+       
+       
     </Authorized>
     <NotAuthorized>
         <MudLink Href="authentication/login">Login / Register</MudLink>
