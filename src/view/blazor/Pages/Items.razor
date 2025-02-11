@@ -31,114 +31,122 @@ else{
         }
     </div>
 
-    <MudDataGrid T="Item" @ref="Elements" @bind-SelectedItem=selectedItem RowClick="OnRowClicked" ServerData="ServerReload" Filterable="false" ReadOnly="@_readOnly" EditMode="@(_isCellEditMode ? DataGridEditMode.Cell : DataGridEditMode.Form)"
-    StartedEditingItem="@StartedEditingItem"  CanceledEditingItem="@CanceledEditingItem" CommittedItemChanges="@CommittedItemChanges"
-    Bordered="true" Dense="true" EditTrigger="@(_editTriggerRowClick ? DataGridEditTrigger.OnRowClick : DataGridEditTrigger.Manual)">
-        <ToolBarContent>
-            <MudText Typo="Typo.h6">Items</MudText>
-            <MudIconButton Size="@Size.Large" Icon="@Icons.Material.Filled.Add" aria-label="add" OnClick="() => AddNew()" />
-            <MudSpacer />
-            <MudTextField T="string" ValueChanged="@(s => OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
-            AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
-        </ToolBarContent>
-        <Columns>
-            @* This is the arrow that expands wish I could add a coloumn name with it might use a row template *@
-            <HierarchyColumn T="Item" IconSize="@Size.Large" Class="object-left">Actions</HierarchyColumn>
-            <PropertyColumn Property="x => x.ItemId" Title="Item" Editable="false" Hidden="true">
-                <CellTemplate>
-                    @context.Item.ItemId
-                </CellTemplate>
-            </PropertyColumn>
-            <PropertyColumn Property="x => x.ItemName" Title="Name">
-                <CellTemplate>
-                    @context.Item.ItemName
-                    @if (context.Item.Transaction != null)
-                    {
-                        <MudIcon Icon="@Icons.Material.Filled.NewLabel" Color="@Color.Secondary" Title="Checkout"></MudIcon>
-                    }
-                </CellTemplate>
-            </PropertyColumn>
-            <PropertyColumn Property="x => x.IsAvailable">
-                <EditTemplate>
-                    <MudSwitch @bind-Value="context.Item.IsAvailable" Label="Is Avialable" />
-                </EditTemplate>
-            </PropertyColumn>
-            <TemplateColumn Title="Edit" Hidden="@(_isCellEditMode || _readOnly || _editTriggerRowClick)" >
-                <CellTemplate>
-                    <MudIconButton Size="@Size.Medium" Icon="@Icons.Material.Outlined.Edit" OnClick="@context.Actions.StartEditingItemAsync" />
-                </CellTemplate>
-            </TemplateColumn>
-            <TemplateColumn Title="Delete">
-                <CellTemplate>
-                    <MudIconButton Size="@Size.Medium" Icon="@Icons.Material.Filled.Delete" aria-label="delete" OnClick="() => DeleteItemAsync(context.Item)" />
-                </CellTemplate>
-            </TemplateColumn>
-            <TemplateColumn>
-                <CellTemplate>
-                    @if(context.Item.IsAvailable){             @*    CHECK IN / OUT HANDLER *@
-                        <ItemActions  item="context.Item" _showCheckInButton="context.Item.Transaction != null" _showCheckoutButton="context.Item.Transaction == null" CheckIn="CheckInHandler" CheckOut="CheckOutHandler"></ItemActions>
-                    }
-                    else{
-                        <MudPaper>Out of Commission</MudPaper>
-                    }
-                </CellTemplate>
-            </TemplateColumn>
+        
+        <MudDataGrid T="Item" @ref="Elements" @bind-SelectedItem=selectedItem RowClick="OnRowClicked" ServerData="ServerReload" Filterable="false" 
+            ReadOnly="@_readOnly" EditMode="@(_isCellEditMode ? DataGridEditMode.Cell : DataGridEditMode.Form)"
+            StartedEditingItem="@StartedEditingItem"  CanceledEditingItem="@CanceledEditingItem" CommittedItemChanges="@CommittedItemChanges"
+            Bordered="true" Dense="true"
+            EditTrigger="@(_editTriggerRowClick ? DataGridEditTrigger.OnRowClick : DataGridEditTrigger.Manual)">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Items</MudText>
+                <MudIconButton Size="@Size.Large" Icon="@Icons.Material.Filled.Add" aria-label="add" OnClick="() => AddNew()" />
+                <MudSpacer />
+                <MudTextField T="string" ValueChanged="@(s => OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
+                AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+            </ToolBarContent>
+            <Columns>
+                @* This is the arrow that expands wish I could add a coloumn name with it might use a row template *@
+                <HierarchyColumn T="Item" IconSize="@Size.Large" Class="object-left">Actions</HierarchyColumn>
+                <PropertyColumn Property="x => x.ItemId" Title="Item" Editable="false" Hidden="true">
+                    <CellTemplate>
+                        @context.Item.ItemId
+                    </CellTemplate>
+                </PropertyColumn>
+                <PropertyColumn Property="x => x.ItemName" Title="Name">
+                    <CellTemplate>
+                        @context.Item.ItemName
+                        @if (context.Item.Transaction != null)
+                        {
+                            <MudIcon Icon="@Icons.Material.Filled.NewLabel" Color="@Color.Secondary" Title="Checkout"></MudIcon>
+                        }
+                    </CellTemplate>
+                </PropertyColumn>
+                <PropertyColumn Property="x => x.IsAvailable">
+                    <EditTemplate>
+                        <MudSwitch @bind-Value="context.Item.IsAvailable" Label="Is Avialable" />
+                    </EditTemplate>
+                </PropertyColumn>
+                <TemplateColumn Title="Edit" Hidden="@(_isCellEditMode || _readOnly || _editTriggerRowClick)" >
+                    <CellTemplate>
+                        <MudIconButton Size="@Size.Medium" Icon="@Icons.Material.Outlined.Edit" OnClick="@context.Actions.StartEditingItemAsync" />
+                    </CellTemplate>
+                </TemplateColumn>
+                <TemplateColumn Title="Delete">
+                    <CellTemplate>
+                        <MudIconButton Size="@Size.Medium" Icon="@Icons.Material.Filled.Delete" aria-label="delete" OnClick="() => DeleteItemAsync(context.Item)" />
+                    </CellTemplate>
+                </TemplateColumn>
+                <TemplateColumn>
+                    <CellTemplate>
+                        @if(context.Item.IsAvailable){             @*    CHECK IN / OUT HANDLER *@
+                            <ItemActions  item="context.Item" _showCheckInButton="context.Item.Transaction != null" _showCheckoutButton="context.Item.Transaction == null" CheckIn="CheckInHandler" CheckOut="CheckOutHandler"></ItemActions>
+                        }
+                        else{
+                            <MudPaper>Out of Commission</MudPaper>
+                        }
+                    </CellTemplate>
+                </TemplateColumn>
 
-        </Columns>
-        <ChildRowContent>
-            <MudGrid>
-                <MudItem xs="12">                      
-                    <MudCard Outlined="true" Class="border-solid border-2 mud-border-primary p-4">
-                        <MudCardHeader>
-                            <CardHeaderContent>
-                                Upload Image for @context.Item.ItemName
-                            </CardHeaderContent>
-                        </MudCardHeader>
-                        <MudCardContent>
-                            @*    UPLOAD IMAGE COMPONENT *@
-                            <UploadImage Item="@context.Item" OnUrlSet="CaptureItemUrl"></UploadImage>
-                        </MudCardContent>
-                    </MudCard>
+            </Columns>
+            <ChildRowContent>
+                <MudGrid>
+                    <MudItem xs="12">                      
+                        <MudCard Outlined="true" Class="border-solid border-2 mud-border-primary p-4">
+                            <MudCardHeader>
+                                <CardHeaderContent>
+                                   <MudPaper>
+                                        Upload Image for @context.Item.ItemName
+                                   </MudPaper>
+                                </CardHeaderContent>
+                            </MudCardHeader>
+                            <MudCardContent>
+                                                    @*    UPLOAD IMAGE COMPONENT *@
+                                <UploadImage Item="@context.Item" OnUrlSet="CaptureItemUrl"></UploadImage>
+                            </MudCardContent>
+                        </MudCard>
 
-                </MudItem>
-                <MudItem xs="12">
-                    <MudCard Outlined="true" Class="border-solid border-2 mud-border-primary p-4">
-                        <MudCardHeader>
-                            <CardHeaderContent>
-                                <MudText Typo="Typo.h6">@context.Item.ItemId</MudText>
-                            </CardHeaderContent>
-                        </MudCardHeader>
-                        <MudCardContent>
-                            <MudText>@context.Item.ItemName</MudText>
-                            <MudText> @context.Item.Description</MudText>
-                        </MudCardContent>
-                    </MudCard>
-                </MudItem>
-                @if (context.Item.Transaction != null)
-                {
-                    <MudItem xs="12">                     @*  BORROWER DISPLAY COMPONENT *@
-                        <BorrowerDisplay BorrowerId="@context.Item.Transaction.BorrowerId" ItemName="@context.Item.ItemName"></BorrowerDisplay>
                     </MudItem>
-
                     <MudItem xs="12">
                         <MudCard Outlined="true" Class="border-solid border-2 mud-border-primary p-4">
                             <MudCardHeader>
-                                <h3>Messages</h3>
+                                <CardHeaderContent>
+                                    <MudText Typo="Typo.h6">@context.Item.ItemId</MudText>
+                                </CardHeaderContent>
                             </MudCardHeader>
-                            <MudCardContent Style="max-height: 400px; overflow-y: auto;">
-                                @*    REALTIME MESSAGING COMPONENT *@
-                                <RealtimeMessages transactionId="@context.Item.Transaction.TransactionId"></RealtimeMessages>
+                            <MudCardContent>
+                                <MudText>@context.Item.ItemName</MudText>
+                                <MudText> @context.Item.Description</MudText>
                             </MudCardContent>
                         </MudCard>
                     </MudItem>
-                }
-            </MudGrid>
+                    @if (context.Item.Transaction != null)
+                    {
+                        <MudItem xs="12">                     @*  BORROWER DISPLAY COMPONENT *@
+                            <BorrowerDisplay BorrowerId="@context.Item.Transaction.BorrowerId" ItemName="@context.Item.ItemName"></BorrowerDisplay>
+                        </MudItem>
 
-        </ChildRowContent>
-        <PagerContent>
-            <MudDataGridPager T="Item" />
-        </PagerContent>
-    </MudDataGrid>
+                        <MudItem xs="12">
+                            <MudCard Outlined="true" Class="border-solid border-2 mud-border-primary p-4">
+                                <MudCardHeader>
+                                    <h3>Messages</h3>
+                                </MudCardHeader>
+                                <MudCardContent Style="max-height: 400px; overflow-y: auto;">
+                                                             @*    REALTIME MESSAGING COMPONENT *@
+                                    <RealtimeMessages transactionId="@context.Item.Transaction.TransactionId"></RealtimeMessages>
+                                </MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                    }
+                </MudGrid>
+
+            </ChildRowContent>
+            <PagerContent>
+                <MudDataGridPager T="Item" />
+            </PagerContent>
+        </MudDataGrid>
+        
+    
+
 }
 
 
@@ -193,7 +201,7 @@ else{
         await hubConnection.StartAsync();
         Console.WriteLine("Connection to message hub started");
 
-
+        
         await base.OnInitializedAsync();
 
     }
