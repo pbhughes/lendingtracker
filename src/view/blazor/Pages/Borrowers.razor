@@ -28,8 +28,8 @@ else
             <MudText Typo="Typo.h6">Borrowers</MudText>
             <MudIconButton Size="@Size.Large" Icon="@Icons.Material.Filled.Add" aria-label="add" OnClick="() => AddNew()" />
             <MudSpacer />
-            <MudTextField T="string" ValueChanged="@(s=>OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
-            AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+            <MudAutocomplete SearchFunc="Search" T="string" ValueChanged="@(s=>OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
+            AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudAutocomplete>
 
         </ToolBarContent>
         <Columns>
@@ -72,13 +72,13 @@ else
         </PagerContent>
     </MudDataGrid>
 
-    
+
 }
 
 @code {
     private MudDataGrid<Borrower> Elements;
 
-
+    private List<string> borrowers = new List<string>();
     private bool _isReadOnly = true;
     private bool _readOnly;
     private bool _isCellEditMode;
@@ -245,6 +245,19 @@ else
     {
         searchString = text;
         return Elements.ReloadServerData();
+    }
+
+    private async Task<IEnumerable<string>> Search(string value, CancellationToken token)
+    {
+        // In real life use an asynchronous function for fetching data from an api.
+        IEnumerable<Borrower> data = await Http.GetFromJsonAsync<List<Borrower>>("/borrowers");
+        borrowers = data.Select(i => i.Name).ToList<string>();
+
+        // if text is null or empty, show complete list
+        if (string.IsNullOrEmpty(value))
+            return borrowers;
+
+        return borrowers.Where(x => x.Contains(value, StringComparison.InvariantCultureIgnoreCase));
     }
 
 }
