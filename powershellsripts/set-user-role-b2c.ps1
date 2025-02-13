@@ -2,8 +2,8 @@
 
 $userPrincipalName = "a783294f-b2cd-4a71-aa75-b88a1969ace1@needthatback.onmicrosoft.com"
 $mailNickName = "a783294f-b2cd-4a71-aa75-b88a1969ace1"
-$propertyName = "exention_fd654ae5-bf03-4677-9427-5fd01c8b4458_userRole"
-$propertyValue = "admin"
+$propertyName = "exention_fd654ae5-bf03-4677-9427-5fd01c8b4458_phone"
+$propertyValue = ""
 
 az login
 

@@ -1,4 +1,7 @@
 ﻿@page "/"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
@@ -84,7 +87,6 @@
         if(authState.User.Identity.IsAuthenticated){
 
 
-            await GetAccessToken();
             string userId = await GetClaimAsync("UserId");
 
 
@@ -129,7 +131,6 @@
 
     private async void HandleValidSubmit()
     {
-        await GetAccessToken();
         var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
         Http.DefaultRequestHeaders.Authorization = value;
 
@@ -139,35 +140,7 @@
             Navigation.NavigateTo("/items");
     }
 
-    private async Task GetAccessToken()
-    {
-        var tokenResult = await TokenProvider.RequestAccessToken(new AccessTokenRequestOptions
-            {
-
-                Scopes = new[] { "https://needthatback.onmicrosoft.com/lender/lender" ,
-                                 "profile", "openid"
-                }
-            });
-
-        if (tokenResult.TryGetToken(out var token))
-        {
-            accessToken = token.Value;
-        }
-        else
-        {
-            error = tokenResult.Status switch
-            {
-                AccessTokenResultStatus.RequiresRedirect => "Redirect required. Navigating...",
-                AccessTokenResultStatus.Success => null,
-                _ => "An unknown error occurred."
-            };
-
-            if (tokenResult.Status == AccessTokenResultStatus.RequiresRedirect)
-            {
-                Navigation.NavigateTo(tokenResult.InteractiveRequestUrl!);
-            }
-        }
-    }
+    
 
     private async Task<string> GetClaimAsync(string claimType)
     {
@@ -228,12 +201,8 @@
 
     private async Task<User> GetUserPhone(string userId)
     {
-        await GetAccessToken();
-        var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
-        Http.DefaultRequestHeaders.Authorization = value;
-
-        User user = await Http.GetFromJsonAsync<User>($"/users/{userId}");
-        return user;
+       User user = await Http.GetFromJsonAsync<User>($"/users/{userId}");
+       return user;
     }
 }
 
