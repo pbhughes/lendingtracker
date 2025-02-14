@@ -24,6 +24,8 @@ using System.Net.Http;
 using System.Web;
 using System.Text;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Azure.Identity;
+using Microsoft.ApplicationInsights.Extensibility;
 
 
 
@@ -110,8 +112,27 @@ builder.Services.AddScoped(typeof(IMessageMailer), typeof(MessageMailer));
 builder.Services.AddScoped<MessageSignalr>();
 builder.Services.AddScoped(typeof(IValidationServices), typeof(ValidatorService));
 builder.Services.AddScoped(typeof(IBlobStorageService), typeof(BlobStorageService));
+builder.Services.Configure<Microsoft.ApplicationInsights.Extensibility.TelemetryConfiguration>(config =>
+{
+config.SetAzureTokenCredential(new DefaultAzureCredential());
+});
 
+//Add Application Inisghts
+string appInsightsConnectionString = builder.Configuration["ApplicationInsights:ConnectionString"];
+builder.Services.AddApplicationInsightsTelemetry(new Microsoft.ApplicationInsights.AspNetCore.Extensions.ApplicationInsightsServiceOptions
+{
+    ConnectionString = appInsightsConnectionString,
+    EnableDebugLogger = true,
+    EnableDependencyTrackingTelemetryModule = true,
+    EnableHeartbeat = true,
+    EnableQuickPulseMetricStream = true
 
+});
+
+builder.Services.Configure<TelemetryConfiguration>( (o) =>
+{
+    o.TelemetryInitializers.Add(new TelemetryInitializer(builder.Configuration));
+});
 var app = builder.Build();
 
 // Use CORS
