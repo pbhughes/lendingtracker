@@ -179,27 +179,6 @@ else{
     {
         _breakPoint = await _viewportService.GetCurrentBreakpointAsync();
 
-        hubConnection = new HubConnectionBuilder()
-            .WithUrl($"{Http.BaseAddress}messagehub")
-            .WithAutomaticReconnect()
-            .ConfigureLogging(logging =>
-            {
-                logging.SetMinimumLevel(LogLevel.Debug);
-
-            })
-            .Build();
-
-
-        hubConnection.On<string, string>("ReceiveMessage", (user, message) =>
-        {
-            var encodedMsg = $"{user}: {message}";
-            messages.Add(encodedMsg);
-            InvokeAsync(StateHasChanged);
-            _newMessages = true;
-        });
-
-        await hubConnection.StartAsync();
-        Console.WriteLine("Connection to message hub started");
 
         
         await base.OnInitializedAsync();

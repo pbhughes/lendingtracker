@@ -64,66 +64,38 @@
         {
 
 
-            hubConnection = new HubConnectionBuilder()
-               .WithUrl($"{Http.BaseAddress}messagehub", options =>
-               {
-                   options.AccessTokenProvider = () => Task.FromResult(_accessToken);
-               })
-               .WithAutomaticReconnect()
-               .ConfigureLogging(logging =>
-               {
-                   logging.SetMinimumLevel(LogLevel.Debug);
 
-               })
-               .Build();
+            hubConnection = new HubConnectionBuilder()
+                .WithUrl($"{Http.BaseAddress}messagehub")
+                .WithAutomaticReconnect()
+                .ConfigureLogging(logging =>
+                {
+                    logging.SetMinimumLevel(LogLevel.Debug);
+
+                })
+                .Build();
 
 
             hubConnection.On<string, string>("ReceiveMessage", (user, message) =>
             {
                 var encodedMsg = $"{user}: {message}";
                 messages.Add(encodedMsg);
-                GetData();
                 InvokeAsync(StateHasChanged);
+              
             });
 
             await hubConnection.StartAsync();
+            Console.WriteLine("Connection to message hub started");
         }
     }
 
     private async Task GetData(){
 
-        await GetAccessToken();
-        var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _accessToken);
-        Http.DefaultRequestHeaders.Authorization = value;
+       
 
         Elements = await Http.GetFromJsonAsync<List<Message>>($"/messages/{transactionId}");
     }
     
 
-    private async Task GetAccessToken()
-    {
-        var tokenResult = await TokenProvider.RequestAccessToken(new AccessTokenRequestOptions
-            {
-                Scopes = new[] { "https://needthatback.onmicrosoft.com/lender/lender" }
-            });
-
-        if (tokenResult.TryGetToken(out var token))
-        {
-            _accessToken = token.Value;
-        }
-        else
-        {
-            _error = tokenResult.Status switch
-            {
-                AccessTokenResultStatus.RequiresRedirect => "Redirect required. Navigating...",
-                AccessTokenResultStatus.Success => null,
-                _ => "An unknown error occurred."
-            };
-
-            if (tokenResult.Status == AccessTokenResultStatus.RequiresRedirect)
-            {
-                Navigation.NavigateTo(tokenResult.InteractiveRequestUrl!);
-            }
-        }
-    }
+   
 }
