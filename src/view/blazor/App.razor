@@ -1,5 +1,9 @@
-﻿@inject ILogger<App> _logger
+﻿@using BlazorApplicationInsights
 
+@inject ILogger<App> _logger
+
+
+<ApplicationInsightsInit IsWasmStandalone="true" />
 <CascadingAuthenticationState>
     <Router AppAssembly="@typeof(App).Assembly">
         <Found Context="routeData">
@@ -29,3 +33,11 @@
         </NotFound>
     </Router>
 </CascadingAuthenticationState>
+
+@code{
+    protected override Task OnInitializedAsync()
+    {
+
+        return base.OnInitializedAsync();
+    }
+}
