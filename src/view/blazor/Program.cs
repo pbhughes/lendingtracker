@@ -1,4 +1,5 @@
 using BlazorApplicationInsights;
+using BlazorApplicationInsights.Models;
 using Blazored.LocalStorage;
 using LendingView.Servcies;
 using Microsoft.AspNetCore.Components.Web;
@@ -41,6 +42,19 @@ namespace LendingView
             builder.Services.AddBlazorApplicationInsights(x =>
             {
                 x.ConnectionString = "InstrumentationKey=34e61473-fb29-43a9-90c6-b5324284ff96;IngestionEndpoint=https://westus2-2.in.applicationinsights.azure.com/;LiveEndpoint=https://westus2.livediagnostics.monitor.azure.com/;ApplicationId=a1daa383-6400-4e5b-828b-c5ebd3060666";
+            },
+            async applicationInsights =>
+            {
+            var telemetryItem = new TelemetryItem()
+            {
+                Tags = new Dictionary<string, object?>()
+                {
+                    { "ai.cloud.role", "Lending View SPA" },
+                }
+                };
+
+                await applicationInsights.AddTelemetryInitializer(telemetryItem);
+
             });
 
             //support authorization
