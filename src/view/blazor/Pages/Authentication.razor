@@ -1,14 +1,18 @@
 ﻿@page "/authentication/{action}"
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using BlazorApplicationInsights
+@using BlazorApplicationInsights.Interfaces
 @inject NavigationManager Navigation
 @inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 
 
-<RemoteAuthenticatorView Action="@Action" OnLogInSucceeded="HandleLoginSucceeded" />
+
+<RemoteAuthenticatorView Action="@Action" OnLogInSucceeded="HandleLoginSucceeded" OnLogOutSucceeded="HandleLogoutSucceeded" />
 
 @code{
     [Parameter] public string Action { get; set; }
-    private string returnUrl;
+    [CascadingParameter] public Task<AuthenticationState> AuthenticationState { get; set; }
+    [Inject] private IApplicationInsights AppInsights { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -18,7 +22,16 @@
 
     private async Task HandleLoginSucceeded(){
 
+        //set the user
+        var user = (await AuthenticationState).User;
+
+        await AppInsights.SetAuthenticatedUserContext(user.FindFirst("name")?.Value);
+
         //we could do some post login stuff here
         Navigation.NavigateTo("/index");
+    }
+
+    private async Task HandleLogoutSucceeded(){
+        await AppInsights.ClearAuthenticatedUserContext();
     }
 }
