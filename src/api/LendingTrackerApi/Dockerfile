@@ -25,6 +25,7 @@ FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
 # Trust the dotnet dev-certs
 RUN dotnet publish "./LendingTrackerApi.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+ENV APPLICATIONINSIGHTS_CONNECTION_STRING = "InstrumentationKey=34e61473-fb29-43a9-90c6-b5324284ff96;IngestionEndpoint=https://westus2-2.in.applicationinsights.azure.com/;LiveEndpoint=https://westus2.livediagnostics.monitor.azure.com/;ApplicationId=a1daa383-6400-4e5b-828b-c5ebd3060666"
 
 # This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
 FROM base AS final

@@ -99,7 +99,15 @@ builder.Services.AddAuthorization(options =>
 
 });
 
-//add SMS config support
+//add app insights upport
+string aiCon = Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING");
+builder.Services.AddApplicationInsightsTelemetry(options =>
+{
+    options.ConnectionString = aiCon;
+    options.EnableQuickPulseMetricStream = true;
+    options.EnableDebugLogger = true;
+});
+
 // Bind configuration section
 builder.Services.Configure<MessageSMSSettings>(
     builder.Configuration.GetSection("MessageSMS"));
@@ -117,22 +125,7 @@ builder.Services.Configure<Microsoft.ApplicationInsights.Extensibility.Telemetry
 config.SetAzureTokenCredential(new DefaultAzureCredential());
 });
 
-//Add Application Inisghts
-string appInsightsConnectionString = builder.Configuration["ApplicationInsights:ConnectionString"];
-builder.Services.AddApplicationInsightsTelemetry(new Microsoft.ApplicationInsights.AspNetCore.Extensions.ApplicationInsightsServiceOptions
-{
-    ConnectionString = appInsightsConnectionString,
-    EnableDebugLogger = true,
-    EnableDependencyTrackingTelemetryModule = true,
-    EnableHeartbeat = true,
-    EnableQuickPulseMetricStream = true
 
-});
-
-builder.Services.Configure<TelemetryConfiguration>( (o) =>
-{
-    o.TelemetryInitializers.Add(new TelemetryInitializer(builder.Configuration));
-});
 var app = builder.Build();
 
 // Use CORS
