@@ -28,9 +28,6 @@ using Azure.Identity;
 using Microsoft.ApplicationInsights.Extensibility;
 
 
-
-
-
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
 var builder = WebApplication.CreateBuilder(args);
@@ -122,7 +119,7 @@ builder.Services.AddScoped(typeof(IValidationServices), typeof(ValidatorService)
 builder.Services.AddScoped(typeof(IBlobStorageService), typeof(BlobStorageService));
 builder.Services.Configure<Microsoft.ApplicationInsights.Extensibility.TelemetryConfiguration>(config =>
 {
-config.SetAzureTokenCredential(new DefaultAzureCredential());
+    config.SetAzureTokenCredential(new DefaultAzureCredential());
 });
 
 
