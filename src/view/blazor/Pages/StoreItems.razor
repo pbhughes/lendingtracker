@@ -63,7 +63,7 @@ else
                     <MudSwitch @bind-Value="context.Item.IsAvailable" Label="Is Avialable" />
                 </EditTemplate>
             </PropertyColumn>
-            <PropertyColumn Property="x => x.StoreLink" />
+            <PropertyColumn Property="x => x.StoreLink" Required="false" />
             <TemplateColumn Hidden="@(_isCellEditMode || _readOnly || _editTriggerRowClick)">
                 <CellTemplate>
                     <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" OnClick="@context.Actions.StartEditingItemAsync" />
