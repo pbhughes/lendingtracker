@@ -229,6 +229,13 @@ app.MapPost("/users", async (User user, LendingTrackerContext db, IValidationSer
             return Results.BadRequest($"User {user.Email} already exists");
         }
 
+        //enforce 5 item free rule
+        if (user.MaxBorrowers == 0)
+            user.MaxBorrowers = 5;
+
+        if (user.MaxItems == 0)
+            user.MaxItems = 5;
+
         db.Users.Add(user);
         await db.SaveChangesAsync();
         return Results.Created($"/users/{user.UserId}", user);

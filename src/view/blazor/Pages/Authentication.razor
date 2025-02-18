@@ -1,4 +1,5 @@
 ﻿@page "/authentication/{action}"
+[Authorize]
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 @using BlazorApplicationInsights
 @using BlazorApplicationInsights.Interfaces
@@ -27,11 +28,13 @@
 
         await AppInsights.SetAuthenticatedUserContext(user.FindFirst("name")?.Value);
 
+
         //we could do some post login stuff here
-        Navigation.NavigateTo("/index");
+      
     }
 
     private async Task HandleLogoutSucceeded(){
+        await LocalStorage.RemoveItemAsync("firstRun");
         await AppInsights.ClearAuthenticatedUserContext();
     }
 }

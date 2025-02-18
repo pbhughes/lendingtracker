@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 
 namespace LendingTrackerApi.Models;
 
@@ -18,6 +19,12 @@ public partial class User
     public string? Address { get; set; }
 
     public DateTime? CreatedAt { get; set; }
+
+    [DefaultValue(5)]
+    public int MaxItems { get; set; }
+
+    [DefaultValue(5)]
+    public int MaxBorrowers { get; set; }
 
     public virtual ICollection<Borrower> Borrowers { get; set; } = new List<Borrower>();
 

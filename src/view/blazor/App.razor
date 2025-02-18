@@ -1,6 +1,8 @@
 ﻿@using BlazorApplicationInsights
 
 @inject ILogger<App> _logger
+@inject NavigationManager Navigation
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 
 
 <ApplicationInsightsInit IsWasmStandalone="true" />
@@ -37,7 +39,13 @@
 @code{
     protected override async Task OnInitializedAsync()
     {
-        
+        //identify  the first run has happened
+        await LocalStorage.SetItemAsStringAsync("firstRun", "true");
+
+        Uri url = new Uri(Navigation.Uri.ToString());
+        if (url.AbsolutePath == "/")
+            Navigation.NavigateTo("/home");
+
         await base.OnInitializedAsync();
     }
 }

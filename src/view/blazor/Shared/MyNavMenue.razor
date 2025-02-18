@@ -1,12 +1,9 @@
 ﻿
 <MudNavMenu>
-    <MudNavLink Href="/" Match="NavLinkMatch.All">Home</MudNavLink>
-    <AuthorizeView>
-        
-        <MudNavLink Href="/items" Match="NavLinkMatch.Prefix">Items</MudNavLink>
-        <MudNavLink Href="/borrowers" Match="NavLinkMatch.Prefix">Borrowers</MudNavLink>
-    </AuthorizeView>
-    
+    <MudNavLink Href="/home" Match="NavLinkMatch.All">Home</MudNavLink>
+    <MudNavLink Href="/items" Match="NavLinkMatch.Prefix">Items</MudNavLink>
+    <MudNavLink Href="/borrowers" Match="NavLinkMatch.Prefix">Borrowers</MudNavLink>
+ 
     <AuthorizeView Policy="Admin">
         
         <MudNavGroup Title="Settings" Expanded="true">
