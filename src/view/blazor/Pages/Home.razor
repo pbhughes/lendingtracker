@@ -1,4 +1,4 @@
-﻿@page "/"
+﻿@page "/home"
 
 <MudGrid>
     <MudItem xs="6">
@@ -12,13 +12,13 @@
                 Add tools to your list
             </MudItem>
             <MudItem>
-               Add friends, family, coworders, and neighbors as borrowers
+                Add friends, family, coworders, and neighbors as borrowers
             </MudItem>
             <MudItem>
                 Loan the tool to a borrower, borrower gets notified via email
             </MudItem>
             <MudItem>
-               Include a return date
+                Include a return date
             </MudItem>
             <MudItem>
                 Ask for the item back via Londing Tracker
@@ -40,5 +40,8 @@
 </MudGrid>
 
 @code {
-
+    protected override Task OnInitializedAsync()
+    {
+        return base.OnInitializedAsync();
+    }
 }

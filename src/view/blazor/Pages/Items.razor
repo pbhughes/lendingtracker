@@ -145,21 +145,19 @@ else{
         </PagerContent>
     </MudDataGrid>
 
-
-
 }
 
 
 
 @code {
-    private MudDataGrid<Item> Elements;
+    private MudDataGrid<Item> Elements = new MudDataGrid<Item>();
     private List<string> _items = new List<string>();
     private bool _isReadOnly = true;
     private bool _readOnly;
     private bool _isCellEditMode;
     private List<string> _events = new();
     private bool _editTriggerRowClick;
-    string searchString = null;
+    string? searchString = null;
     public bool _isAddNew = false;
     private string? accessToken;
     private string? error;
@@ -167,20 +165,29 @@ else{
     private bool _showCheckOutForm = false;
     private bool _afterCheckout = false;
     private Breakpoint _breakPoint;
-    private Item selectedItem;
+    private Item? selectedItem;
     private bool _showCheckIn;
     private bool _showWCheckOut;
 
     //signalr support
     private HubConnection hubConnection;
     private List<string> messages = new List<string>();
+    [CascadingParameter] public Task<AuthenticationState> AuthenticationState { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
+        //set the user
+        var user = (await AuthenticationState).User;
         _breakPoint = await _viewportService.GetCurrentBreakpointAsync();
+        await LocalStorage.SetItemAsStringAsync("lastUrl", "/items");
+        bool isNew = user.HasClaim("newUser", "True");
+        bool userIsSet = await LocalStorage.GetItemAsync<bool>("userSet");
+        if (isNew && !userIsSet)
+        {
+            Navigation.NavigateTo("/index");
+        }
+      
 
-
-        
         await base.OnInitializedAsync();
 
     }
