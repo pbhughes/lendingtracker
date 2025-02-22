@@ -119,7 +119,11 @@
         if(tempUser != null){
             me = tempUser;
         }
-
+        else
+        {
+            me.MaxBorrowers = 5;
+            me.MaxItems = 5;
+        }
         Match match = Regex.Match(firstEmail, emailPattern);
         me.Email = match.Value;
 
