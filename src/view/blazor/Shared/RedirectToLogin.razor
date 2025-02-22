@@ -1,8 +1,13 @@
 ﻿@inject NavigationManager Navigation
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 @code {
+
+    [CascadingParameter] public Task<AuthenticationState> AuthenticationState { get; set; }
+
     protected override void OnInitialized()
     {
         Navigation.NavigateToLogin("authentication/login");
     }
+
+   
 }

@@ -1,0 +1,199 @@
+﻿@using BlazorApplicationInsights.Interfaces
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using LendingView.Models
+@using System.ComponentModel.DataAnnotations
+@using System.Net.Http
+@using System.Text.RegularExpressions
+@using System.IdentityModel.Tokens.Jwt
+@using LendingView.Servcies
+@using BlazorApplicationInsights.Models
+
+
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider ast
+@inject IAccessTokenProvider TokenProvider
+@inject IUserService _userService
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inject LendingTrackerService _service;
+
+
+
+<AuthorizeView>
+    <Authorized Context="authContext">
+
+        @if (_collectPhone)
+        {
+            <MudPopover Elevation="0" AnchorOrigin="@AnchorOrigin" TransformOrigin="@TransformOrigin" Open="@_collectPhone" RelativeWidth="@DropdownWidth.Adaptive">
+                <MudText>
+                    <MudGrid>
+                        <MudItem xs="12" sm="7">
+                            <MudPaper Class="pa-4">
+                                <EditForm Model="@me" method="post" OnValidSubmit="HandleValidSubmit">
+                                    <DataAnnotationsValidator />
+                                    <MudTextField T="string" ReadOnly="true" Label="@me.FullName" Value="@me.FullName"></MudTextField>
+                                    <MudSelect @bind-Value="me.CountryCode" Placeholder="Chose Country Code">
+                                        @foreach (var country in countries)
+                                        {
+                                            <MudSelectItem Value="country.Code">@country.Name</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                    <MudTextField T="string" Label="Phone Number" @bind-Value="me.PhoneNumber" For="() => me.PhoneNumber" Placeholder="Enter valid phone"></MudTextField>
+                                    <MudField Label="Items">You can track @me.MaxItems items</MudField>
+                                    <MudField Label="Borrowers">You can track @me.MaxBorrowers borrowers</MudField>
+                                    <MudSpacer />
+                                    <MudSpacer />
+                                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto d-flex justify-end align-center">Update</MudButton>
+                                </EditForm>
+                            </MudPaper>
+                        </MudItem>
+                    </MudGrid>
+                </MudText>
+
+            </MudPopover>
+
+        }
+    </Authorized>
+    <NotAuthorized>
+        <MudChip T="string" Color="Color.Tertiary">Lending Tracker allows you to keep track of the stuff you own and lend out</MudChip>
+        <MudPaper Class="d-flex flex-grow-1 border-none" Outlined="false">
+            <video controls>
+                <source src="https://needthatbackstorage.blob.core.windows.net/media/video.mp4?sp=r&st=2024-12-27T21:05:02Z&se=2028-01-02T05:05:02Z&spr=https&sv=2022-11-02&sr=c&sig=gmPc46HqQP8K2W%2FAoBP70Qpqf0zbI48AFJpsj9HEuuA%3D" />
+                Your browser does not support the video tag sorry
+            </video>
+        </MudPaper>
+
+    </NotAuthorized>
+</AuthorizeView>
+
+
+
+@code {
+
+    public Origin TransformOrigin { get; set; } = Origin.CenterCenter;
+    public Origin AnchorOrigin { get; set; } = Origin.CenterCenter;
+
+    //Country selector support
+    private static List<Country> countries = CountryData.GetCountries();
+    [CascadingParameter] public Task<AuthenticationState> AuthenticationState { get; set; }
+
+    private User me = new User();
+    private ClaimsIdentity identity;
+    private string accessToken = string.Empty;
+    private string error;
+    private bool _collectPhone = true;
+    private ClaimsPrincipal _user;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        // await GetAccessToken();
+        var authState = await ast.GetAuthenticationStateAsync();
+        _user = (await AuthenticationState).User;
+        me.FullName = _user.Identity.Name;
+        me.UserId = Guid.Parse(_user.Claims.Where(c => c.Type == "sub").First().Value);
+        string email = string.Empty;
+        string emailPattern = @"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}";
+        var firstEmail = _user.Claims.First(n => n.Type == "emails").Value;
+
+        //lookup user profile data
+        var tempUser = await _service.GetUsersAsync();
+        if(tempUser != null){
+            me = tempUser;
+        }
+        Match match = Regex.Match(firstEmail, emailPattern);
+        me.Email = match.Value;
+
+        await base.OnInitializedAsync();
+
+
+    }
+
+    private async void HandleValidSubmit()
+    {
+        var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+        Http.DefaultRequestHeaders.Authorization = value;
+
+        var response = await Http.PostAsJsonAsync<User>("/users", me);
+
+        if (response.StatusCode == System.Net.HttpStatusCode.Created)
+        {
+            string nextUrl = await LocalStorage.GetItemAsStringAsync("lastUrl");
+            await LocalStorage.SetItemAsync<bool>("userSet", true);
+            Navigation.NavigateTo("/items");
+        }
+
+    }
+
+
+
+    private async Task<string> GetClaimAsync(string claimType)
+    {
+
+        var handler = new JwtSecurityTokenHandler();
+
+        // Read the token
+        if (handler.CanReadToken(accessToken))
+        {
+            var jwtToken = handler.ReadJwtToken(accessToken);
+
+            // Access claims
+            var claims = jwtToken.Claims;
+
+            foreach (var claim in claims)
+            {
+                if (claim.Type == claimType)
+                {
+                    if (claim.Type == "emails")
+                    {
+                        string emailPattern = @"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}";
+
+                        var firstEmail = jwtToken.Claims.First(n => n.Type == "emails").Value;
+                        Console.WriteLine(firstEmail);
+
+                        Match match = Regex.Match(firstEmail, emailPattern);
+
+                        if (match.Success)
+                        {
+                            return match.Value;
+                        }
+                        else
+                        {
+                            return "No Email";
+                        }
+                    }
+                    return claim.Value;
+                }
+            }
+        }
+        return null;
+    }
+
+    private async Task<string> ParseEmails(string emailClaimValues)
+    {
+        string emailPattern = @"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}";
+
+        Match match = Regex.Match(emailClaimValues, emailPattern);
+
+        if (match.Success)
+        {
+            return match.Value;
+        }
+        else
+        {
+            return "No Email";
+        }
+    }
+
+    private async Task<User> GetUserPhone(string userId)
+    {
+        User user = await Http.GetFromJsonAsync<User>($"/users/{userId}");
+        return user;
+    }
+}
+

@@ -10,17 +10,23 @@
 
 <AuthorizeView>
     <Authorized>
+
         <MudHidden BreakPoint="Breakpoint.MdAndDown">
-             Hello, @GetEmail(context)
-              <MudButton OnClick="BeginLogout" Color="Color.Secondary">Log Out</MudButton>
+            Hello, @GetEmail(context)
+            <MudButton OnClick="BeginLogout" Color="Color.Secondary">Log Out</MudButton>
         </MudHidden>
 
         <MudHidden BreakPoint="Breakpoint.LgAndUp">
-           
+
             <MudButton OnClick="BeginLogout" Color="Color.Secondary">Log Out</MudButton>
         </MudHidden>
-       
-       
+        <MudIconButton Icon="@Icons.Material.Outlined.AccountCircle" title="Profile" aria-label="Profile" Color="@Color.Default" OnClick="ShowProfileData"></MudIconButton>
+        
+        @if(_showProfileData){
+            <LendingView.Pages.CapturePhone></LendingView.Pages.CapturePhone>
+        }
+
+
     </Authorized>
     <NotAuthorized>
         <MudLink Color="Color.Secondary" Href="authentication/login">Login / Register</MudLink>
@@ -28,7 +34,11 @@
 </AuthorizeView>
 
 @code{
+    private bool _showProfileData = false;
 
+    private void ShowProfileData(){
+        _showProfileData = !_showProfileData;
+    }
     private async void BeginLogout(MouseEventArgs args)
     {
         await SignOutManager.SetSignOutState();

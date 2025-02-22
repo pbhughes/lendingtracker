@@ -232,11 +232,8 @@ else
 
 
         //call the put AI and commit the changes
-        await GetAccessToken();
-        var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
-        Http.DefaultRequestHeaders.Authorization = value;
-
         var response = await Http.PutAsJsonAsync<Borrower>($"/borrowers/{borrower.BorrowerId}", borrower);
+        await Elements.ReloadServerData();
 
     }
 

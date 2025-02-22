@@ -301,13 +301,13 @@ else{
         //call the put AI and commit the changes
         var response = await Http.DeleteAsync($"/items/{item.ItemId}");
 
-        Elements.ReloadServerData();
+        await Elements.ReloadServerData();
     }
 
     async void CommitChanges(Item item){
         //call the put AI and commit the changes
         var response = await Http.PutAsJsonAsync<Item>($"/items/{item.ItemId}", item);
-        Elements.ReloadServerData();
+        await Elements.ReloadServerData();
     }
 
     async void AddNew(){
