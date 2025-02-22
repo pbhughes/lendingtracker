@@ -37,11 +37,11 @@
 </CascadingAuthenticationState>
 
 @code{
+    [CascadingParameter] public Task<AuthenticationState> AuthenticationState { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
-        //identify  the first run has happened
-        await LocalStorage.SetItemAsStringAsync("firstRun", "true");
-
+        //set the user
         Uri url = new Uri(Navigation.Uri.ToString());
         if (url.AbsolutePath == "/")
             Navigation.NavigateTo("/home");

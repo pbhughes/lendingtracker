@@ -1,0 +1,83 @@
+﻿@page "/donate"
+
+<MudTimeline TimelineOrientation="@TimelineOrientation.Vertical" TimelinePosition="@TimelinePosition.Start">
+    <MudTimelineItem Color="Color.Success" Variant="Variant.Filled">
+        <ItemContent>
+            <MudAlert Severity="Severity.Success">Easlity track the tools you have</MudAlert>
+        </ItemContent>
+        <ItemOpposite>
+            <MudText Color="Color.Success">13:38</MudText>
+        </ItemOpposite>
+    </MudTimelineItem>
+    <MudTimelineItem Color="Color.Success" Variant="Variant.Filled">
+        <ItemContent>
+            <MudAlert Severity="Severity.Success">Easily add friends, family, and coworkers as borrowers</MudAlert>
+        </ItemContent>
+        <ItemOpposite>
+            <MudText Color="Color.Success">13:39</MudText>
+        </ItemOpposite>
+    </MudTimelineItem>
+    <MudTimelineItem Color="Color.Success" Variant="Variant.Filled">
+        <ItemContent>
+            <MudAlert Severity="Severity.Success">Easilty checkout tools to people in your borrower list</MudAlert>
+        </ItemContent>
+        <ItemOpposite>
+            <MudText Color="Color.Success">13:40</MudText>
+        </ItemOpposite>
+    </MudTimelineItem>
+    <MudTimelineItem Color="Color.Success" Variant="Variant.Filled">
+        <ItemContent>
+            <MudAlert Severity="Severity.Success">Send email notifications to borrowers</MudAlert>
+        </ItemContent>
+        <ItemOpposite>
+            <MudText Color="Color.Success">13:41</MudText>
+        </ItemOpposite>
+    </MudTimelineItem>
+    <MudTimelineItem Color="Color.Success" Variant="Variant.Filled">
+        <ItemContent>
+            <MudAlert Severity="Severity.Success">Track who has what</MudAlert>
+        </ItemContent>
+        <ItemOpposite>
+            <MudText Color="Color.Success">13:37</MudText>
+        </ItemOpposite>
+    </MudTimelineItem>
+    <MudTimelineItem Color="Color.Warning" Variant="Variant.Filled">
+        <ItemContent>
+            <MudAlert Severity="Severity.Warning">The site is free hosting is not</MudAlert>
+        </ItemContent>
+        <ItemOpposite>
+            <MudText Color="Color.Success">13:37</MudText>
+        </ItemOpposite>
+    </MudTimelineItem>
+    <MudTimelineItem Color="Color.Error" Variant="Variant.Filled">
+        <ItemContent>
+            <MudAlert Severity="Severity.Error">Hosting costs add up consider donating to support the site</MudAlert>
+        </ItemContent>
+        <ItemOpposite>
+            <MudText Color="Color.Success">13:37</MudText>
+        </ItemOpposite>
+    </MudTimelineItem>
+</MudTimeline>
+
+<MudSpacer/>
+
+<div id="donate-button-container">
+    <div id="donate-button"></div>
+    
+    <script>
+        PayPal.Donation.Button({
+        env:'production',
+        hosted_button_id:'RXGDFWJRR5WPY',
+        image: {
+        src:'https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif',
+        alt:'Donate with PayPal button',
+        title:'PayPal - The safer, easier way to pay online!',
+        }
+        }).render('#donate-button');
+    </script>
+</div>
+
+
+@code {
+
+}

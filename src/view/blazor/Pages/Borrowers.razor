@@ -90,7 +90,7 @@ else
 
 @code {
     private MudDataGrid<Borrower> Elements;
-
+    [CascadingParameter] public Task<AuthenticationState> AuthenticationState { get; set; }
     private List<string> borrowers = new List<string>();
     private bool _isReadOnly = true;
     private bool _readOnly;
@@ -105,11 +105,19 @@ else
    
 
 
-    protected override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
-        var returnUrl = Navigation.Uri;
-        LocalStorage.SetItemAsStringAsync(key: "returnUrl", data: returnUrl);
-        return base.OnInitializedAsync();
+        //set the user
+        var user = (await AuthenticationState).User;
+        
+        await LocalStorage.SetItemAsStringAsync("lastUrl", "/borrowers");
+        bool isNew = user.HasClaim("newUser", "True");
+        bool userIsSet = await LocalStorage.GetItemAsync<bool>("userSet");
+        if (isNew && !userIsSet)
+        {
+            Navigation.NavigateTo("/index");
+        }
+        await base.OnInitializedAsync();
     }
 
     private async Task GetAccessToken()
@@ -224,11 +232,8 @@ else
 
 
         //call the put AI and commit the changes
-        await GetAccessToken();
-        var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
-        Http.DefaultRequestHeaders.Authorization = value;
-
         var response = await Http.PutAsJsonAsync<Borrower>($"/borrowers/{borrower.BorrowerId}", borrower);
+        await Elements.ReloadServerData();
 
     }
 
