@@ -23,7 +23,6 @@ namespace LendingView.Servcies
         private async Task<T> GetAsync<T>(string url)
         {
             var response = await _httpClient.GetAsync($"{_config["ApiHost:BaseUrl"]}{url}");
-            response.EnsureSuccessStatusCode();
             var json = await response.Content.ReadAsStringAsync();
             return JsonSerializer.Deserialize<T>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         }

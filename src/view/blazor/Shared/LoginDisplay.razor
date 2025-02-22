@@ -21,9 +21,9 @@
             <MudButton OnClick="BeginLogout" Color="Color.Secondary">Log Out</MudButton>
         </MudHidden>
         <MudIconButton Icon="@Icons.Material.Outlined.AccountCircle" title="Profile" aria-label="Profile" Color="@Color.Default" OnClick="ShowProfileData"></MudIconButton>
-        
+
         @if(_showProfileData){
-            <LendingView.Pages.CapturePhone></LendingView.Pages.CapturePhone>
+            <LendingView.Pages.CapturePhone Close="Close"></LendingView.Pages.CapturePhone>
         }
 
 
@@ -64,6 +64,10 @@
         }
 
         return email.ToString();
+    }
+
+    private async void Close(){
+        _showProfileData = false;
     }
 
 

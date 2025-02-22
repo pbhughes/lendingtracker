@@ -43,7 +43,7 @@
     {
         //set the user
         Uri url = new Uri(Navigation.Uri.ToString());
-        if (url.AbsolutePath == "/")
+        if (url.AbsolutePath == "/" || url.AbsolutePath == "")
             Navigation.NavigateTo("/home");
 
         await base.OnInitializedAsync();
