@@ -37,6 +37,7 @@
                                 <EditForm Model="@me" method="post" OnValidSubmit="HandleValidSubmit">
                                     <DataAnnotationsValidator />
                                     <MudTextField T="string" ReadOnly="true" Label="@me.FullName" Value="@me.FullName"></MudTextField>
+                                    <MudTextField T="string" ReadOnly="true" Label="@me.Email" Value="@me.Email"></MudTextField>
                                     <MudSelect @bind-Value="me.CountryCode" Placeholder="Chose Country Code">
                                         @foreach (var country in countries)
                                         {
@@ -81,6 +82,7 @@
     //Country selector support
     private static List<Country> countries = CountryData.GetCountries();
     [CascadingParameter] public Task<AuthenticationState> AuthenticationState { get; set; }
+    [Parameter] public EventCallback Close { get; set; }
 
     private User me = new User();
     private ClaimsIdentity identity;
@@ -100,12 +102,24 @@
         string email = string.Empty;
         string emailPattern = @"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}";
         var firstEmail = _user.Claims.First(n => n.Type == "emails").Value;
-
+        me.Email = firstEmail;
         //lookup user profile data
-        var tempUser = await _service.GetUsersAsync();
+        User tempUser = null;
+        try
+        {
+            tempUser = await _service.GetUsersAsync();
+        }
+        catch (Exception ex)
+        {
+            //eat this -  the user is in the 
+            //identity store but not the database
+            //user will be added
+        }
+
         if(tempUser != null){
             me = tempUser;
         }
+
         Match match = Regex.Match(firstEmail, emailPattern);
         me.Email = match.Value;
 
@@ -123,10 +137,13 @@
 
         if (response.StatusCode == System.Net.HttpStatusCode.Created)
         {
+            _collectPhone = false;
             string nextUrl = await LocalStorage.GetItemAsStringAsync("lastUrl");
             await LocalStorage.SetItemAsync<bool>("userSet", true);
             Navigation.NavigateTo("/items");
         }
+
+        await Close.InvokeAsync();
 
     }
 

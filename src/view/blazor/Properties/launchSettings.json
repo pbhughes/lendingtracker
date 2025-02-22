@@ -3,13 +3,26 @@
     "LendingView - Development": {
       "commandName": "Project",
       "launchBrowser": true,
-      "launchUrl": "https://localhost:5001",
+      "launchUrl": "https://localhost:5001/",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
       "dotnetRunMessages": true,
       "hotReloadEnabled": true,
-      "applicationUrl": "https://localhost:5001",
+      "applicationUrl": "https://localhost:5001/",
+      "inspectUri": "{wsProtocol}://{url.hostname}:{url.port}/_framework/debug/ws-proxy?browser={browserInspectUri}",
+      "sqlDebugging": true
+    },
+    "LendingView - Debug": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "launchUrl": "https://localhost:5001/",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "dotnetRunMessages": true,
+      "hotReloadEnabled": true,
+      "applicationUrl": "https://localhost:5001/",
       "inspectUri": "{wsProtocol}://{url.hostname}:{url.port}/_framework/debug/ws-proxy?browser={browserInspectUri}",
       "sqlDebugging": true
     },
@@ -21,7 +34,7 @@
       },
       "dotnetRunMessages": true,
       "hotReloadEnabled": true,
-      "applicationUrl": "https://localhost:5001",
+      "applicationUrl": "https://localhost:5001/",
       "inspectUri": "{wsProtocol}://{url.hostname}:{url.port}/_framework/debug/ws-proxy?browser={browserInspectUri}",
       "sqlDebugging": true
     }
