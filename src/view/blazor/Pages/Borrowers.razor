@@ -16,7 +16,7 @@
 
 @if (_isAddNew)
 {
-    <LendingView.Components.AddNewBorrower AddingNew="@_isAddNew" OnAddNew="HandleAddnew"></LendingView.Components.AddNewBorrower>
+    <LendingView.Components.AddNewBorrower AddingNew="@_isAddNew" OnAddNew="HandleAddnew" Reload="Reload"></LendingView.Components.AddNewBorrower>
 }
 else
 {
@@ -102,14 +102,14 @@ else
     private string? accessToken;
     private string? error;
     public IMask emailMask = RegexMask.Email();
-   
+
 
 
     protected override async Task OnInitializedAsync()
     {
         //set the user
         var user = (await AuthenticationState).User;
-        
+
         await LocalStorage.SetItemAsStringAsync("lastUrl", "/borrowers");
         bool isNew = user.HasClaim("newUser", "True");
         bool userIsSet = await LocalStorage.GetItemAsync<bool>("userSet");
@@ -120,90 +120,64 @@ else
         await base.OnInitializedAsync();
     }
 
-    private async Task GetAccessToken()
-    {
-        var tokenResult = await TokenProvider.RequestAccessToken(new AccessTokenRequestOptions
-            {
-                Scopes = new[] { "https://needthatback.onmicrosoft.com/lender/lender" },
 
-            });
-
-        if (tokenResult.TryGetToken(out var token))
-        {
-            accessToken = token.Value;
-        }
-        else
-        {
-            error = tokenResult.Status switch
-            {
-                AccessTokenResultStatus.RequiresRedirect => "Redirect required. Navigating...",
-                AccessTokenResultStatus.Success => null,
-                _ => "An unknown error occurred."
-            };
-
-            if (tokenResult.Status == AccessTokenResultStatus.RequiresRedirect)
-            {
-                Navigation.NavigateTo(tokenResult.InteractiveRequestUrl!);
-            }
-        }
-    }
 
     private async Task<GridData<Borrower>> ServerReload(GridState<Borrower> state)
     {
-        await GetAccessToken();
+
         var authState = await authStateProvider.GetAuthenticationStateAsync();
         bool isAuthenticated = authState.User.Identity?.IsAuthenticated ?? false;
         IEnumerable<Borrower> data = new List<Borrower>();
         int totalItems = 0;
 
 
-          
 
-            var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
-            Http.DefaultRequestHeaders.Authorization = value;
 
-            data = await Http.GetFromJsonAsync<List<Borrower>>("/borrowers");
-            await Task.Delay(300);
-            data = data.Where(element =>
+        var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+        Http.DefaultRequestHeaders.Authorization = value;
+
+        data = await Http.GetFromJsonAsync<List<Borrower>>("/borrowers");
+        await Task.Delay(300);
+        data = data.Where(element =>
+        {
+            if (string.IsNullOrWhiteSpace(searchString))
+                return true;
+            if (element.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+            if (element.BorrowerEmail.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+            if (element.BorrowerSms.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+            return false;
+        }).ToArray();
+        totalItems = data.Count();
+
+        var sortDefinition = state.SortDefinitions.FirstOrDefault();
+        if (sortDefinition != null)
+        {
+            switch (sortDefinition.SortBy)
             {
-                if (string.IsNullOrWhiteSpace(searchString))
-                    return true;
-                if (element.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
-                    return true;
-                if (element.BorrowerEmail.Contains(searchString, StringComparison.OrdinalIgnoreCase))
-                    return true;
-                if (element.BorrowerSms.Contains(searchString, StringComparison.OrdinalIgnoreCase))
-                    return true;
-                return false;
-            }).ToArray();
-            totalItems = data.Count();
-
-            var sortDefinition = state.SortDefinitions.FirstOrDefault();
-            if (sortDefinition != null)
-            {
-                switch (sortDefinition.SortBy)
-                {
-                    case nameof(Borrower.Name):
-                        data = data.OrderByDirection(
-                            sortDefinition.Descending ? SortDirection.Descending : SortDirection.Ascending,
-                            o => o.Name
-                        );
-                        break;
-                    case nameof(Borrower.BorrowerEmail):
-                        data = data.OrderByDirection(
-                            sortDefinition.Descending ? SortDirection.Descending : SortDirection.Ascending,
-                            o => o.BorrowerEmail
-                        );
-                        break;
-                    case nameof(Borrower.BorrowerSms):
-                        data = data.OrderByDirection(
-                            sortDefinition.Descending ? SortDirection.Descending : SortDirection.Ascending,
-                            o => o.BorrowerSms
-                        );
-                        break;
-                }
+                case nameof(Borrower.Name):
+                    data = data.OrderByDirection(
+                        sortDefinition.Descending ? SortDirection.Descending : SortDirection.Ascending,
+                        o => o.Name
+                    );
+                    break;
+                case nameof(Borrower.BorrowerEmail):
+                    data = data.OrderByDirection(
+                        sortDefinition.Descending ? SortDirection.Descending : SortDirection.Ascending,
+                        o => o.BorrowerEmail
+                    );
+                    break;
+                case nameof(Borrower.BorrowerSms):
+                    data = data.OrderByDirection(
+                        sortDefinition.Descending ? SortDirection.Descending : SortDirection.Ascending,
+                        o => o.BorrowerSms
+                    );
+                    break;
             }
-        
+        }
+
 
         var pagedData = data.Skip(state.Page * state.PageSize).Take(state.PageSize).ToArray();
         return new GridData<Borrower>
@@ -242,7 +216,7 @@ else
         _events.Insert(0, $"Event = Item deleted, Data = {System.Text.Json.JsonSerializer.Serialize(borrower)}");
 
         //call the put AI and commit the changes
-        await GetAccessToken();
+
         var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
         Http.DefaultRequestHeaders.Authorization = value;
 
@@ -254,6 +228,12 @@ else
     async void AddNew()
     {
         _isAddNew = true;
+    }
+
+    async void Reload()
+    {
+        StateHasChanged();
+        _isAddNew = false;
     }
 
     private void HandleAddnew(string msg)
