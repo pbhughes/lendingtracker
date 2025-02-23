@@ -30,7 +30,11 @@
 
 
         //we could do some post login stuff here
-        
+        var returnUrl = Navigation.Uri.Contains("redirect_uri=")
+           ? new Uri(Navigation.Uri).Query.Split("redirect_uri=")[1]
+           : "/items"; // Default redirect path
+
+        Navigation.NavigateTo(returnUrl, forceLoad: true);
       
     }
 
