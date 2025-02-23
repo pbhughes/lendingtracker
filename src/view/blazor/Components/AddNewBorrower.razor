@@ -85,6 +85,8 @@
     private string? error;
     [Parameter] public bool AddingNew { get; set; }
     [Parameter] public EventCallback<string> OnAddNew { get; set; }
+    [Parameter] public EventCallback<string> Reload { get; set; }
+    [CascadingParameter] public Task<AuthenticationState> AuthenticationState { get; set; }
     //Country selector support
     private static List<Country> _countries = CountryData.GetCountries();
     Margin _margin;
@@ -101,28 +103,23 @@
     private async void OnValidSubmit(EditContext context)
     {
         success = true;
-        StateHasChanged();
-
-        //call the put AI and commit the changes
-        await GetAccessToken();
-        var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
-        Http.DefaultRequestHeaders.Authorization = value;
-
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        model.UserId = Guid.Parse(authState.User.Claims.First(nameof => nameof.Type == "sub").Value);
 
 
-
-
+        var user = (await AuthenticationState).User;
+        model.UserId = Guid.Parse(user.Claims.Where(c => c.Type == "sub").First().Value);
         var response = await Http.PostAsJsonAsync<Borrower>("/borrowers", model);
+        
+
 
         if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
         {
             await OpenDialogAsync( model.BorrowerEmail);
         }
 
-        if(_allowDuplicates)
+        if (_allowDuplicates)
             await OnAddNew.InvokeAsync();
+        else
+            await Reload.InvokeAsync();
 
     }
 
@@ -134,32 +131,7 @@
 
 
 
-    private async Task GetAccessToken()
-    {
-        var tokenResult = await TokenProvider.RequestAccessToken(new AccessTokenRequestOptions
-            {
-                Scopes = new[] { "https://needthatback.onmicrosoft.com/lender/lender" }
-            });
-
-        if (tokenResult.TryGetToken(out var token))
-        {
-            accessToken = token.Value;
-        }
-        else
-        {
-            error = tokenResult.Status switch
-            {
-                AccessTokenResultStatus.RequiresRedirect => "Redirect required. Navigating...",
-                AccessTokenResultStatus.Success => null,
-                _ => "An unknown error occurred."
-            };
-
-            if (tokenResult.Status == AccessTokenResultStatus.RequiresRedirect)
-            {
-                Navigation.NavigateTo(tokenResult.InteractiveRequestUrl!);
-            }
-        }
-    }
+   
 
 
     private async Task OpenDialogAsync(string email)

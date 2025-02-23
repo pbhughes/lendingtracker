@@ -3,10 +3,13 @@
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 @using BlazorApplicationInsights
 @using BlazorApplicationInsights.Interfaces
+@using LendingView.Models;
+@using System.Text.RegularExpressions
+@using LendingView.Servcies
+
 @inject NavigationManager Navigation
 @inject Blazored.LocalStorage.ILocalStorageService LocalStorage
-
-
+@inject LendingView.Servcies.LendingTrackerService dataService;
 
 <RemoteAuthenticatorView Action="@Action" OnLogInSucceeded="HandleLoginSucceeded" OnLogOutSucceeded="HandleLogoutSucceeded" />
 
@@ -14,6 +17,8 @@
     [Parameter] public string Action { get; set; }
     [CascadingParameter] public Task<AuthenticationState> AuthenticationState { get; set; }
     [Inject] private IApplicationInsights AppInsights { get; set; }
+
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -30,6 +35,36 @@
 
 
         //we could do some post login stuff here
+        //write the user record with the data you have from the login
+        User lendingUser = new User();
+        lendingUser.FullName = user.Identity.Name;
+        string email = string.Empty;
+        string emailPattern = @"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}";
+        var firstEmail = user.FindFirst(n => n.Type == "emails").Value;
+        Console.WriteLine(firstEmail);
+
+        Match match = Regex.Match(firstEmail, emailPattern);
+        if (match.Success)
+        {
+            email = match.Value;
+        }
+        else
+        {
+            email = "User";
+        }
+
+        lendingUser.Email = email;
+        lendingUser.UserId = Guid.Parse(user.FindFirst("sub").Value);
+        try
+        {
+            await dataService.CreateUserAsync(lendingUser);
+        }
+        catch (Exception ex)
+        {
+            
+            throw;
+        }
+
         var returnUrl = Navigation.Uri.Contains("redirect_uri=")
            ? new Uri(Navigation.Uri).Query.Split("redirect_uri=")[1]
            : "/items"; // Default redirect path
