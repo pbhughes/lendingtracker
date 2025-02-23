@@ -29,12 +29,18 @@
 
     </Authorized>
     <NotAuthorized>
-        <MudLink Color="Color.Secondary" Href="authentication/login">Login / Register</MudLink>
+        <MudLink Color="Color.Secondary" onclick="Login">Login / Register</MudLink>
     </NotAuthorized>
 </AuthorizeView>
 
 @code{
     private bool _showProfileData = false;
+
+    private async Task Login()
+    {
+        var returnUrl = Navigation.Uri;
+        Navigation.NavigateTo($"authentication/login?redirect_uri={returnUrl}");
+    }
 
     private void ShowProfileData(){
         _showProfileData = !_showProfileData;

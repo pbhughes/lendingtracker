@@ -56,6 +56,8 @@ namespace LendingView
                 await applicationInsights.AddTelemetryInitializer(telemetryItem);
 
             });
+            //support inital page load
+            builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 
             //support authorization
             builder.Services.AddAuthorizationCore(options =>
