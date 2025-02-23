@@ -3,16 +3,13 @@
     <MudNavLink Href="/home" Match="NavLinkMatch.All">Home</MudNavLink>
     <MudNavLink Href="/items" Match="NavLinkMatch.Prefix">Items</MudNavLink>
     <MudNavLink Href="/borrowers" Match="NavLinkMatch.Prefix">Borrowers</MudNavLink>
- 
     <AuthorizeView Policy="Admin">
-        
         <MudNavGroup Title="Settings" Expanded="true">
             <MudNavLink Href="/storeitems" Match="NavLinkMatch.Prefix">Item Links</MudNavLink>
         </MudNavGroup>
     </AuthorizeView>
-
     <MudNavLink Href="/about"  Match="NavLinkMatch.Prefix">About</MudNavLink>
-    <MudChip T="string" Color="Color.Secondary" Href="/donate">Donate</MudChip>
+    <MudNavLink Href="/donate"><MudText Color="@Color.Secondary">Donate</MudText></MudNavLink>
   
 </MudNavMenu>
 
