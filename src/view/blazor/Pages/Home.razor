@@ -1,43 +1,140 @@
 ﻿@page "/home"
 
+<MudHidden Breakpoint="Breakpoint.MdAndDown">
 <MudGrid>
-    <MudItem xs="6">
-        <MudText Typo="Typo.h5">Easily know who borrowed your tools and equipment</MudText>
-        <MudText Typo="Typo.caption">
-            Add the tool your lending to your items, track it forever. Always know where your tools are.  Quickly add a friend or family member to you borrower list lend them tool know you can keep track of who has it.
-        </MudText>
-        <MudSpacer></MudSpacer>
-        <MudList T="string">
-            <MudItem>
-                Add tools to your list
-            </MudItem>
-            <MudItem>
-                Add friends, family, coworders, and neighbors as borrowers
-            </MudItem>
-            <MudItem>
-                Loan the tool to a borrower, borrower gets notified via email
-            </MudItem>
-            <MudItem>
-                Include a return date
-            </MudItem>
-            <MudItem>
-                Ask for the item back via Londing Tracker
-            </MudItem>
-        </MudList>
-    </MudItem>
-    <MudItem xs="6">
-        <MudImage Height="300" Src="https://needthatbackstorage.blob.core.windows.net/media/logo_transparent_background.png?sp=r&st=2024-12-27T21:05:02Z&se=2028-01-02T05:05:02Z&spr=https&sv=2022-11-02&sr=c&sig=gmPc46HqQP8K2W%2FAoBP70Qpqf0zbI48AFJpsj9HEuuA%3D" />
-    </MudItem>
-    <MudItem xs="4">
-        <MudText Typo="Typo.subtitle2">Items</MudText>
-    </MudItem>
-    <MudItem xs="4">
-        <MudText Typo="Typo.subtitle2">Borrowers</MudText>
-    </MudItem>
-    <MudItem xs="4">
-        <MudText Typo="Typo.subtitle2">Tracking</MudText>
-    </MudItem>
+    <MudHidden Breakpoint="Breakpoint.MdAndDown">
+        <MudItem xs="6">
+            <MudText Typo="Typo.h5">Easily know who borrowed your tools and equipment</MudText>
+            <MudText Typo="Typo.caption">
+                Add the tool your lending to your items, track it forever. Always know where your tools are.  Quickly add a friend or family member to you borrower list lend them tool know you can keep track of who has it.
+            </MudText>
+            <MudSpacer></MudSpacer>
+            <MudList T="string">
+                <MudItem>
+                    Add tools to your list
+                </MudItem>
+                <MudItem>
+                    Add friends, family, coworders, and neighbors as borrowers
+                </MudItem>
+                <MudItem>
+                    Loan the tool to a borrower, borrower gets notified via email
+                </MudItem>
+                <MudItem>
+                    Include a return date
+                </MudItem>
+                <MudItem>
+                    Ask for the item back via Londing Tracker
+                </MudItem>
+            </MudList>
+        </MudItem>
+        <MudItem xs="6">
+            <MudImage Height="300" Src="https://needthatbackstorage.blob.core.windows.net/media/logo_transparent_background.png?sp=r&st=2024-12-27T21:05:02Z&se=2028-01-02T05:05:02Z&spr=https&sv=2022-11-02&sr=c&sig=gmPc46HqQP8K2W%2FAoBP70Qpqf0zbI48AFJpsj9HEuuA%3D" />
+        </MudItem>
+    </MudHidden>
+    <MudHidden Breakpoint="Breakpoint.MdAndDown">
+        <MudItem xs="4">
+            <MudCard>
+                <MudCardHeader>Tools, equipment, and other items</MudCardHeader>
+                <MudCardContent>
+                    <MudStack>
+                        <MudStack Row="true">
+                            <MudIcon Icon="@Icons.Material.Filled.Build" Color="@Color.Tertiary"></MudIcon>
+                            <MudPaper>Add tools and any other item you loan</MudPaper>
+                        </MudStack>
+                        <MudStack Row="true">
+                            <MudIcon Icon="@Icons.Material.Filled.Carpenter" Color="@Color.Warning"></MudIcon>
+                            <MudPaper>Never forget what you've loanded out</MudPaper>
+                        </MudStack>
+                        <MudStack Row="true">
+                            <MudIcon Icon="@Icons.Material.Filled.Star" Color="@Color.Secondary"></MudIcon>
+                            <MudPaper>Or who has your favorite tool or item</MudPaper>
+                        </MudStack>
+                    </MudStack>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+        <MudItem xs="4">
+            <MudCard>
+                <MudCardHeader>Add Friends, Neighbors, and Family</MudCardHeader>
+                <MudCardContent>
+                    <MudStack>
+                        <MudStack Row="true">
+                            <MudIcon Icon="@Icons.Material.Filled.People" Color="@Color.Tertiary"></MudIcon>
+                            <MudPaper>Add those folks you lend tools and equipment to</MudPaper>
+                        </MudStack>
+                        <MudStack Row="true">
+                            <MudIcon Icon="@Icons.Material.Filled.AddAlert" Color="@Color.Warning"></MudIcon>
+                            <MudPaper>Easily add borrowers with a few clicks just few click</MudPaper>
+                        </MudStack>
+                    </MudStack>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+        <MudItem xs="4">
+            <MudCard>
+                <MudCardHeader>Hands off communication</MudCardHeader>
+                <MudCardContent>
+                    <MudStack>
+                        <MudStack Row="true">
+                            <MudIcon Icon="@Icons.Material.Filled.People" Color="@Color.Tertiary"></MudIcon>
+                            <MudPaper>An email is sent to the borrower</MudPaper>
+                        </MudStack>
+                        <MudStack Row="true">
+                            <MudIcon Icon="@Icons.Material.Filled.Mouse" Color="@Color.Warning"></MudIcon>
+                            <MudPaper>Easily request the item back right using the sites emailer</MudPaper>
+                        </MudStack>
+                        <MudStack Row="true">
+                            <MudIcon Icon="@Icons.Material.Filled.AttachMoney" Color="@Color.Success"></MudIcon>
+                            <MudPaper>Include your Paypal hyper link to request money or suggest prodcts from your Amazon Seller link</MudPaper>
+                        </MudStack>
+                    </MudStack>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudHidden>
 </MudGrid>
+</MudHidden>
+<MudSpacer />
+<MudHidden Breakpoint="Breakpoint.MdAndUp">
+    <MudSpacer />
+    <MudStack>
+        <MudStack>
+            <MudStack Row="true">
+                <MudIcon Icon="@Icons.Material.Filled.Build" Color="@Color.Tertiary"></MudIcon>
+                <MudPaper>Add tools and any other item you loan</MudPaper>
+            </MudStack>
+            <MudStack Row="true">
+                <MudIcon Icon="@Icons.Material.Filled.Carpenter" Color="@Color.Warning"></MudIcon>
+                <MudPaper>Never forget what you've loanded out</MudPaper>
+            </MudStack>
+            <MudStack Row="true">
+                <MudIcon Icon="@Icons.Material.Filled.Star" Color="@Color.Secondary"></MudIcon>
+                <MudPaper>Know who has your favorite tool or item</MudPaper>
+            </MudStack>
+        </MudStack>
+        <MudStack Row="true">
+            <MudIcon Icon="@Icons.Material.Filled.People" Color="@Color.Tertiary"></MudIcon>
+            <MudPaper>Email your borrowers when its loaned out</MudPaper>
+        </MudStack>
+        <MudStack Row="true">
+            <MudIcon Icon="@Icons.Material.Filled.Mouse" Color="@Color.Warning"></MudIcon>
+            <MudPaper>Easily request the item back right using the sites emailer</MudPaper>
+        </MudStack>
+        <MudStack Row="true">
+            <MudIcon Icon="@Icons.Material.Filled.AttachMoney" Color="@Color.Success"></MudIcon>
+            <MudPaper>Include your Paypal hyper link to request money or suggest prodcts from your Amazon Seller link</MudPaper>
+        </MudStack>
+        <MudStack Row="true">
+            <MudIcon Icon="@Icons.Material.Filled.People" Color="@Color.Tertiary"></MudIcon>
+            <MudPaper>Add those folks you lend tools and equipment to</MudPaper>
+        </MudStack>
+        <MudStack Row="true">
+            <MudIcon Icon="@Icons.Material.Filled.AddAlert" Color="@Color.Warning"></MudIcon>
+            <MudPaper>Easily add borrowers with a few clicks just few click</MudPaper>
+        </MudStack>
+        
+    </MudStack>
+</MudHidden>
 
 @code {
     protected override Task OnInitializedAsync()
