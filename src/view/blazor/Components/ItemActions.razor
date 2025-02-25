@@ -14,7 +14,7 @@
 <MudButtonGroup Color="Color.Primary" Variant="Variant.Text">
     <MudButton Icon="@Icons.Material.Filled.Inbox"  Color="@Color.Success" Variant="Variant.Filled" Disabled="!_showCheckInButton" OnClick="@( () => CheckIn.InvokeAsync(item))">Check In</MudButton>
     <MudButton Icon="@Icons.Material.Filled.Outbox" Color="@Color.Success" Variant="Variant.Filled" Disabled="_showCheckInButton" OnClick="@( () => CheckOutLocal(true))">Check Out</MudButton>
-    <MudPopover Open="@_open" Fixed="true">
+    <MudPopover AnchorOrigin="@Origin.TopCenter" TransformOrigin="@Origin.TopRight" Open="@_open" Fixed="false">
         <CheckItemOut ItemId="@item.ItemId" Close="CheckOutHandler"></CheckItemOut>
     </MudPopover>
 </MudButtonGroup>
