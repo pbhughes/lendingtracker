@@ -11,7 +11,7 @@
 
 
 <MudGrid>
-    <MudItem xs="6">
+    <MudItem xs="4">
         <MudFileUpload T="IBrowserFile" FilesChanged="UploadFiles">
             <ActivatorContent>
                 <MudFab Color="Color.Secondary"
@@ -20,32 +20,36 @@
             </ActivatorContent>
 
         </MudFileUpload>
-
-        @if (_files != null)
-        {
-            <MudText Typo="@Typo.h6">@_files.Count() File@(_files.Count() == 1 ? "" : "s"):</MudText>
-            <MudList T="string">
-                @foreach (var file in _files)
-                {
-                    <MudListItem Icon="@Icons.Material.Filled.AttachFile" @key="@file">
-                        @file.Name <code>@file.Size bytes</code>
-                    </MudListItem>
-                }
-            </MudList>
-
-        }
-
-        @if (!string.IsNullOrEmpty(error))
-        {
-            <MudText>@error</MudText>
-        }
-
-        @if (!_uplodateComplete)
-        {
-            <MudText>@messageText</MudText>
-        }
     </MudItem>
-    <MudItem xs="2">
+    <MudItem xs="4">
+        <MudHidden Breakpoint="@Breakpoint.MdAndDown">
+            @if (_files != null)
+            {
+                <MudText Typo="@Typo.h6">@_files.Count() File@(_files.Count() == 1 ? "" : "s"):</MudText>
+                <MudList T="string">
+                    @foreach (var file in _files)
+                    {
+                        <MudListItem Icon="@Icons.Material.Filled.AttachFile" @key="@file">
+                            @file.Name <code>@file.Size bytes</code>
+                        </MudListItem>
+                    }
+                </MudList>
+
+            }
+
+            @if (!string.IsNullOrEmpty(error))
+            {
+                <MudText>@error</MudText>
+            }
+
+            @if (!_uplodateComplete)
+            {
+                <MudText>@messageText</MudText>
+            }
+        </MudHidden>
+       
+    </MudItem>
+    <MudItem xs="4">
         @if( ! string.IsNullOrEmpty(item.ImageLink) ){
             <MudImage Src="@item.ImageLink" Alt="Item Image" Elevation="25" Class="rounded-lg" Width="100" Height="100" />
         }

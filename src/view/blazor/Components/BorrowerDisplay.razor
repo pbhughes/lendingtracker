@@ -12,17 +12,13 @@
 @inject AuthenticationStateProvider authStateProvider
 @inject NavigationManager Navigation
 
+<MudGrid xs="12">
 
-<MudCard Outlined="true" Class="border-solid border-2 mud-border-primary p-4">
-    <MudCardHeader>
-        <h3>Checked Out To: @_selectedBorrower.Name</h3>
-    </MudCardHeader>
-    <MudCardContent>
-        <MudButton Color="Color.Primary" Href="@mailTo" Target="_blank">@_selectedBorrower.BorrowerEmail</MudButton>
-        <MudButton Color="Color.Primary" Href="@telLink" Target="_blank">@_selectedBorrower.BorrowerSms</MudButton>
-    </MudCardContent>
-</MudCard>
-
+    <h4>@_selectedBorrower.Name</h4>
+    <MudButton Color="Color.Primary" Href="@mailTo" Target="_blank">@_selectedBorrower.BorrowerEmail</MudButton>
+    <MudButton Color="Color.Primary" Href="@telLink" Target="_blank">@_selectedBorrower.BorrowerSms</MudButton>
+   
+</MudGrid>
 
 
 @code {
