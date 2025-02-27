@@ -118,13 +118,25 @@ else{
                         </MudCardContent>
                     </MudCard>
                 </MudItem>
-                @if (context.Item.Transaction != null)
-                {
-                    <MudItem xs="12">                     @*  BORROWER DISPLAY COMPONENT *@
-                        <BorrowerDisplay BorrowerId="@context.Item.Transaction.BorrowerId" ItemName="@context.Item.ItemName"></BorrowerDisplay>
-                    </MudItem>
 
-                    <MudItem xs="12">
+                <MudItem xs="12">
+                    <MudCard Outlined="true" Class="border-solid border-2 mud-border-primary p-4">
+                        <MudCardHeader>
+                           
+                        </MudCardHeader>
+                        <MudCardContent>
+                            @*  BORROWER DISPLAY COMPONENT *@
+                            <BorrowerDisplay BorrowerId="@context.Item.Transaction.BorrowerId" ItemName="@context.Item.ItemName"></BorrowerDisplay>
+                        </MudCardContent>
+                    </MudCard>
+                   
+                </MudItem>
+
+
+
+                <MudItem xs="12">
+                    @if (context.Item.Transaction != null)
+                    {
                         <MudCard Outlined="true" Class="border-solid border-2 mud-border-primary p-4">
                             <MudCardHeader>
                                 <h3>Messages</h3>
@@ -134,8 +146,9 @@ else{
                                 <RealtimeMessages transactionId="@context.Item.Transaction.TransactionId"></RealtimeMessages>
                             </MudCardContent>
                         </MudCard>
+                    }
                     </MudItem>
-                }
+                
             </MudGrid>
 
         </ChildRowContent>
