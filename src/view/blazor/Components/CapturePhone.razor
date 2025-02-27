@@ -29,7 +29,7 @@
 
         @if (_collectPhone)
         {
-            <MudPopover Elevation="0" AnchorOrigin="@AnchorOrigin" TransformOrigin="@TransformOrigin" Open="@_collectPhone" RelativeWidth="@DropdownWidth.Adaptive">
+            <MudPopover Elevation="0"  AnchorOrigin="@AnchorOrigin" TransformOrigin="@TransformOrigin" Open="@_collectPhone" RelativeWidth="@DropdownWidth.Adaptive">
                 <MudText>
                     <MudGrid>
                         <MudItem xs="12" sm="7">
@@ -50,10 +50,7 @@
                                     <MudSpacer />
                                     <MudPaper justify-end>
                                         <MudButtonGroup Size="@Size.Large">
-                                            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto d-flex justify-end align-center">Update</MudButton>
-                                        </MudButtonGroup>
-                                        <MudButtonGroup Size="@Size.Small">
-                                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Href="/privacy" aria-label="delete" />
+                                            <MudButton ButtonType="ButtonType.Submit" OnClick="@ToggleOpen" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto d-flex justify-end align-center">Update</MudButton>
                                         </MudButtonGroup>
                                     </MudPaper>
                                 </EditForm>
@@ -67,13 +64,6 @@
         }
     </Authorized>
     <NotAuthorized>
-        <MudChip T="string" Color="Color.Tertiary">Lending Tracker allows you to keep track of the stuff you own and lend out</MudChip>
-        <MudPaper Class="d-flex flex-grow-1 border-none" Outlined="false">
-            <video controls>
-                <source src="https://needthatbackstorage.blob.core.windows.net/media/video.mp4?sp=r&st=2024-12-27T21:05:02Z&se=2028-01-02T05:05:02Z&spr=https&sv=2022-11-02&sr=c&sig=gmPc46HqQP8K2W%2FAoBP70Qpqf0zbI48AFJpsj9HEuuA%3D" />
-                Your browser does not support the video tag sorry
-            </video>
-        </MudPaper>
 
     </NotAuthorized>
 </AuthorizeView>
@@ -96,6 +86,7 @@
     private string error;
     private bool _collectPhone = true;
     private ClaimsPrincipal _user;
+    private void ToggleOpen() => _collectPhone = !_collectPhone;
 
     protected override async Task OnInitializedAsync()
     {
@@ -222,5 +213,7 @@
         User user = await Http.GetFromJsonAsync<User>($"/users/{userId}");
         return user;
     }
+
+   
 }
 
