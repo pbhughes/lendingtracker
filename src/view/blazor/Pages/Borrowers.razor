@@ -45,13 +45,16 @@ else
                         <MudIcon Icon="@Icons.Material.Filled.NewLabel" Color="@Color.Secondary" Title="Has Items"></MudIcon>
                     }
                 </CellTemplate>
+                <EditTemplate>
+                    <MudTextField T="string" Label="Name" Typo="Typo.subtitle1" @bind-Value="context.Item.Name" MaxLength="200" MaxLines="1"></MudTextField>
+                </EditTemplate>
             </PropertyColumn>
             <TemplateColumn>
                 <CellTemplate>
                     <MudButton Color="Color.Primary" Href="@TelephoneLink(@context.Item)" Target="_blank">@context.Item.BorrowerSms</MudButton>
                 </CellTemplate>
                 <EditTemplate>
-                    <MudTextField @bind-Value="context.Item.BorrowerSms" Label="Standard" Variant="Variant.Text" Margin="Margin.Dense" HelperText="Valid Phone"  Pattern="(000) 000-0000"></MudTextField>
+                    <MudTextField @bind-Value="context.Item.BorrowerSms" MaxLength="15" MaxLines="1" Label="Standard" Variant="Variant.Text" Margin="Margin.Dense" HelperText="Valid Phone"  Pattern="(000) 000-0000"></MudTextField>
                 </EditTemplate>
             </TemplateColumn>
             <TemplateColumn>
@@ -59,7 +62,7 @@ else
                     <MudButton Color="Color.Primary" Href="@EmailLink(@context.Item)" Target="_blank">@context.Item.BorrowerEmail</MudButton>
                 </CellTemplate>
                 <EditTemplate>
-                    <MudTextField @bind-Value="context.Item.BorrowerEmail" Label="Email Address" Variant="Variant.Text" Margin="Margin.Dense" HelperText="Valid Email" Mask="@emailMask" Clearable></MudTextField>
+                    <MudTextField @bind-Value="context.Item.BorrowerEmail" MaxLength="320" MaxLines="1" Label="Email Address" Variant="Variant.Text" Margin="Margin.Dense" HelperText="Valid Email" Mask="@emailMask" Clearable></MudTextField>
                 </EditTemplate>
             </TemplateColumn>
             <TemplateColumn Hidden="@(_isCellEditMode || _readOnly || _editTriggerRowClick)" CellClass="d-flex justify-end">

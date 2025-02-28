@@ -60,6 +60,17 @@ else{
                         <MudIcon Icon="@Icons.Material.Filled.NewLabel" Color="@Color.Secondary" Title="Checkout"></MudIcon>
                     }
                 </CellTemplate>
+                <EditTemplate>
+                    <MudTextField T="string" Label="Name" Typo="Typo.subtitle1" @bind-Value="@context.Item.ItemName" MaxLength="200" MaxLines="1"></MudTextField>
+                </EditTemplate>
+            </PropertyColumn>
+            <PropertyColumn Property="x => x.Description" Title="Description">
+                <CellTemplate>
+                    @context.Item.Description
+                </CellTemplate>
+                <EditTemplate>
+                    <MudTextField T="string" Label="Description" Typo="Typo.subtitle1" @bind-Value="@context.Item.Description" MaxLength="200" MaxLines="1"></MudTextField> 
+                </EditTemplate>
             </PropertyColumn>
             <PropertyColumn Property="x => x.IsAvailable">
                 <EditTemplate>
