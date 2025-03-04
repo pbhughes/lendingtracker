@@ -36,7 +36,7 @@
                             <MudPaper Class="pa-4">
                                 <EditForm Model="@me" method="post" OnValidSubmit="HandleValidSubmit">
                                     <DataAnnotationsValidator />
-                                    <MudTextField T="string" ReadOnly="true" Value="@me.FullName"></MudTextField>
+                                    <MudTextField T="string" ReadOnly="true" Value="@me.FullName" MaxLength="200"></MudTextField>
                                     <MudTextField T="string" ReadOnly="true" Label="Email" Value="@me.Email"></MudTextField>
                                     <MudSelect @bind-Value="me.CountryCode" Label="Country Code" Placeholder="Chose Country Code">
                                         @foreach (var country in countries)
