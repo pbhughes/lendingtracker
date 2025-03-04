@@ -1,13 +1,13 @@
 ﻿@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 @using LendingView.Models
 @using LendingView.Servcies
-@using LendingView.Servcies
 
 @inject HttpClient Http
 @inject IAccessTokenProvider TokenProvider
 @inject AuthenticationStateProvider authStateProvider
 @inject NavigationManager Navigation
 @inject LendingTrackerService data
+@inject IDialogService DialogService
 
 
 <MudGrid>
@@ -47,7 +47,7 @@
                 <MudText>@messageText</MudText>
             }
         </MudHidden>
-       
+
     </MudItem>
     <MudItem xs="4">
         @if( ! string.IsNullOrEmpty(item.ImageLink) ){
@@ -74,35 +74,54 @@
         error = string.Empty;
         _files.Add(file);
         //TODO upload the files to the server
-
-        using var content = new MultipartFormDataContent();
-        var fileStream = file.OpenReadStream(maxAllowedSize: 1_000_000); // 1MB limit
-        var streamContent = new StreamContent(fileStream);
-        streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
-
-        content.Add(streamContent, "file", file.Name);
-        var response  = await Http.PostAsync("/images", content);
-
-        if (response.IsSuccessStatusCode)
+        try
         {
-            var fileResponse = await response.Content.ReadFromJsonAsync<FileUploadResponse>();
-            _files.Clear();
-            item.ImageLink = fileResponse.Url;
-            messageText =  "Upload complete";
-            StateHasChanged();
 
-            //upate the item with the new image link   
-            var updateResponse = await data.UpdateItemAsync(item.ItemId, item);
 
-            //notify the parent
-            await OnUrlSet.InvokeAsync(item.ImageLink);
+            using var content = new MultipartFormDataContent();
+            var fileStream = file.OpenReadStream(maxAllowedSize: 2_000_000); // 1MB limit
+            var streamContent = new StreamContent(fileStream);
+            streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
+
+            content.Add(streamContent, "file", file.Name);
+            var response = await Http.PostAsync("/images", content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var fileResponse = await response.Content.ReadFromJsonAsync<FileUploadResponse>();
+                _files.Clear();
+                item.ImageLink = fileResponse.Url;
+                messageText = "Upload complete";
+                StateHasChanged();
+
+                //upate the item with the new image link   
+                var updateResponse = await data.UpdateItemAsync(item.ItemId, item);
+
+                //notify the parent
+                await OnUrlSet.InvokeAsync(item.ImageLink);
+
+            }
+            else
+            {
+                error = $"Error occured {response.ReasonPhrase} please try again.";
+                _files.Clear();
+
+            }
 
         }
-        else{
-            error = $"Error occured {response.ReasonPhrase} please try again.";
-            _files.Clear();
-           
+        catch (Exception ex)
+        {
+            messageText = ex.Message;
         }
+
+
+    }
+
+    private async Task OpenDialogAsync(string message)
+    {
+        var parameters = new DialogParameters<string> { { x => error, message } };
+        var dialog = await DialogService.ShowAsync<ErrorDialog>("Error", parameters);
+        var result = await dialog.Result;
     }
 
 }
