@@ -618,7 +618,7 @@ app.MapGet("/admin/items", async (LendingTrackerContext db, IHttpContextAccessor
 
     return items is null ? Results.NotFound() : Results.Ok(items.ToList());
 
-}).WithTags("Admin").RequireAuthorization("admin");
+}).WithTags("Admin").RequireAuthorization("authorized_user");
 
 app.MapPut("/admin/items/{id}", async (int id, Item updatedItem, LendingTrackerContext db, ClaimsPrincipal currentUser) =>
 {
@@ -633,7 +633,7 @@ app.MapPut("/admin/items/{id}", async (int id, Item updatedItem, LendingTrackerC
 
     await db.SaveChangesAsync();
     return Results.NoContent();
-}).WithTags("Admin").RequireAuthorization("admin");
+}).WithTags("Admin").RequireAuthorization("authorized_user");
 
 // Run the application
 app.Run();
@@ -653,7 +653,8 @@ static async Task SendMessageToPorrower(Transaction transaction, string message,
     }
 }
 
-static async Task SendMessageToPorrowerWithLink(Transaction transaction, string message, string link, string lenderName,string itemName, LendingTrackerContext db, IMessageMailer emailer, IConfiguration config)
+static async Task SendMessageToPorrowerWithLink(Transaction transaction, string message, string link, string lenderName,string itemName, 
+    LendingTrackerContext db, IMessageMailer emailer, IConfiguration config)
 {
     Borrower b = await db.Borrowers.FindAsync(transaction.BorrowerId);
     string logourl = config["Branding:Logo"];
@@ -662,7 +663,7 @@ static async Task SendMessageToPorrowerWithLink(Transaction transaction, string 
     emailContent.Html += $"<img src='{logourl}' alt='Logo'/>";
     emailContent.Html += $"<h3>Lending Tracker activity from {config["Branding:Name"]} </h3>";
     emailContent.Html += "<br/>";
-    emailContent.Html += $"You borrowed a {itemName} from {lenderName} an <strong> {config["Branding:Name"]} </strong> lending tracker user.";
+    emailContent.Html += $"You borrowed a {itemName} from {lenderName} using <strong> {config["Branding:Name"]} </strong>.";
     emailContent.Html += "<br/>";
     emailContent.Html += $"<p>If your looking to purchase a {itemName} you can find the item <a href='{link}'>Here</a> at {config["Branding:Name"]}'s online store.</p>";
     emailContent.Html += $"If you would like to track items you lend out using Lending Tracker signup <a href='{config["LendingTracker:Link"]}' alt='Lending Tracker Signup Link'>Here</a>";
