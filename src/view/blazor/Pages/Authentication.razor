@@ -61,9 +61,20 @@
         }
         catch (Exception ex)
         {
-            
+
             throw;
         }
+
+        try
+        {
+            dataService.CreateUserAsync(lendingUser);
+        }
+        catch (Exception ex)
+        {
+            
+            //if you can write the user goto the profile screen
+        }
+      
 
         var returnUrl = Navigation.Uri.Contains("redirect_uri=")
            ? new Uri(Navigation.Uri).Query.Split("redirect_uri=")[1]
