@@ -12,9 +12,9 @@ public partial class User
 
     public string Email { get; set; } = null!;
 
-    public string PhoneNumber { get; set; } = null!;
+    public string? PhoneNumber { get; set; } = null!;
 
-    public string CountryCode { get; set; } = null!;
+    public string? CountryCode { get; set; } = null!;
 
     public string? Address { get; set; }
 
