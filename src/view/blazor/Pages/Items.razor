@@ -7,9 +7,11 @@
 @using MudBlazor
 @using MudBlazor.Services
 @using LendingView.Components
+@using LendingView.Servcies
 @using System.Net
 @using Microsoft.Extensions.Logging
 @using Microsoft.AspNetCore.SignalR.Client
+
 
 @inject HttpClient Http
 @inject IAccessTokenProvider TokenProvider
@@ -17,7 +19,7 @@
 @inject NavigationManager Navigation
 @inject IBrowserViewportService _viewportService
 @inject Blazored.LocalStorage.ILocalStorageService LocalStorage
-
+@inject LendingTrackerService _dataService
 
 
 @if(_isAddNew)
@@ -106,7 +108,7 @@ else{
                         <MudCardHeader>
                             <CardHeaderContent>
                                 <MudPaper>
-                                    Upload Image for @context.Item.ItemName
+                                    <h4>Upload Image</h4?
                                 </MudPaper>
                             </CardHeaderContent>
                         </MudCardHeader>
@@ -117,30 +119,9 @@ else{
                     </MudCard>
 
                 </MudItem>
-                <MudItem xs="12">
-                    <MudCard Outlined="true" Class="border-solid border-2 mud-border-primary p-4">
-                        <MudCardHeader>
-                            <CardHeaderContent>
-                                <MudText>@context.Item.ItemName</MudText>
-                            </CardHeaderContent>
-                        </MudCardHeader>
-                        <MudCardContent>
-                            <MudText> @context.Item.Description</MudText>
-                        </MudCardContent>
-                    </MudCard>
-                </MudItem>
 
                 <MudItem xs="12">
-                    <MudCard Outlined="true" Class="border-solid border-2 mud-border-primary p-4">
-                        <MudCardHeader>
-                           
-                        </MudCardHeader>
-                        <MudCardContent>
-                            @*  BORROWER DISPLAY COMPONENT *@
-                            <BorrowerDisplay BorrowerId="@context.Item.Transaction.BorrowerId" ItemName="@context.Item.ItemName"></BorrowerDisplay>
-                        </MudCardContent>
-                    </MudCard>
-                   
+                    <BorrowerDisplay BorrowerId="@context.Item.Transaction.BorrowerId" ItemName="@context.Item.ItemName"></BorrowerDisplay>
                 </MudItem>
 
 
@@ -150,16 +131,16 @@ else{
                     {
                         <MudCard Outlined="true" Class="border-solid border-2 mud-border-primary p-4">
                             <MudCardHeader>
-                                <h3>Messages</h3>
+                                <h4>Messaging</h4>
                             </MudCardHeader>
                             <MudCardContent Style="max-height: 400px; overflow-y: auto;">
                                 @*    REALTIME MESSAGING COMPONENT *@
-                                <RealtimeMessages transactionId="@context.Item.Transaction.TransactionId"></RealtimeMessages>
+                                <RealtimeMessages transactionId="@context.Item.Transaction.TransactionId" ItemName="@context.Item.ItemName"></RealtimeMessages>
                             </MudCardContent>
                         </MudCard>
                     }
-                    </MudItem>
-                
+                </MudItem>
+
             </MudGrid>
 
         </ChildRowContent>
@@ -209,7 +190,7 @@ else{
         {
             Navigation.NavigateTo("/index");
         }
-      
+
 
         await base.OnInitializedAsync();
 
@@ -233,7 +214,7 @@ else{
     {
 
 
-        IEnumerable<Item> data = await Http.GetFromJsonAsync<List<Item>>("/items");
+        IEnumerable<Item> data = await _dataService.GetItemsAsync();
 
         selectedItem = data.FirstOrDefault();
 

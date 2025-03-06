@@ -29,6 +29,7 @@
 
         @if (_collectPhone)
         {
+            
             <MudPopover Elevation="0"  AnchorOrigin="@AnchorOrigin" TransformOrigin="@TransformOrigin" Open="@_collectPhone" RelativeWidth="@DropdownWidth.Adaptive">
                 <MudText>
                     <MudGrid>
@@ -50,6 +51,7 @@
                                     <MudSpacer />
                                     <MudPaper class="d-flex flex-row-reverse flex-grow-1 gap-2">
                                         <MudButtonGroup Size="@Size.Large">
+                                            <MudButton ButtonType="ButtonType.Submit" OnClick="@(()=>_collectPhone = !_collectPhone )" Variant="Variant.Filled" Color="Color.Secondary">Cancel</MudButton>
                                             <MudButton ButtonType="ButtonType.Submit" OnClick="@HandleValidSubmit" Variant="Variant.Filled" Color="Color.Primary" >Update</MudButton>
                                         </MudButtonGroup>
                                     </MudPaper>
@@ -58,9 +60,8 @@
                         </MudItem>
                     </MudGrid>
                 </MudText>
-
             </MudPopover>
-
+        
         }
     </Authorized>
     <NotAuthorized>
@@ -79,6 +80,7 @@
     private static List<Country> countries = CountryData.GetCountries();
     [CascadingParameter] public Task<AuthenticationState> AuthenticationState { get; set; }
     [Parameter] public EventCallback Close { get; set; }
+    private void ClosePopover() => _collectPhone = false;
 
     private User me = new User();
     private ClaimsIdentity identity;
