@@ -76,7 +76,7 @@ namespace LendingView.Servcies
         public Task<User> GetUsersAsync() => GetAsync<User>("/users");
         public Task<User> GetUserByIdAsync(int id) => GetAsync<User>($"/users/{id}");
         public Task<bool> CreateUserAsync(User user) => PostAsync("/users", user);
-        public Task<bool> UpdateUserAsync(string id, User user) => PutAsync($"/users/{id}", user);
+        public Task<bool> UpdateUserAsync(Guid id, User user) => PutAsync($"/users/{id}", user);
         public Task<bool> DeleteUserAsync(int id) => DeleteAsync($"/users/{id}");
 
         // --- Transactions Endpoints ---

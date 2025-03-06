@@ -20,7 +20,7 @@
 @inject IAccessTokenProvider TokenProvider
 @inject IUserService _userService
 @inject Blazored.LocalStorage.ILocalStorageService LocalStorage
-@inject LendingTrackerService _service;
+@inject LendingTrackerService _dataService;
 
 
 
@@ -50,7 +50,7 @@
                                     <MudSpacer />
                                     <MudPaper class="d-flex flex-row-reverse flex-grow-1 gap-2">
                                         <MudButtonGroup Size="@Size.Large">
-                                            <MudButton ButtonType="ButtonType.Submit" OnClick="@ToggleOpen" Variant="Variant.Filled" Color="Color.Primary" >Update</MudButton>
+                                            <MudButton ButtonType="ButtonType.Submit" OnClick="@HandleValidSubmit" Variant="Variant.Filled" Color="Color.Primary" >Update</MudButton>
                                         </MudButtonGroup>
                                     </MudPaper>
                                 </EditForm>
@@ -86,7 +86,7 @@
     private string error;
     private bool _collectPhone = true;
     private ClaimsPrincipal _user;
-    private void ToggleOpen() => _collectPhone = !_collectPhone;
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -104,7 +104,7 @@
         User tempUser = null;
         try
         {
-            tempUser = await _service.GetUsersAsync();
+            tempUser = await _dataService.GetUsersAsync();
         }
         catch (Exception ex)
         {
@@ -129,26 +129,33 @@
 
     }
 
+
     private async void HandleValidSubmit()
     {
-        var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
-        Http.DefaultRequestHeaders.Authorization = value;
-
-        var response = await Http.PostAsJsonAsync<User>("/users", me);
-
-        if (response.StatusCode == System.Net.HttpStatusCode.Created)
+        bool updateSuccess = false;
+        try
         {
-            _collectPhone = false;
+            updateSuccess = await _dataService.UpdateUserAsync(me.UserId, me);
+        }
+        catch (Exception ex)
+        {
+            
+            throw;
+        }
+       
+
+        if (updateSuccess)
+        {
+            
             string nextUrl = await LocalStorage.GetItemAsStringAsync("lastUrl");
             await LocalStorage.SetItemAsync<bool>("userSet", true);
             Navigation.NavigateTo("/items");
         }
+        _collectPhone = !_collectPhone;
 
         await Close.InvokeAsync();
 
     }
-
-
 
     private async Task<string> GetClaimAsync(string claimType)
     {
