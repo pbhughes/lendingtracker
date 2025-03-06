@@ -5,9 +5,12 @@
 @using System.Text.RegularExpressions
 @using Microsoft.AspNetCore.Authorization
 @using System.IdentityModel.Tokens.Jwt
+@using LendingView.Servcies
 @inject HttpClient Http
 @inject IAccessTokenProvider TokenProvider
 @inject NavigationManager Navigation
+@inject LendingTrackerService _dataService
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 
 
 
@@ -18,9 +21,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        await GetAccessToken();
-        var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
-        Http.DefaultRequestHeaders.Authorization = value;
+
         User user = new User();
         {
             user.UserId = Guid.Parse(await GetClaimAsync("sub"));
@@ -36,8 +37,13 @@
 
         user.CreatedAt = DateTime.Now;
 
-        var response = await Http.PostAsJsonAsync<User>("/users", user);
-       
+        bool success = await _dataService.UpdateUserAsync(user.UserId, user);
+
+        string nextUrl = await LocalStorage.GetItemAsStringAsync("lastUrl");
+        Uri lastLink = new Uri(nextUrl);
+        await LocalStorage.SetItemAsync<bool>("userSet", true);
+        Navigation.NavigateTo(lastLink.AbsolutePath);
+
 
     }
 
@@ -81,32 +87,5 @@
         }
         return null;
     }
-    private async Task GetAccessToken()
-    {
-        var tokenResult = await TokenProvider.RequestAccessToken(new AccessTokenRequestOptions
-            {
-                Scopes = new[] { "https://needthatback.onmicrosoft.com/lender/lender" ,
-                                 "profile", "openid"
-                }
-            });
-
-        if (tokenResult.TryGetToken(out var token))
-        {
-            accessToken = token.Value;
-        }
-        else
-        {
-            error = tokenResult.Status switch
-            {
-                AccessTokenResultStatus.RequiresRedirect => "Redirect required. Navigating...",
-                AccessTokenResultStatus.Success => null,
-                _ => "An unknown error occurred."
-            };
-
-            if (tokenResult.Status == AccessTokenResultStatus.RequiresRedirect)
-            {
-                Navigation.NavigateTo(tokenResult.RedirectUrl!);
-            }
-        }
-    }
+  
 }

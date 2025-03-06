@@ -12,12 +12,39 @@
 @inject NavigationManager Navigation
 
 
+<MudGrid>
+    <MudItem xs="4">
+        <MudButtonGroup Color="Color.Primary" Variant="Variant.Filled">
+            <MudButton>Standard Messages</MudButton>
+            <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Style="align-self: auto;">
+                <MudMenuItem OnClick="async () => AskForITemBack()">Please Return my @ItemName</MudMenuItem>
+                <MudMenuItem OnClick="async () => Inquire()">Still using my @ItemName?</MudMenuItem>
+            </MudMenu>
+        </MudButtonGroup>
+    </MudItem>
+    <MudHidden Breakpoint="@Breakpoint.MdAndUp">
+        <MudItem xs="12">
+            <div class="d-flex flex-grow-1 gap-4">
+                <MudTextField T="string" Label="Type a few words" MaxLength="200"></MudTextField>
+                <MudButton Color="@Color.Primary" Variant="@Variant.Filled">Send</MudButton>
+            </div>
+        </MudItem>
+    </MudHidden>
+    <MudItem xs="8">
+            <MudHidden Breakpoint="@Breakpoint.MdAndDown">
+            <div class="d-flex flex-grow-1 gap-4">
+                <MudTextField T="string" Label="Type a few words" MaxLength="200"></MudTextField>
+                <MudButton Color="@Color.Primary" Variant="@Variant.Filled">Send</MudButton>
+            </div>
+            </MudHidden>
+    </MudItem>
+</MudGrid>
+
 
 
 <MudDataGrid T="Message" Items="@Elements">
     <Columns>
-        <PropertyColumn Property="x => x.Text" Title="Text" />
-        <PropertyColumn Property="x => x.Method" Title="Method" />
+        <PropertyColumn Property="x => x.Text" Title="Message"/>
         <PropertyColumn Property="x => x.Direction" Title="Direction">
             <CellTemplate>
                 @if (context.Item.Direction == 0)
@@ -35,14 +62,16 @@
                 @DateTime.Parse(context.Item.MessageDate).ToLocalTime().ToString("yyyy - MM - dd HH: mm:ss")
             </CellTemplate>
         </PropertyColumn>
-        <PropertyColumn Property="x => x.Phone" Title="Phone" />
     </Columns>
+
 </MudDataGrid>
 
 
 @code {
     [Parameter]
     public Guid transactionId { get; set; }
+    [Parameter]
+    public string ItemName { get; set; }
 
     private IEnumerable<Message> Elements = new List<Message>();
     string _accessToken;
@@ -81,7 +110,7 @@
                 var encodedMsg = $"{user}: {message}";
                 messages.Add(encodedMsg);
                 InvokeAsync(StateHasChanged);
-              
+
             });
 
             await hubConnection.StartAsync();
@@ -89,11 +118,20 @@
         }
     }
 
-    private async Task GetData(){
+    private async void AskForITemBack(){
+        //send the item back message
+        string message = $"Can you please return my {ItemName}.";
+    }
 
-       
+    private async void Inquire(){
+        ////inquire about an item
+        string message = $"Ar you still using my {ItemName}?";
+    }
 
-        Elements = await Http.GetFromJsonAsync<List<Message>>($"/messages/{transactionId}");
+    private async Task GetData()
+    {
+
+         Elements = await Http.GetFromJsonAsync<List<Message>>($"/messages/{transactionId}");
     }
     
 

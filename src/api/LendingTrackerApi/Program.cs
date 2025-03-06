@@ -265,6 +265,7 @@ app.MapPut("/users/{id}", async (Guid id, User updatedUser, LendingTrackerContex
     user.PhoneNumber = updatedUser.PhoneNumber;
     user.Address = updatedUser.Address;
     user.CreatedAt = updatedUser.CreatedAt;
+    user.CountryCode = updatedUser.CountryCode;
 
     await db.SaveChangesAsync();
     return Results.NoContent();

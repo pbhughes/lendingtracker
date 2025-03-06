@@ -21,6 +21,7 @@
 @inject IAccessTokenProvider TokenProvider
 @inject IUserService _userService
 @inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inject LendingTrackerService _dataService
 
 
 
@@ -107,9 +108,9 @@
         var value = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
         Http.DefaultRequestHeaders.Authorization = value;
 
-        var response = await Http.PostAsJsonAsync<User>("/users", me);
+        bool success = await _dataService.UpdateUserAsync(me.UserId,me);
 
-        if (response.StatusCode == System.Net.HttpStatusCode.Created){
+        if (success){
             string nextUrl = await LocalStorage.GetItemAsStringAsync("lastUrl");
             await LocalStorage.SetItemAsync<bool>("userSet", true);
             Navigation.NavigateTo(nextUrl);
