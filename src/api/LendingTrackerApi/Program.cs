@@ -587,6 +587,46 @@ app.MapPost("/messages", async ([FromBody] Transaction transaction, string messa
 
 }).WithTags("Messages").RequireAuthorization("authorized_user");
 
+app.MapPost("/messages/simple/{transactionId}", async ( Guid transactionId, [FromBody] SimpleMessage message,
+    LendingTrackerContext db, ClaimsPrincipal currentUser, IHubContext<MessagesHub> hub, IMessageMailer mailer) =>
+{
+    Guid sub = Guid.Parse(currentUser.GetNameIdentifierId());
+
+    var user = await db.Users.FindAsync(sub);
+    var trans = await db.Transactions.FindAsync(transactionId);
+    var item = await db.Items.FindAsync(message.ItemId);
+    
+
+    if (user.UserId != trans.LenderId)
+        return Results.Unauthorized();
+
+    if(item.OwnerId != user.UserId)
+        return Results.Unauthorized();  
+
+       
+    Message msg = new Message()
+    {
+        Id = Guid.NewGuid(),
+        Method = "email",
+        Text = message.Message,
+        ItemId = message.ItemId,
+        TransactionId = trans.TransactionId
+    };
+   
+    //look up borrower to pull SMS device
+    await SendMessageToPorrower(trans, message.Message, db, mailer);
+
+    db.Messages.Add(msg);
+    await db.SaveChangesAsync();
+
+    await hub.Clients.All.SendAsync("ReceiveMessage", "user", "signlr");
+
+    return Results.Created($"/message/{msg.Id}", message);
+
+
+
+}).WithTags("Messages").RequireAuthorization("authorized_user");
+
 app.MapGet("/messages/{transactionId}", async ( Guid transactionId, LendingTrackerContext db, ClaimsPrincipal currentUser) =>
 {
     Guid sub = Guid.Parse(currentUser.GetNameIdentifierId());
@@ -643,6 +683,18 @@ app.Run();
 
 //hELPER FUNCTIONS****************************************************************************************HELPER FUNCTIONS****************************************************
 static async Task SendMessageToPorrower(Transaction transaction, string message, LendingTrackerContext db, IMessageMailer emailer)
+{
+    Borrower b = await db.Borrowers.FindAsync(transaction.BorrowerId);
+    if (b != null)
+    {
+        if (b.BorrowerId != null)
+        {
+            EmailSendOperation sendResult = await emailer.SendEmail(toAddress: b.BorrowerEmail, subject: "Message From Lending Tracker", message: message);
+        }
+    }
+}
+
+static async Task SendMessage(Transaction transaction, string message, LendingTrackerContext db, IMessageMailer emailer)
 {
     Borrower b = await db.Borrowers.FindAsync(transaction.BorrowerId);
     if (b != null)
