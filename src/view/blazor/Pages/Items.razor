@@ -133,9 +133,9 @@ else{
                             <MudCardHeader>
                                 <h4>Messaging</h4>
                             </MudCardHeader>
-                            <MudCardContent Style="max-height: 400px; overflow-y: auto;">
+                            <MudCardContent Style="max-height: 400px; overflow-y: scroll;">
                                 @*    REALTIME MESSAGING COMPONENT *@
-                                <RealtimeMessages transactionId="@context.Item.Transaction.TransactionId" ItemName="@context.Item.ItemName"></RealtimeMessages>
+                                <RealtimeMessages transactionId="@context.Item.Transaction.TransactionId" ItemName="@context.Item.ItemName" ItemId="@context.Item.ItemId"></RealtimeMessages>
                             </MudCardContent>
                         </MudCard>
                     }
@@ -172,6 +172,7 @@ else{
     private Item? selectedItem;
     private bool _showCheckIn;
     private bool _showWCheckOut;
+   
 
     //signalr support
     private HubConnection hubConnection;
