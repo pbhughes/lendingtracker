@@ -121,7 +121,10 @@ else{
                 </MudItem>
 
                 <MudItem xs="12">
-                    <BorrowerDisplay BorrowerId="@context.Item.Transaction.BorrowerId" ItemName="@context.Item.ItemName"></BorrowerDisplay>
+                    @if (context.Item.Transaction != null)
+                    {
+                        <BorrowerDisplay BorrowerId="@context.Item.Transaction.BorrowerId" ItemName="@context.Item.ItemName"></BorrowerDisplay>
+                    }
                 </MudItem>
 
 
