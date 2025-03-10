@@ -5,11 +5,15 @@
 @using System.Net
 @using Microsoft.Extensions.Logging
 @using Microsoft.AspNetCore.SignalR.Client
+@using LendingView.Servcies
+@using FluentValidation
 
 @inject HttpClient Http
 @inject IAccessTokenProvider TokenProvider
 @inject AuthenticationStateProvider authStateProvider
 @inject NavigationManager Navigation
+@inject LendingTrackerService _dataService
+
 
 
 <MudGrid>
@@ -17,7 +21,7 @@
         <MudButtonGroup Color="Color.Primary" Variant="Variant.Filled">
             <MudButton>Standard Messages</MudButton>
             <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Style="align-self: auto;">
-                <MudMenuItem OnClick="async () => AskForITemBack()">Please Return my @ItemName</MudMenuItem>
+                <MudMenuItem OnClick="async () => AskForItemBack()">Please Return my @ItemName</MudMenuItem>
                 <MudMenuItem OnClick="async () => Inquire()">Still using my @ItemName?</MudMenuItem>
             </MudMenu>
         </MudButtonGroup>
@@ -25,18 +29,25 @@
     <MudHidden Breakpoint="@Breakpoint.MdAndUp">
         <MudItem xs="12">
             <div class="d-flex flex-grow-1 gap-4">
-                <MudTextField T="string" Label="Type a few words" MaxLength="200"></MudTextField>
-                <MudButton Color="@Color.Primary" Variant="@Variant.Filled">Send</MudButton>
+                <MudForm>
+                    <MudTextField T="string" Label="Type a few words" MaxLength="200" @bind-Value="message" @bind-Text="message" Validation="@messageValidator"></MudTextField>
+                    <MudButton Color="@Color.Primary" Variant="@Variant.Filled">Send</MudButton>
+                </MudForm>
             </div>
         </MudItem>
     </MudHidden>
     <MudItem xs="8">
-            <MudHidden Breakpoint="@Breakpoint.MdAndDown">
-            <div class="d-flex flex-grow-1 gap-4">
-                <MudTextField T="string" Label="Type a few words" MaxLength="200"></MudTextField>
-                <MudButton Color="@Color.Primary" Variant="@Variant.Filled">Send</MudButton>
+        <MudHidden Breakpoint="@Breakpoint.MdAndDown">
+            <div>
+                <MudTextField T="string" Label="Type a few words" MaxLength="200" @bind-Value="message" @bind-Text="message" FullWidth="true" 
+                Validation="@messageValidator" Variant="@Variant.Text" AutoGrow="true" Lines="1" MaxLines="3"></MudTextField>
+                <MudButton Color="@Color.Primary" Variant="@Variant.Filled" OnClick="async () => SendMessage()" >Send</MudButton>
+                @if (showSpinner)
+                {
+                    <MudProgressCircular Color="Color.Primary" Size="Size.Small" Indeterminate="true" />
+                }
             </div>
-            </MudHidden>
+        </MudHidden>
     </MudItem>
 </MudGrid>
 
@@ -44,22 +55,10 @@
 
 <MudDataGrid T="Message" Items="@Elements">
     <Columns>
-        <PropertyColumn Property="x => x.Text" Title="Message"/>
-        <PropertyColumn Property="x => x.Direction" Title="Direction">
-            <CellTemplate>
-                @if (context.Item.Direction == 0)
-                {
-                    <MudIcon Icon="@Icons.Material.Filled.ArrowRight" Title="Favorite" />
-                }
-                else
-                {
-                    <MudIcon Icon="@Icons.Material.Filled.ArrowLeft" Title="Favorite" />
-                }
-            </CellTemplate>
-        </PropertyColumn>
+        <PropertyColumn Property="x => x.Text" Title="Message"/>       
         <PropertyColumn Property="x => x.MessageDate" Title="Date">
             <CellTemplate>
-                @DateTime.Parse(context.Item.MessageDate).ToLocalTime().ToString("yyyy - MM - dd HH: mm:ss")
+                @DateTime.Parse(context.Item.MessageDate).ToLocalTime().ToString("yyyy - MM - dd")
             </CellTemplate>
         </PropertyColumn>
     </Columns>
@@ -73,9 +72,16 @@
     [Parameter]
     public string ItemName { get; set; }
 
+    [Parameter]
+    public int ItemId { get; set; }
+
     private IEnumerable<Message> Elements = new List<Message>();
-    string _accessToken;
-    string _error;
+    string? _accessToken;
+    string? _error;
+    string? message;
+    MudForm form;
+    bool showSpinner = false;
+
 
     //signalr support wire up connection if authenticated
     private HubConnection hubConnection;
@@ -118,14 +124,44 @@
         }
     }
 
-    private async void AskForITemBack(){
+
+    MessageValidator<string> messageValidator = new MessageValidator<string>( x => x.NotEmpty().Length(3,200));
+
+
+
+    private async void AskForItemBack(){
         //send the item back message
-        string message = $"Can you please return my {ItemName}.";
+        message = $"Can you please return my {ItemName}.";
+
+
     }
 
     private async void Inquire(){
         ////inquire about an item
-        string message = $"Ar you still using my {ItemName}?";
+        message = $"Are you still using my {ItemName}?";
+    }
+
+    private async void SendMessage(){
+        showSpinner = true;
+        try
+        {
+            bool success = await _dataService.SendSimpleMessageAsync(transactionId, new SimpleMessage() { ItemId = ItemId, Message = message });
+            if (success)
+            {
+                message = string.Empty;
+            }
+        }
+        catch (Exception ex)
+        {
+
+            throw;
+        }
+        finally{
+
+            showSpinner = false;
+            StateHasChanged();
+        }
+      
     }
 
     private async Task GetData()

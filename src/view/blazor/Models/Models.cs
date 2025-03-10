@@ -151,6 +151,13 @@ namespace LendingView.Models
         public int? ItemId { get; set; }
         public string TransactionId { get; set; }
     }
+
+    public class SimpleMessage
+    {
+        public string Message { get; set; }
+        public int ItemId { get; set; }
+    }
+
     public class Country 
     {
         public string Name { get; set; }

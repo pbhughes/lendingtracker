@@ -35,6 +35,7 @@ namespace LendingView.Servcies
             return response.IsSuccessStatusCode;
         }
 
+
         private async Task<bool> PutAsync<T>(string url, T data)
         {
             var json = JsonSerializer.Serialize(data);
@@ -87,10 +88,17 @@ namespace LendingView.Servcies
         public Task<bool> DeleteTransactionAsync(int id) => DeleteAsync($"/transactions/{id}");
 
         // --- Messages Endpoints ---
+
+
         public Task<bool> SendMessageAsync(Transaction transaction, string message, string phone, string method, string direction) =>
-            PostAsync($"/messages?message={message}&phone={phone}&method={method}&direction={direction}", transaction);
+           PostAsync($"/messages?message={message}&phone={phone}&method={method}&direction={direction}", transaction);
+
+        public Task<bool> SendSimpleMessageAsync(Guid transactionId, SimpleMessage message) =>
+         PostAsync($"/messages/simple/{transactionId}", message);
+
         public Task<Message> GetMessageByTransactionIdAsync(string transactionId) =>
             GetAsync<Message>($"/messages/{transactionId}");
+       
 
         // --- Image Upload ---
         public async Task<bool> UploadImageAsync(byte[] imageBytes)
